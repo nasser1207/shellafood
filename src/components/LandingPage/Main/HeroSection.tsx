@@ -28,7 +28,7 @@ export default function HeroSection() {
                         {t("landing.hero.subtitle")}
                     </p>
                     <a
-                        href="/error"
+                        href="/home"
                         className="inline-flex items-center justify-center rounded-lg bg-[#FA9D2B] dark:bg-[#D48925] px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 text-xs sm:text-sm md:text-base lg:text-lg text-white shadow-xl transition-all duration-300 hover:bg-[#D48925] dark:hover:bg-[#B8771F] focus:ring-4 focus:ring-[#FA9D2B]/50 dark:focus:ring-[#D48925]/50 focus:outline-none"
                     >
                         {t("landing.hero.browseButton")}
