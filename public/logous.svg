@@ -1,0 +1,18 @@
+<svg width="45" height="40" viewBox="0 0 45 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="45" height="40" fill="#012169"/>
+  
+  <!-- White diagonal cross -->
+  <path d="M0 0L45 40M45 0L0 40" stroke="white" stroke-width="4"/>
+  
+  <!-- Red diagonal cross -->
+  <path d="M0 0L45 40M45 0L0 40" stroke="#C8102E" stroke-width="2"/>
+  
+  <!-- White horizontal and vertical cross -->
+  <rect x="20" y="0" width="5" height="40" fill="white"/>
+  <rect x="0" y="17.5" width="45" height="5" fill="white"/>
+  
+  <!-- Red horizontal and vertical cross -->
+  <rect x="21" y="0" width="3" height="40" fill="#C8102E"/>
+  <rect x="0" y="18.5" width="45" height="3" fill="#C8102E"/>
+</svg>
