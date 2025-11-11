@@ -2,20 +2,28 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://shellafood.com';
 
-export interface DeleteAddressResult {
+export interface UpdateCartResult {
 	success: boolean;
 	error?: string;
 }
 
-export async function deleteAddressAction(addressId: string): Promise<DeleteAddressResult> {
+export async function updateCartAction({
+	itemId,
+	quantity,
+}: {
+	itemId: string;
+	quantity: number;
+}): Promise<UpdateCartResult> {
 	try {
-		const response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
-			method: 'DELETE',
+		const response = await fetch(`${BASE_URL}/api/v1/cart/update`, {
+			method: 'PUT',
 			headers: {
+				'Content-Type': 'application/json',
 				'Accept': 'application/json',
 				'X-LANG': 'ar',
 			},
 			credentials: 'include',
+			body: JSON.stringify({ item_id: itemId, quantity }),
 		});
 
 		const data = await response.json();
@@ -23,7 +31,7 @@ export async function deleteAddressAction(addressId: string): Promise<DeleteAddr
 		if (!response.ok) {
 			return {
 				success: false,
-				error: data.message || data.error || 'Failed to delete address',
+				error: data.message || data.error || 'Failed to update cart',
 			};
 		}
 
@@ -31,10 +39,11 @@ export async function deleteAddressAction(addressId: string): Promise<DeleteAddr
 			success: true,
 		};
 	} catch (error) {
-		console.error('Error deleting address:', error);
+		console.error('Error updating cart:', error);
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : 'Network error',
 		};
 	}
 }
+

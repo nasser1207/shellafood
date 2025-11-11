@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import CategoriesPage from "@/components/Categories/CategoriesPage";
-import { getCategoriesAction } from '@/app/actions/categories/categories.action';
+import { TEST_CATEGORIES } from "@/lib/data/categories/testData";
 
 export const metadata: Metadata = {
 	title: "الأقسام | شلة فود",
@@ -68,13 +68,9 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPageRoute() {
-	const result = await getCategoriesAction();
 	
-	if (!result.success) {
-		return <div>Error loading categories</div>;
-	}
 	
-	return <CategoriesPage categories={result.categories} />;
+	return <CategoriesPage categories={TEST_CATEGORIES} />;
 }
 
 

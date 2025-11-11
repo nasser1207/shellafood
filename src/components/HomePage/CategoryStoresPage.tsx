@@ -184,16 +184,13 @@ export default function CategoryStoresPage({
 		const fetchCategoryStores = async () => {
 			setIsLoading(true);
 			try {
-				const { getStoresByCategoryAction } = await import("@/app/actions/stores");
-				const result = await getStoresByCategoryAction(categoryName || "", pageSize, 0);
-				if (result.success && result.data) {
-					const data = result.data as any;
-					setStores(data.stores || []);
-					setHasMore(Boolean(data.hasMore));
-					setNextOffset(Number(data.nextOffset ?? (data.stores?.length ?? 0)));
+				const { getStoresByCategoryAction } = await import("@/app/actions/categories/categories.action");
+				const result = await getStoresByCategoryAction(categoryName || "");
+				if (result.success && result.stores) {
+					setStores(result.stores || []);
 				} else {
-					console.error('فشل في جلب متاجر القسم');
-				}
+					console.error('فشل في جلب متاجر القسم:', result.error);
+				}	
 			} catch (error) {
 				console.error('خطأ في جلب متاجر القسم:', error);
 			} finally {
@@ -213,13 +210,10 @@ export default function CategoryStoresPage({
 		if (!hasMore || isLoadingMore || !categoryName) return;
 		setIsLoadingMore(true);
 		try {
-			const { getStoresByCategoryAction } = await import("@/app/actions/stores");
-			const result = await getStoresByCategoryAction(categoryName || "", pageSize, nextOffset);
-			if (result.success && result.data) {
-				const data = result.data as any;
-				setStores(prev => [...prev, ...(data.stores || [])]);
-				setHasMore(Boolean(data.hasMore));
-				setNextOffset(Number(data.nextOffset ?? nextOffset));
+			const { getStoresByCategoryAction } = await import("@/app/actions/categories/categories.action");
+			const result = await getStoresByCategoryAction(categoryName || "");
+			if (result.success && result.stores) {
+				setStores(prev => [...prev, ...(result.stores || [])]);
 			}
 		} catch (error) {
 			console.error('خطأ في جلب المزيد من المتاجر:', error);

@@ -29,7 +29,7 @@ export function useProductFavorites(productId: string, productData?: Partial<Fav
 	const { language } = useLanguage();
 	const isArabic = language === 'ar';
 
-	const checkFavoriteStatus = useCallback(() => {
+	const checkFavoriteStatus = useCallback(async () => {
 		if (!productId) return;
 		const isFav = isProductFavorite(productId);
 		setState(prev => ({ ...prev, isFavorite: isFav }));
@@ -150,7 +150,7 @@ export function useStoreFavorites(storeId: string, storeData?: Partial<FavoriteS
 	const { language } = useLanguage();
 	const isArabic = language === 'ar';
 
-	const checkFavoriteStatus = useCallback(() => {
+	const checkFavoriteStatus = useCallback(async () => {
 		if (!storeId) return;
 		const isFav = isStoreFavorite(storeId);
 		setState(prev => ({ ...prev, isFavorite: isFav }));

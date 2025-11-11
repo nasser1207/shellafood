@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import PopularStoresSlider from "./PopularStoresSlider";
 import SectionHeader from "./SectionHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -39,7 +38,6 @@ export default function PopularStoresSection({
 				viewAllRoute={viewAllRoute}
 				viewAllText={isArabic ? "عرض الكل" : "View All"}
 			/>
-			<PopularStoresSlider categoryName={categoryName} stores={[]} />
 		</motion.section>
 	);
 }

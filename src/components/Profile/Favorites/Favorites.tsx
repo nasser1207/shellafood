@@ -62,17 +62,12 @@ export default function Favorites() {
 
 		setAddingToCart(product.id);
 		try {
-			const result = await addToCart({ 
-				productId: product.id, 
-				storeId: product.storeId, 
-				quantity: 1 
+			const result = await addToCart({
+				productId: product.id,
+				storeId: product.storeId,
+				quantity: 1,
+				priceAtAdd: Number(product.price),
 			});
-			
-			if (result.success) {
-				alert(result.message || "تم إضافة المنتج إلى السلة بنجاح!");
-			} else {
-				alert(result.error || "حدث خطأ أثناء إضافة المنتج إلى السلة");
-			}
 		} catch (error) {
 			console.error("Error adding to cart:", error);
 			alert("حدث خطأ أثناء إضافة المنتج إلى السلة");

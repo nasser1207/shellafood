@@ -8,7 +8,7 @@ import { ServiceResult } from "@/lib/types/service-result";
 import { NotificationDialog } from "../Utils/NotificationDialog";
 import { FormInput } from "../Utils/FormInput";
 import { PasswordInput } from "../Utils/PasswordInput";
-import { checkLoginAction } from "@/app/actions/login/check-login.action";
+import { loginAction } from "@/app/actions/login/post-login.action";
 
 interface LoginFormProps {
 	loginAction: (formData: LoginInput) => Promise<ServiceResult<{ userId: string }>>;

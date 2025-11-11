@@ -63,13 +63,11 @@ function ProductCard({
 		name: product.name,
 		nameAr: product.nameAr,
 		image: product.image,
-		price: typeof product.price === 'number' ? product.price : parseFloat(product.price?.toString().replace(/[^0-9.]/g, '') || '0'),
-		originalPrice: product.originalPrice ? (typeof product.originalPrice === 'number' ? product.originalPrice : parseFloat(product.originalPrice.toString().replace(/[^0-9.]/g, '') || '0')) : undefined,
+		price: typeof product.price === 'number' ? product.price : parseFloat((product.price as unknown as number)?.toString().replace(/[^0-9.]/g, '') || '0'),
+		originalPrice: product.originalPrice ? (typeof product.originalPrice === 'number' ? product.originalPrice : parseFloat((product.originalPrice as unknown as number)?.toString().replace(/[^0-9.]/g, '') || '0')) : undefined as unknown as number | undefined,
 		unit: product.unit,
 		unitAr: product.unitAr,
 		storeId: product.storeId,
-		storeName: product.storeName,
-		storeNameAr: product.storeNameAr,
 	});
 	
 	const displayName = isArabic && product.nameAr ? product.nameAr : product.name;

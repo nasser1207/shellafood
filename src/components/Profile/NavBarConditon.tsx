@@ -15,7 +15,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import HelpAndSupport from "./Support/HelpAndSupport";
-import { loginService } from "@/lib/services/login.service";
 
 const MobileMenu = ({
 	onClose,

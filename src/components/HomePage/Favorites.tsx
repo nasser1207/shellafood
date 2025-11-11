@@ -74,8 +74,9 @@ export default function Favorites() {
 		try {
 			const result = await addToCart({
 				productId: product.id,
-				storeId: product.storeId,
-				quantity: 1
+				storeId: product.storeId || '',
+				quantity: 1,
+				priceAtAdd: parseFloat(product.price) || 0,
 			});
 
 			if (result.success) {
@@ -117,13 +118,14 @@ export default function Favorites() {
 			// تفريغ السلة
 			const clearSuccess = await clearCart();
 			
-			if (clearSuccess) {
-				// إضافة المنتج الجديد
-				const result = await addToCart({
-					productId: product.id,
-					storeId: product.storeId,
-					quantity: 1
-				});
+						if (clearSuccess) {
+							// إضافة المنتج الجديد
+							const result = await addToCart({        
+								productId: product.id,
+								storeId: product.storeId || '',       
+								quantity: 1,
+								priceAtAdd: parseFloat(product.price) || 0,
+							});
 
 				if (result.success) {
 					alert(`تم تفريغ السلة وإضافة "${product.name}" بنجاح!`);

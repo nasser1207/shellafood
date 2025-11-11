@@ -2,20 +2,22 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://shellafood.com';
 
-export interface DeleteAddressResult {
+export interface RemoveFromCartResult {
 	success: boolean;
 	error?: string;
 }
 
-export async function deleteAddressAction(addressId: string): Promise<DeleteAddressResult> {
+export async function removeFromCartAction(itemId: string): Promise<RemoveFromCartResult> {
 	try {
-		const response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
+		const response = await fetch(`${BASE_URL}/api/v1/cart/remove`, {
 			method: 'DELETE',
 			headers: {
+				'Content-Type': 'application/json',
 				'Accept': 'application/json',
 				'X-LANG': 'ar',
 			},
 			credentials: 'include',
+			body: JSON.stringify({ item_id: itemId }),
 		});
 
 		const data = await response.json();
@@ -23,7 +25,7 @@ export async function deleteAddressAction(addressId: string): Promise<DeleteAddr
 		if (!response.ok) {
 			return {
 				success: false,
-				error: data.message || data.error || 'Failed to delete address',
+				error: data.message || data.error || 'Failed to remove item from cart',
 			};
 		}
 
@@ -31,10 +33,11 @@ export async function deleteAddressAction(addressId: string): Promise<DeleteAddr
 			success: true,
 		};
 	} catch (error) {
-		console.error('Error deleting address:', error);
+		console.error('Error removing item from cart:', error);
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : 'Network error',
 		};
 	}
 }
+

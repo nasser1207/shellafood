@@ -205,7 +205,7 @@ export default function FavoritesPage() {
 							<FavoritesTabs	
 								tabs={tabs}
 								activeTab={activeTab}
-								onTabChange={setActiveTab}
+								onTabChange={(tabId: string) => setActiveTab(tabId as "products" | "stores")}
 							/>
 						</div>
 
