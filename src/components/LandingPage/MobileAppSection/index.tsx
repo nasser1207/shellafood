@@ -116,7 +116,7 @@ export default function MobileAppSection() {
 						transition={{ duration: 0.8 }}
 						className={`relative ${isArabic ? "lg:order-2" : "lg:order-1"} mt-8 lg:mt-0 flex items-center justify-center`}
 					>
-						<div className="relative w-full max-w-[400px] sm:max-w-[420px] md:max-w-[460px] lg:max-w-[480px] xl:max-w-[540px] 2xl:max-w-[600px] aspect-[5/8] mx-auto">
+						<div className="relative hidden lg:block w-full max-w-[400px] sm:max-w-[420px] md:max-w-[460px] lg:max-w-[480px] xl:max-w-[540px] 2xl:max-w-[600px] aspect-[5/8] mx-auto">
 							<div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 blur-3xl opacity-20" />
 
 							<motion.div
