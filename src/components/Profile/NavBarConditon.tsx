@@ -4,6 +4,8 @@ import {
 	ClipboardList,
 	Globe,
 	Home,
+	List,
+	LogOut,
 	Mail,
 	MenuIcon,
 	Search,
@@ -56,13 +58,15 @@ const MobileMenu = ({
 		{ id: "my-orders", label: "طلباتي", icon: ClipboardList, href: "/my-orders" },
 		{ id: "cart", label: "السلة", icon: ShoppingBag, href: "/cart", badge: cartCount },
 		{
-			id: "login",
-			label: isLoadingUser ? "..." : isLoggedIn && user ? user.fullName : "تسجيل الدخول",
+		id: "profile",
+			label: "الملف الشخصي",
 			icon: User,
-			href: isLoggedIn ? "/profile" : "/login",
+			href: "/profile" 
 		},
+		{ id: "categories", label: "الفئات", icon: List, href: "/categories" },
 		{ id: "contact", label: "اتصل بنا", icon: Mail, href: "#", action: openAterms },
 		{ id: "language", label: "عربية", icon: Globe, href: "/" },
+		{ id: "logout", label: "تسجيل الخروج", icon: LogOut, href: "/logout" },
 	];
 
 	return (
