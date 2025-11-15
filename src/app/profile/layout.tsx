@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import NavBarCondition from "@/components/Profile/NavBarConditon";
 import ShellaFooter from "@/components/ShellaFooter/ShellaFooter";
-import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
 	title: "الملف الشخصي | شلة فود",
@@ -34,7 +33,7 @@ export default function ProfileLayout({
 	return (
 		<>
 			{/* Navigation - Server Component by default */}
-			<Navbar />
+			<NavBarCondition />
 			{/* Main Content */}
 			<main className="min-h-screen bg-white dark:bg-gray-900">
 				{children}

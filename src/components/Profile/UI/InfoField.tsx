@@ -64,7 +64,7 @@ export default function InfoField({ label, value, type = "text", editable = fals
 
 	return (
 		<div className="mb-4 last:mb-0">
-			<label className="block text-sm font-medium text-gray-700 mb-2">
+			<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 				{label}
 			</label>
 			{editable ? (
@@ -72,11 +72,11 @@ export default function InfoField({ label, value, type = "text", editable = fals
 					type={type}
 					value={type === 'date' ? formatDateForInput(value) : value}
 					onChange={handleInputChange}
-					className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+					className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 text-sm"
 					dir={direction}
 				/>
 			) : (
-				<div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-900">
+				<div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm text-gray-900 dark:text-gray-100">
 					{value}
 				</div>
 			)}

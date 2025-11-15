@@ -189,13 +189,13 @@ export default function MyWallet() {
 	const getTransactionColor = (type: string) => {
 		switch (type) {
 			case "deposit":
-				return "text-green-600 bg-green-50";
+				return "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30";
 			case "withdraw":
-				return "text-red-600 bg-red-50";
+				return "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30";
 			case "payment":
-				return "text-blue-600 bg-blue-50";
+				return "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30";
 			default:
-				return "text-gray-600 bg-gray-50";
+				return "text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800";
 		}
 	};
 
@@ -216,22 +216,22 @@ export default function MyWallet() {
 		switch (status) {
 			case "active":
 				return (
-					<div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold">
-						<div className="w-2 h-2 bg-green-500 rounded-full"></div>
+					<div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full text-xs font-semibold">
+						<div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
 						نشط
 					</div>
 				);
 			case "pending":
 				return (
-					<div className="flex items-center gap-2 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full text-xs font-semibold">
-						<div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+					<div className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-3 py-1.5 rounded-full text-xs font-semibold">
+						<div className="w-2 h-2 bg-yellow-500 dark:bg-yellow-400 rounded-full"></div>
 						قيد الانتظار
 					</div>
 				);
 			case "frozen":
 				return (
-					<div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-1.5 rounded-full text-xs font-semibold">
-						<div className="w-2 h-2 bg-red-500 rounded-full"></div>
+					<div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-3 py-1.5 rounded-full text-xs font-semibold">
+						<div className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full"></div>
 						مجمّد
 					</div>
 				);
@@ -273,7 +273,7 @@ export default function MyWallet() {
 	];
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/20 to-white p-4 md:p-6 lg:p-8" dir="rtl">
+		<div className="min-h-screen bg-gradient-to-br from-gray-50 dark:from-gray-900 via-green-50/20 dark:via-green-900/10 to-white dark:to-gray-900 p-4 md:p-6 lg:p-8" dir="rtl">
 			<div className="max-w-6xl mx-auto space-y-6">
 				{/* Header Section */}
 				<motion.div
@@ -282,8 +282,8 @@ export default function MyWallet() {
 					transition={{ duration: 0.5 }}
 					className="mb-6"
 				>
-					<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">محفظتي</h2>
-					<p className="text-gray-600 text-sm md:text-base">إدارة رصيدك بسهولة وأمان</p>
+					<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">محفظتي</h2>
+					<p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">إدارة رصيدك بسهولة وأمان</p>
 				</motion.div>
 
 				{/* Premium Wallet Card */}
@@ -378,28 +378,28 @@ export default function MyWallet() {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.2 }}
-					className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8"
+					className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 md:p-8"
 				>
 					<div className="flex items-center justify-between mb-4">
 						<div className="flex items-center gap-3">
-							<div className="p-2.5 bg-green-50 rounded-xl">
-								<Activity className="w-5 h-5 text-green-600" />
+							<div className="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-xl">
+								<Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
 							</div>
 							<div>
-								<h3 className="text-lg font-bold text-gray-900">الحد الشهري</h3>
-								<p className="text-sm text-gray-500">استخدامك لهذا الشهر</p>
+								<h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">الحد الشهري</h3>
+								<p className="text-sm text-gray-500 dark:text-gray-400">استخدامك لهذا الشهر</p>
 							</div>
 						</div>
 						<div className="text-left">
-							<p className="text-2xl font-extrabold text-gray-900">
+							<p className="text-2xl font-extrabold text-gray-900 dark:text-gray-100">
 								{monthlyUsage.toFixed(2)} / {monthlyLimit.toFixed(2)} ر.س
 							</p>
-							<p className="text-xs text-gray-500 mt-1">
+							<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
 								{currentMonthTotal} معاملة هذا الشهر
 							</p>
 						</div>
 					</div>
-					<div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+					<div className="relative h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
 						<motion.div
 							initial={{ width: 0 }}
 							animate={{ width: `${Math.min(usagePercentage, 100)}%` }}
@@ -413,7 +413,7 @@ export default function MyWallet() {
 							}`}
 						></motion.div>
 					</div>
-					<div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+					<div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
 						<span>المستخدم</span>
 						<span>{usagePercentage.toFixed(1)}%</span>
 					</div>
@@ -424,15 +424,15 @@ export default function MyWallet() {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.3 }}
-					className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8"
+					className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 md:p-8"
 				>
 					{/* Section Header */}
 					<div className="flex items-center justify-between mb-6">
-						<h3 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-							<History className="w-6 h-6 text-green-600" />
+						<h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+							<History className="w-6 h-6 text-green-600 dark:text-green-400" />
 							سجل المعاملات
 						</h3>
-						<button className="flex items-center gap-2 text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">
+						<button className="flex items-center gap-2 text-sm font-semibold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-500 transition-colors">
 							<History className="w-4 h-4" />
 							<span>عرض الكل</span>
 						</button>
@@ -446,8 +446,8 @@ export default function MyWallet() {
 								onClick={() => setActiveFilter(filter.key)}
 								className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
 									activeFilter === filter.key
-										? "bg-green-600 text-white shadow-md"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+										? "bg-green-600 dark:bg-green-500 text-white shadow-md"
+										: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
 								}`}
 							>
 								{filter.icon}
@@ -465,7 +465,7 @@ export default function MyWallet() {
 									initial={{ opacity: 0, x: -20 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.3, delay: index * 0.05 }}
-									className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
+									className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border border-gray-100 dark:border-gray-700"
 								>
 									<div className="flex items-center gap-4 flex-1">
 										{/* Transaction Icon */}
@@ -476,10 +476,10 @@ export default function MyWallet() {
 										{/* Transaction Details */}
 										<div className="flex-1">
 											<div className="flex items-center gap-2 mb-1">
-												<p className="font-semibold text-gray-900">{transaction.description}</p>
+												<p className="font-semibold text-gray-900 dark:text-gray-100">{transaction.description}</p>
 												{getStatusIcon(transaction.status)}
 											</div>
-											<p className="text-sm text-gray-500">{formatDate(transaction.date)}</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(transaction.date)}</p>
 										</div>
 									</div>
 
@@ -487,7 +487,7 @@ export default function MyWallet() {
 									<div className="text-left">
 										<p
 											className={`text-lg font-bold ${
-												transaction.amount > 0 ? "text-green-600" : "text-red-600"
+												transaction.amount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
 											}`}
 										>
 											{transaction.amount > 0 ? "+" : ""}
@@ -511,8 +511,8 @@ export default function MyWallet() {
 									<CreditCard className="w-16 h-16 text-green-600" />
 								</div>
 							</div>
-							<p className="text-lg font-semibold text-gray-700 mb-2">لا توجد معاملات</p>
-							<p className="text-sm text-gray-500 text-center max-w-md">
+							<p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">لا توجد معاملات</p>
+							<p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md">
 								{activeFilter === "all"
 									? "لم يتم إجراء أي معاملات حتى الآن. ابدأ بإضافة رصيد إلى محفظتك."
 									: `لا توجد معاملات من نوع "${filters.find((f) => f.key === activeFilter)?.label}"`}

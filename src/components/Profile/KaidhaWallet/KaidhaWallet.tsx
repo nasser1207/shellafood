@@ -99,13 +99,13 @@ export default function KaidhaWallet() {
 	const getTransactionColor = (type: string) => {
 		switch (type) {
 			case "payment":
-				return "text-red-500 bg-red-50";
+				return "text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/30";
 			case "deposit":
-				return "text-green-500 bg-green-50";
+				return "text-green-500 dark:text-green-400 bg-green-50 dark:bg-green-900/30";
 			case "transfer":
-				return "text-blue-500 bg-blue-50";
+				return "text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30";
 			default:
-				return "text-gray-500 bg-gray-50";
+				return "text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800";
 		}
 	};
 
@@ -132,7 +132,7 @@ export default function KaidhaWallet() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/20 to-white p-4 md:p-6 lg:p-8" dir="rtl">
+		<div className="min-h-screen bg-gradient-to-br from-gray-50 dark:from-gray-900 via-green-50/20 dark:via-green-900/10 to-white dark:to-gray-900 p-4 md:p-6 lg:p-8" dir="rtl">
 			<div className="max-w-6xl mx-auto space-y-6">
 				{/* Header Section */}
 				<motion.div
@@ -145,16 +145,16 @@ export default function KaidhaWallet() {
 						<div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg">
 							<Wallet className="w-8 h-8 text-white" />
 						</div>
-						<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">محفظة قيدها</h2>
+						<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100">محفظة قيدها</h2>
 					</div>
 					<button
 						onClick={handleRefresh}
 						disabled={isRefreshing}
-						className="p-2.5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all disabled:opacity-50"
+						className="p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50"
 						aria-label="تحديث الرصيد"
 					>
 						<RefreshCw
-							className={`w-5 h-5 text-gray-600 ${isRefreshing ? "animate-spin" : ""}`}
+							className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${isRefreshing ? "animate-spin" : ""}`}
 						/>
 					</button>
 				</motion.div>
@@ -219,20 +219,20 @@ export default function KaidhaWallet() {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.2 }}
-					className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8"
+					className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 md:p-8"
 				>
 					<div className="flex items-center justify-between mb-4">
 						<div className="flex items-center gap-2">
-							<TrendingUp className="w-5 h-5 text-green-600" />
-							<span className="text-sm font-semibold text-gray-700">
-								قيدها <span className="text-green-600">متاح</span>
+							<TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+							<span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+								قيدها <span className="text-green-600 dark:text-green-400">متاح</span>
 							</span>
 						</div>
-						<span className="text-sm font-bold text-gray-900">
+						<span className="text-sm font-bold text-gray-900 dark:text-gray-100">
 							{progressPercentage.toFixed(0)}%
 						</span>
 					</div>
-					<div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+					<div className="relative h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
 						<motion.div
 							initial={{ width: 0 }}
 							animate={{ width: `${progress}%` }}
@@ -250,31 +250,31 @@ export default function KaidhaWallet() {
 					className="grid grid-cols-1 md:grid-cols-2 gap-4"
 				>
 					{/* Card Limit */}
-					<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+					<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 hover:shadow-xl transition-shadow">
 						<div className="flex items-center justify-between mb-3">
 							<div className="flex items-center gap-3">
-								<div className="p-2.5 bg-blue-50 rounded-xl">
-									<CreditCard className="w-5 h-5 text-blue-600" />
+								<div className="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+									<CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
 								</div>
-								<span className="text-sm font-semibold text-gray-600">حد البطاقة</span>
+								<span className="text-sm font-semibold text-gray-600 dark:text-gray-400">حد البطاقة</span>
 							</div>
 						</div>
-						<p className="text-2xl font-extrabold text-gray-900">
+						<p className="text-2xl font-extrabold text-gray-900 dark:text-gray-100">
 							SAR {cardLimit.toLocaleString("ar-SA")}
 						</p>
 					</div>
 
 					{/* Available Balance */}
-					<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+					<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 hover:shadow-xl transition-shadow">
 						<div className="flex items-center justify-between mb-3">
 							<div className="flex items-center gap-3">
-								<div className="p-2.5 bg-green-50 rounded-xl">
-									<Wallet className="w-5 h-5 text-green-600" />
+								<div className="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-xl">
+									<Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
 								</div>
-								<span className="text-sm font-semibold text-gray-600">الرصيد المتاح</span>
+								<span className="text-sm font-semibold text-gray-600 dark:text-gray-400">الرصيد المتاح</span>
 							</div>
 						</div>
-						<p className="text-2xl font-extrabold text-gray-900">
+						<p className="text-2xl font-extrabold text-gray-900 dark:text-gray-100">
 							SAR {availableBalance.toLocaleString("ar-SA", { minimumFractionDigits: 2 })}
 						</p>
 					</div>
@@ -285,9 +285,9 @@ export default function KaidhaWallet() {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.4 }}
-					className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8"
+					className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 md:p-8"
 				>
-					<h3 className="text-xl font-bold text-gray-900 mb-6">عمليات المحفظة الأخيرة</h3>
+					<h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">عمليات المحفظة الأخيرة</h3>
 					<div className="space-y-4">
 						{transactions.map((transaction, index) => (
 							<motion.div
@@ -295,7 +295,7 @@ export default function KaidhaWallet() {
 								initial={{ opacity: 0, x: -20 }}
 								animate={{ opacity: 1, x: 0 }}
 								transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-								className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+								className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
 							>
 								<div className="flex items-center gap-4 flex-1">
 									{/* Transaction Icon */}
@@ -308,12 +308,12 @@ export default function KaidhaWallet() {
 									{/* Transaction Details */}
 									<div className="flex-1">
 										<div className="flex items-center gap-2 mb-1">
-											<p className="font-semibold text-gray-900">
+											<p className="font-semibold text-gray-900 dark:text-gray-100">
 												{transaction.description}
 											</p>
 											{getStatusIcon(transaction.status)}
 										</div>
-										<p className="text-sm text-gray-500">{formatDate(transaction.date)}</p>
+										<p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(transaction.date)}</p>
 									</div>
 								</div>
 
@@ -321,7 +321,7 @@ export default function KaidhaWallet() {
 								<div className="text-left">
 									<p
 										className={`text-lg font-bold ${
-											transaction.amount > 0 ? "text-green-600" : "text-red-600"
+											transaction.amount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
 										}`}
 									>
 										{transaction.amount > 0 ? "+" : ""}

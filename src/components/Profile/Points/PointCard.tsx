@@ -21,7 +21,7 @@ export default function PointCard({ offer, isArabic = false }: PointCardProps) {
 
 	return (
 		<div 
-			className="relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+			className="relative flex flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
 			dir={direction}
 		>
 			{/* Offer Badge */}
@@ -47,25 +47,25 @@ export default function PointCard({ offer, isArabic = false }: PointCardProps) {
 			{/* Offer Details */}
 			<div className={`flex flex-col p-4 ${currentIsArabic ? 'text-right' : 'text-left'}`}>
 				{/* Title */}
-				<h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+				<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">
 					{offer.title}
 				</h3>
 
 				{/* Points and Price */}
 				<div className={`flex items-center justify-between mb-3 ${currentIsArabic ? 'flex-row' : 'flex-row'}`}>
 					<div className={`flex items-center gap-2 ${currentIsArabic ? 'flex-row' : 'flex-row'}`}>
-						<div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-							<FaStar className="text-yellow-600 text-sm" />
+						<div className="h-8 w-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+							<FaStar className="text-yellow-600 dark:text-yellow-400 text-sm" />
 						</div>
-						<span className="text-sm font-medium text-gray-700">
+						<span className="text-sm font-medium text-gray-700 dark:text-gray-300">
 							{offer.points} {currentIsArabic ? 'نقطة' : 'Points'}
 						</span>
 					</div>
 					<div className={`flex items-center gap-2 ${currentIsArabic ? 'flex-row' : 'flex-row'}`}>
-						<div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-							<FaGift className="text-green-600 text-sm" />
+						<div className="h-8 w-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+							<FaGift className="text-green-600 dark:text-green-400 text-sm" />
 						</div>
-						<span className="text-sm font-medium text-green-600">
+						<span className="text-sm font-medium text-green-600 dark:text-green-400">
 							{offer.price}
 						</span>
 					</div>
@@ -74,15 +74,15 @@ export default function PointCard({ offer, isArabic = false }: PointCardProps) {
 				{/* Expiration Date (if available) */}
 				{offer.expirationDate && (
 					<div className={`flex items-center gap-2 mb-3 ${currentIsArabic ? 'flex-row' : 'flex-row'}`}>
-						<FaClock className="text-gray-400 text-xs" />
-						<span className="text-xs text-gray-500">
+						<FaClock className="text-gray-400 dark:text-gray-500 text-xs" />
+						<span className="text-xs text-gray-500 dark:text-gray-400">
 							{currentIsArabic ? 'ينتهي في' : 'Expires'} {offer.expirationDate}
 						</span>
 					</div>
 				)}
 
 				{/* Action Button */}
-				<button className={`w-full py-2 px-4 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center justify-center gap-2 ${currentIsArabic ? 'flex-row' : 'flex-row'}`}>
+				<button className={`w-full py-2 px-4 bg-green-500 dark:bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-600 dark:hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2 ${currentIsArabic ? 'flex-row' : 'flex-row'}`}>
 					<FaShoppingCart className="text-sm" />
 					{currentIsArabic ? 'استخدم النقاط' : 'Use Points'}
 				</button>

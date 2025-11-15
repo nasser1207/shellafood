@@ -52,7 +52,7 @@ export default function AccountInfoPage() {
 
 
 	return (
-		<div className="min-h-screen bg-gray-50" dir={direction}>
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={direction}>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 				{/* Header */}
 				<div className="mb-8">
@@ -114,18 +114,18 @@ export default function AccountInfoPage() {
 				{/* Edit Actions */}
 				{isEditing && (
 					<div className="mb-8">
-						<div className="bg-green-50 border border-green-200 rounded-xl p-4">
+						<div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
 							<div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isArabic ? 'sm:flex-row-reverse' : 'sm:flex-row'}`}>
 								<div className="flex items-center gap-2">
 									<div className="h-2 w-2 bg-green-500 rounded-full"></div>
-									<span className="text-sm font-medium text-green-700">
+									<span className="text-sm font-medium text-green-700 dark:text-green-400">
 										{isArabic ? "وضع التعديل نشط" : "Edit mode is active"}
 									</span>
 								</div>
 								<div className={`flex gap-3 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
 									<button
 										onClick={handleCancel}
-										className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+										className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 									>
 										{isArabic ? "إلغاء" : "Cancel"}
 									</button>

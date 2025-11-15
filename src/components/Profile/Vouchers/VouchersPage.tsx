@@ -130,22 +130,22 @@ export default function VouchersPage() {
 	const currentVouchers = activeTab === "available" ? currentContent.vouchers : currentContent.expiredVouchers;
 
 	return (
-		<div className="min-h-screen bg-gray-50" dir={direction}>
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={direction}>
 			<div className="max-w-8xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
 				{/* Header */}
 				<div className="mb-6 sm:mb-8">
-					<div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+					<div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
 						<div className={`flex items-center gap-3 ${isArabic ? 'flex-row' : 'flex-row'}`}>
-							<div className="h-10 w-10 bg-green-100 rounded-xl flex items-center justify-center">
-								<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+								<svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
 								</svg>
 							</div>
 							<div className={isArabic ? 'text-right' : 'text-left'}>
-								<h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+								<h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
 									{currentContent.title}
 								</h1>
-								<p className="text-gray-600 text-sm">
+								<p className="text-gray-600 dark:text-gray-400 text-sm">
 									{currentContent.subtitle}
 								</p>
 							</div>
@@ -155,13 +155,13 @@ export default function VouchersPage() {
 
 				{/* Tabs */}
 				<div className="mb-6" dir={direction}>
-						<div className="flex justify-center gap-8 items-center bg-white rounded-xl shadow-sm border border-gray-200 p-1">
+						<div className="flex justify-center gap-8 items-center bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-1">
 							<button
 								onClick={() => setActiveTab("available")}
 								className={` py-3 px-4 text-sm md:text-lg font-medium rounded-lg transition-all duration-200 ${
 									activeTab === "available"
-										? "bg-green-500 text-white shadow-sm"
-										: "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+										? "bg-green-500 dark:bg-green-600 text-white shadow-sm"
+										: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
 								}`}
 							>
 								{currentContent.availableTab}
@@ -192,18 +192,18 @@ export default function VouchersPage() {
 							/>
 						))
 					) : (
-						<div className="col-span-1 lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+						<div className="col-span-1 lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
 							<div className="flex flex-col items-center gap-4">
-								<div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">
-									<svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div className="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+									<svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
 									</svg>
 								</div>
 								<div>
-									<h3 className="text-lg font-medium text-gray-900 mb-2">
+									<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
 										{activeTab === "available" ? currentContent.noVouchersAvailable : currentContent.noVouchersExpired}
 									</h3>
-									<p className="text-gray-500 text-sm">
+									<p className="text-gray-500 dark:text-gray-400 text-sm">
 										{isArabic ? 'تحقق مرة أخرى لاحقاً للحصول على قسائم جديدة' : 'Check back later for new vouchers'}
 									</p>
 								</div>

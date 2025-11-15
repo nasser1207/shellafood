@@ -108,13 +108,13 @@ export default function AddressesPage() {
 							icon={FaMapMarkerAlt}
 						>
 							<div className="text-center py-6 sm:py-8">
-								<div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-									<FaMapMarkerAlt className="text-gray-400 text-2xl" />
+								<div className="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+									<FaMapMarkerAlt className="text-gray-400 dark:text-gray-500 text-2xl" />
 								</div>
-								<h3 className="text-lg font-medium text-gray-900 mb-2">
+								<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
 									{isArabic ? "لم تقم بحفظ أي عناوين بعد" : "You haven't saved any addresses yet"}
 								</h3>
-								<p className="text-gray-600 text-sm mb-6 leading-relaxed">
+								<p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed">
 									{isArabic 
 										? "أضف عنوانك الأول لتسهيل عملية التوصيل" 
 										: "Add your first address to make delivery easier"
@@ -122,7 +122,7 @@ export default function AddressesPage() {
 								</p>
 								<button
 									onClick={handleAddAddress}
-									className="flex items-center justify-center gap-2 px-6 py-3 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium mx-auto touch-manipulation"
+									className="flex items-center justify-center gap-2 px-6 py-3 sm:py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors font-medium mx-auto touch-manipulation"
 								>
 									<FaPlus className="text-sm" />
 									<span>{isArabic ? "إضافة عنوان جديد" : "Add New Address"}</span>
