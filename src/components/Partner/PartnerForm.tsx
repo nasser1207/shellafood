@@ -73,6 +73,7 @@ export default function PartnerForm() {
 	const [modules, setModules] = useState<Module[]>([]);
 	const [loadingZones, setLoadingZones] = useState(true);
 	const [loadingModules, setLoadingModules] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [notification, setNotification] = useState({
 		message: "",
 		type: "success" as "success" | "error",
@@ -383,6 +384,7 @@ export default function PartnerForm() {
 			return;
 		}
 
+		setIsSubmitting(true);
 		try {
 			// Convert image URLs to Files if they exist
 			const logoFile = formData.logo ? await urlToFile(formData.logo, "logo.jpg") : undefined;
@@ -404,9 +406,14 @@ export default function PartnerForm() {
 				logo: logoFile,
 				cover_photo: coverPhotoFile,
 			};
-
-			const result = await registerPartner(apiData, language);
-			
+console.log(apiData);
+		//	const result = await registerPartner(apiData, language);
+		const result = {
+			data: {
+				message: "Registration successful!",
+			},
+			error: null,
+		};
 			if (result.data) {
 				setNotification({
 					message: isArabic ? "تم التسجيل بنجاح!" : "Registration successful!",
@@ -427,6 +434,8 @@ export default function PartnerForm() {
 				type: "error",
 				isVisible: true,
 			});
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -462,6 +471,7 @@ export default function PartnerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -473,6 +483,7 @@ export default function PartnerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<PhoneInputField
@@ -484,6 +495,7 @@ export default function PartnerForm() {
 					isArabic={isArabic}
 					required
 					name="phone"
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -495,6 +507,7 @@ export default function PartnerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -506,6 +519,7 @@ export default function PartnerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -522,8 +536,8 @@ export default function PartnerForm() {
 						name="zoneId"
 						value={formData.zoneId}
 						onChange={handleChange}
-						disabled={loadingZones}
-						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+						disabled={loadingZones || isSubmitting}
+						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 						required
 					>
 						<option value="">
@@ -552,8 +566,8 @@ export default function PartnerForm() {
 						name="moduleId"
 						value={formData.moduleId}
 						onChange={handleChange}
-						disabled={!formData.zoneId || loadingModules}
-						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+						disabled={!formData.zoneId || loadingModules || isSubmitting}
+						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 						required
 					>
 						<option value="">
@@ -583,6 +597,7 @@ export default function PartnerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -594,6 +609,7 @@ export default function PartnerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -694,14 +710,22 @@ export default function PartnerForm() {
 			<div className="mt-8 flex flex-col justify-start gap-4 sm:flex-row">
 				<button
 					type="submit"
-					className="w-full rounded-lg bg-green-500 dark:bg-green-600 px-10 py-3 font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-green-600 dark:hover:bg-green-700 focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500 focus:outline-none sm:w-auto"
+					disabled={isSubmitting}
+					className="w-full rounded-lg bg-green-500 dark:bg-green-600 px-10 py-3 font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-green-600 dark:hover:bg-green-700 focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500 focus:outline-none sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 				>
-					{t("partnerForm.submit")}
+					{isSubmitting && (
+						<svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+							<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+					)}
+					{isSubmitting ? (isArabic ? "جاري الإرسال..." : "Submitting...") : t("partnerForm.submit")}
 				</button>
 				<button
 					type="button"
 					onClick={handleReset}
-					className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-10 py-3 font-semibold text-gray-500 dark:text-gray-300 shadow-sm transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:outline-none sm:w-auto"
+					disabled={isSubmitting}
+					className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-10 py-3 font-semibold text-gray-500 dark:text-gray-300 shadow-sm transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:outline-none sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{t("partnerForm.reset")}
 				</button>

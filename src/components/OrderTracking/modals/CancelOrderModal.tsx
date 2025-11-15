@@ -3,7 +3,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Info, AlertTriangle } from "lucide-react";
-import { OrderData } from "../types";
+import { OrderData, ORDER_TYPE } from "../types";
+import { getCancelButtonLabel } from "../utils/routeHelpers";
 
 interface CancelOrderModalProps {
 	isOpen: boolean;
@@ -26,7 +27,10 @@ export default React.memo(function CancelOrderModal({
 }: CancelOrderModalProps) {
 	const isArabic = language === "ar";
 
-	if (!isOpen) return null;
+	if (!isOpen || !orderData) return null;
+
+	const isService = orderData.type === ORDER_TYPE.SERVICE;
+	const modalTitle = getCancelButtonLabel(orderData.type, language);
 
 	const showFeeWarning =
 		orderData &&
@@ -53,7 +57,7 @@ export default React.memo(function CancelOrderModal({
 									<AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
 								</div>
 								<h3 className={`text-xl font-bold text-gray-900 dark:text-white ${isArabic ? "text-right" : "text-left"}`}>
-									{isArabic ? "إلغاء الطلب" : "Cancel Order"}
+									{modalTitle}
 								</h3>
 							</div>
 							<button
@@ -67,8 +71,12 @@ export default React.memo(function CancelOrderModal({
 						{/* Content */}
 						<p className={`text-gray-600 dark:text-gray-400 mb-4 ${isArabic ? "text-right" : "text-left"}`}>
 							{isArabic
-								? "هل أنت متأكد من إلغاء هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء."
-								: "Are you sure you want to cancel this order? This action cannot be undone."}
+								? isService
+									? "هل أنت متأكد من إلغاء هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء."
+									: "هل أنت متأكد من إلغاء هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء."
+								: isService
+									? "Are you sure you want to cancel this booking? This action cannot be undone."
+									: "Are you sure you want to cancel this order? This action cannot be undone."}
 						</p>
 
 						{/* Fee Warning Message */}
@@ -84,8 +92,12 @@ export default React.memo(function CancelOrderModal({
 									</div>
 									<p className={`text-sm text-yellow-800 dark:text-yellow-300 leading-relaxed ${isArabic ? "text-right" : "text-left"}`}>
 										{isArabic
-											? "سيتم خصم رسوم صغيرة لصالح الفني (رسوم المعاينة) في حالة حدوث الإلغاء بعد إرسال الفني، وذلك لحماية الفنيين من إهدار الوقت والجهد."
-											: "A small fee will be deducted in favor of the technician (inspection fee) if the cancellation occurs after the technician has been dispatched, to protect technicians from wasted time and effort."}
+											? isService
+												? "سيتم خصم رسوم صغيرة لصالح الفني (رسوم المعاينة) في حالة حدوث الإلغاء بعد إرسال الفني، وذلك لحماية الفنيين من إهدار الوقت والجهد."
+												: "سيتم خصم رسوم صغيرة في حالة حدوث الإلغاء بعد بدء التحضير، وذلك لحماية المتجر من إهدار الوقت والجهد."
+											: isService
+												? "A small fee will be deducted in favor of the technician (inspection fee) if the cancellation occurs after the technician has been dispatched, to protect technicians from wasted time and effort."
+												: "A small fee may be deducted if the cancellation occurs after preparation has started, to protect the store from wasted time and effort."}
 									</p>
 								</div>
 							</motion.div>

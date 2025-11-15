@@ -21,7 +21,11 @@ function CategoriesSlider({
 const handleRefresh = useCallback(() => {
 	
 }, []);
-const handleCategoryClick = useCallback(() => {
+
+const handleCategoryClick = useCallback((categoryPath: string, categoryName: string) => {
+	if (categoryPath) {
+		router.push(categoryPath);
+	}
 }, [router]);
 
 

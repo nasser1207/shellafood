@@ -32,3 +32,12 @@ export function validateSlug(slug: string): boolean {
 	return /^[a-z0-9-]+$/.test(slug);
 }
 
+/**
+ * Decode URL parameter (handles URL encoding)
+ */
+export function decodeParam(param: string | string[] | undefined): string {
+	if (!param) return '';
+	const value = Array.isArray(param) ? param[0] : param;
+	return decodeURIComponent(value);
+}
+

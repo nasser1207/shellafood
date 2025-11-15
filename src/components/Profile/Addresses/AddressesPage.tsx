@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAddresses, type Address } from "@/hooks/useAddresses";
 import Header from "./Header";
 import AddressCard from "./AddressCard";
 import AddEditAddressModal from "./AddEditAddressModal";
@@ -14,51 +15,19 @@ export default function AddressesPage() {
 	const isArabic = language === 'ar';
 	const direction = isArabic ? 'rtl' : 'ltr';
 
-	// Mock addresses data - replace with actual data from your API
-	const initialAddresses = useMemo(() => [
-		{
-			id: "1",
-			type: "home",
-			title: isArabic ? "المنزل" : "Home",
-			address: isArabic ? "شارع الملك فهد، حي النخيل، الرياض 12345" : "King Fahd Street, Al-Nakheel District, Riyadh 12345",
-			details: isArabic ? "مبنى رقم 123، الطابق الثاني، شقة 45" : "Building 123, 2nd Floor, Apartment 45",
-			phone: "+966501234567",
-			isDefault: true,
-			coordinates: { lat: 24.7136, lng: 46.6753 }
-		},
-		{
-			id: "2",
-			type: "work",
-			title: isArabic ? "العمل" : "Work",
-			address: isArabic ? "شارع العليا، حي العليا، الرياض 12211" : "Al-Olaya Street, Al-Olaya District, Riyadh 12211",
-			details: isArabic ? "مبنى المكاتب التجارية، الطابق العاشر" : "Commercial Office Building, 10th Floor",
-			phone: "+966501234568",
-			isDefault: false,
-			coordinates: { lat: 24.6877, lng: 46.7219 }
-		},
-		{
-			id: "3",
-			type: "other",
-			title: isArabic ? "عنوان آخر" : "Other Address",
-			address: isArabic ? "شارع التحلية، حي التحلية، جدة 21432" : "Al-Tahlia Street, Al-Tahlia District, Jeddah 21432",
-			details: isArabic ? "فيلا رقم 67" : "Villa 67",
-			phone: "+966501234569",
-			isDefault: false,
-			coordinates: { lat: 21.4858, lng: 39.1925 }
-		}
-	], [isArabic]);
+	const {
+		addresses,
+		addAddress,
+		updateAddress,
+		deleteAddress,
+		setDefaultAddress,
+	} = useAddresses();
 
-	const [addresses, setAddresses] = useState(initialAddresses);
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-	const [editingAddress, setEditingAddress] = useState<typeof initialAddresses[0] | null>(null);
-	const [viewingAddress, setViewingAddress] = useState<typeof initialAddresses[0] | null>(null);
-
-	// Update addresses when language changes
-	useEffect(() => {
-		setAddresses(initialAddresses);
-	}, [initialAddresses]);
+	const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+	const [viewingAddress, setViewingAddress] = useState<Address | null>(null);
 
 	const handleEditAddress = (addressId: string) => {
 		const address = addresses.find(addr => addr.id === addressId);
@@ -70,43 +39,32 @@ export default function AddressesPage() {
 
 	const handleDeleteAddress = (addressId: string) => {
 		if (window.confirm(isArabic ? "هل أنت متأكد من حذف هذا العنوان؟" : "Are you sure you want to delete this address?")) {
-			setAddresses(prev => prev.filter(addr => addr.id !== addressId));
+			deleteAddress(addressId);
 		}
 	};
 
 	const handleSetDefault = (addressId: string) => {
-		setAddresses(prev => prev.map(addr => ({
-			...addr,
-			isDefault: addr.id === addressId
-		})));
+		setDefaultAddress(addressId);
 	};
 
 	const handleAddAddress = () => {
 		setIsAddModalOpen(true);
 	};
 
-	const handleViewMap = (address: typeof initialAddresses[0]) => {
+	const handleViewMap = (address: Address) => {
 		setViewingAddress(address);
 		setIsMapModalOpen(true);
 	};
 
-	const handleSaveAddress = (addressData: Omit<typeof initialAddresses[0], 'id'>) => {
+	const handleSaveAddress = (addressData: Omit<Address, 'id'>) => {
 		if (editingAddress) {
 			// Edit existing address
-			setAddresses(prev => prev.map(addr => 
-				addr.id === editingAddress.id 
-					? { ...addressData, id: editingAddress.id }
-					: addr
-			));
+			updateAddress(editingAddress.id, addressData);
 			setIsEditModalOpen(false);
 			setEditingAddress(null);
 		} else {
 			// Add new address
-			const newAddress = {
-				...addressData,
-				id: Date.now().toString() // Simple ID generation
-			};
-			setAddresses(prev => [...prev, newAddress]);
+			addAddress(addressData);
 			setIsAddModalOpen(false);
 		}
 	};
@@ -121,10 +79,10 @@ export default function AddressesPage() {
 
 
 	return (
-		<div className="min-h-screen bg-gray-50" dir={direction}>
-			<div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={direction}>
+			<div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full overflow-x-hidden">
 				{/* Header */}
-				<div className="mb-6 sm:mb-8">
+				<div className="mb-4 sm:mb-6 md:mb-8">
 					<Header
 						onAddAddress={handleAddAddress}
 						onSettings={() => console.log('Settings clicked')}
@@ -132,7 +90,7 @@ export default function AddressesPage() {
 				</div>
 
 				{/* Addresses List */}
-				<div className="space-y-4 sm:space-y-6">
+				<div className="space-y-3 sm:space-y-4 md:space-y-6">
 					{addresses.length > 0 ? (
 						addresses.map((address) => (
 							<AddressCard 

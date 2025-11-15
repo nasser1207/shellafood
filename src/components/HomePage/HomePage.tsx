@@ -1,106 +1,80 @@
-// HomePage.tsx
-
 "use client";
 
-import { NearbyStore } from "@/lib/types/api";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-	DeliveryAddressHero,
-	PromotionalBanner,
-	DiscountsSection,
-	NearbyStoresSection,
-	PopularStoresSection,
-} from "@/components/HomePage";
-import { CategoriesSlider } from "../Categories/Slider";
+import { Store } from "../Utils/StoreCard";
+import { Product } from "../Utils/ProductCard";
+import DeliveryAddressHero from "./DeliveryAddressHero";
+import PromotionalBanner from "./PromotionalBanner";
+import CategoriesSection from "./CategoriesSection";
+import NearbyStores from "./NearbyStores";
+import Discounts from "./Discounts";
+import PopularStores from "./PopularStores";
+import HowItWorks from "./HowItWorks";
+import AppDownload from "./AppDownload";
+import Testimonials from "./Testimonials";
+import FloatingCart from "./FloatingCart";
+import { getCartItemsCount } from "@/lib/utils/cartStorage";
+import { TEST_STORES, TEST_CATEGORIES, TEST_PRODUCTS } from "@/lib/data/categories/testData";
 
-// Local Category type for action typing (matches Categories API)
-type Category = {
-	id: string;
-	name: string;
-	description?: string;
-	image?: string;
-};
-
-export default function HomePage({
-	getCategoriesAction,
-	getNearbyStoresAction,
-}: {
-	getCategoriesAction: () => Promise<
-		| { categories: Category[]; cached: boolean; success: boolean }
-		| { error: string }
-	>;
-	getNearbyStoresAction: (args: {
-		lat: number;
-		lng: number;
-		limit?: number;
-		maxDistance?: number;
-	}) => Promise<
-		| {
-				stores: NearbyStore[];
-				userLocation: { lat: number; lng: number };
-				maxDistance: number;
-				total: number;
-		  }
-		| { error: string }
-	>;
-}) {
+export default function HomePage() {
 	const router = useRouter();
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
 
-	const [selectedDeliveryAddress, setSelectedDeliveryAddress] =
-		useState<any>(null);
+	const [selectedDeliveryAddress, setSelectedDeliveryAddress] = useState<any>(null);
+	const [cartCount, setCartCount] = useState(0);
 
 	const handleDeliveryAddressChange = useCallback((address: any) => {
 		setSelectedDeliveryAddress(address);
 	}, []);
 
-	// Prefetch common routes on mount
+	// Update cart count
+	useEffect(() => {
+		const updateCartCount = () => {
+			setCartCount(getCartItemsCount());
+		};
+
+		updateCartCount();
+		window.addEventListener("cartUpdated", updateCartCount);
+		return () => window.removeEventListener("cartUpdated", updateCartCount);
+	}, []);
+
+	// Prefetch common routes
 	useEffect(() => {
 		const routesToPrefetch = [
 			"/categories",
 			"/nearby-stores",
 			"/discounts",
 			"/popular-stores",
-			"/hyper-shella",
-			"/PickUp",
 		];
 		routesToPrefetch.forEach((route) => router.prefetch(route));
 	}, [router]);
 
-	const handleDiscountClick = useCallback((discountTitle: string) => {
-		const route = `/store?store=${encodeURIComponent(discountTitle)}&source=discounts`;
-		router.prefetch(route);
-		router.push(route);
-	}, [router]);
-
-	const handlePopularStoreClick = useCallback((storeName: string) => {
-		const route = `/store?store=${encodeURIComponent(storeName)}&source=popular`;
-		router.prefetch(route);
-		router.push(route);
-	}, [router]);
-
-	const handleCategoryClick = useCallback(
-		(categoryPath: string, categoryName: string) => {
-			// Use the path provided from TEST_CATEGORIES
-			router.prefetch(categoryPath);
-			router.push(categoryPath);
+	// Prepare categories with additional routes
+	const categories = TEST_CATEGORIES.map((cat) => ({
+		id: cat.id,
+		name: cat.name,
+		description: cat.description,
+		image: cat.image,
+		path:cat.slug=="hypermarket" ? "/categories/supermarket/hypermarket/" : `/categories/${cat.slug}`,
+	})).concat([
+		{
+			id: "pickandorder",
+			name: "استلام وتوصيل",
+			description: "استلام وتوصيل",
+			image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+			path: "/pickandorder",
 		},
-		[router]
-	);
-
-	const handleStoreClick = useCallback((storeName: string) => {
-		const route = `/store?store=${encodeURIComponent(storeName)}&source=nearby`;
-		router.prefetch(route);
-		router.push(route);
-	}, [router]);
-
-	const handleViewAllClick = useCallback((route: string) => {
-		router.prefetch(route);
-		router.push(route);
-	}, [router]);
+		{
+			id: "serve-me",
+			name: "اخدمني",
+			description: "اخدمني",
+			image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+			path: "/serve-me",
+		},
+	]);
 
 	return (
 		<div
@@ -111,32 +85,38 @@ export default function HomePage({
 			<DeliveryAddressHero onAddressChange={handleDeliveryAddressChange} />
 
 			{/* Main Content */}
-			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-24">
 				{/* Categories Section */}
-				<CategoriesSlider
-					categories={[]}
-				/>
+				<CategoriesSection categories={categories} />
 
 				{/* Promotional Banner */}
 				<PromotionalBanner />
 
-				{/* Nearby Stores Section */}
-				<NearbyStoresSection
-					getNearbyStoresAction={getNearbyStoresAction}
-					selectedLocation={selectedDeliveryAddress}
-					onStoreClick={handleStoreClick}
-					onViewAll={() => handleViewAllClick("/nearby-stores")}
+				{/* Nearby Stores */}
+				<NearbyStores stores={TEST_STORES.slice(0, 10) as Store[]} />
+
+				{/* Discounts */}
+				<Discounts
+					products={TEST_PRODUCTS.filter(
+						(p) => p.badge || (p.originalPrice && p.originalPrice > (p.price || 0))
+					).slice(0, 8) as Product[]}
 				/>
 
-				{/* Discounts Section */}
-				<DiscountsSection
-					onDiscountClick={handleDiscountClick}
-					onViewAll={() => handleViewAllClick("/discounts")}
-				/>
-
-				{/* Popular Stores Section */}
-				<PopularStoresSection categoryName="سوبر ماركت" />
+				{/* Popular Stores */}
+				<PopularStores stores={TEST_STORES.slice(0, 10) as Store[]} />
 			</div>
+
+			{/* How It Works Section */}
+			{/* <HowItWorks /> */}
+
+			{/* App Download Section */}
+		{/* <AppDownload /> */}
+
+			{/* Testimonials Section */}
+			{/* <Testimonials /> */}
+
+			{/* Floating Cart Button */}
+			{/* <FloatingCart cartCount={cartCount} /> */}
 		</div>
 	);
 }

@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import KaidhaForm from "@/components/Kaidha/KaidhaForm";
-import { postFormKaidhaAction } from "@/app/actions/kaidha/post-form.action";
 
 // Metadata for SEO - Arabic
 export const metadata: Metadata = {
@@ -69,5 +68,5 @@ export const metadata: Metadata = {
 };
 
 export default function KaidhaPage() {
-	return <KaidhaForm postFormKaidhaAction={postFormKaidhaAction} />;
+	return <KaidhaForm />;
 }

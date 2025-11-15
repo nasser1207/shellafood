@@ -182,7 +182,7 @@ export default function StoreView({ recommendedProducts, popularProducts, store,
 								{store.location && (
 									<button
 										onClick={handleLocationClick}
-										className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 font-medium text-sm ${isArabic ? 'flex-row-reverse' : ''}`}
+										className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 font-medium text-sm `}
 										title={isArabic ? "فتح الموقع على الخريطة" : "Open location on map"}
 										aria-label={isArabic ? "فتح الموقع على الخريطة" : "Open location on map"}
 									>
@@ -219,13 +219,13 @@ export default function StoreView({ recommendedProducts, popularProducts, store,
 
 			{/* Recommended Section */}
 			<section className="px-4 py-6 md:px-8 bg-gray-50 dark:bg-gray-900/50">
-				<div className={`mb-4 flex items-center ${isArabic ? 'justify-start' : 'justify-end'}`}>
+				<div className={`mb-4 flex items-center `}>
 					<h2 className={`text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 ${isArabic ? 'text-right' : 'text-left'}`}>
 						{isArabic ? 'موصى به' : 'Recommended'}
 					</h2>
 				</div>
 
-				<div className={`mb-6 flex gap-3 ${isArabic ? 'justify-start' : 'justify-end'}`}>
+				<div className={`mb-6 flex gap-3 `}>
 					{filterButtons.map((filter) => (
 						<button
 							key={filter.key}
@@ -262,7 +262,7 @@ export default function StoreView({ recommendedProducts, popularProducts, store,
 
 			{/* Popular Section */}
 			<section className="px-4 py-6 md:px-8 dark:bg-gray-900">
-				<div className={`mb-4 flex items-center ${isArabic ? 'justify-start' : 'justify-end'}`}>
+				<div className={`mb-4 flex items-center `}>
 					<h2 className={`text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 ${isArabic ? 'text-right' : 'text-left'}`}>
 						{isArabic ? 'الأكثر شعبية' : 'Most Popular'}
 					</h2>

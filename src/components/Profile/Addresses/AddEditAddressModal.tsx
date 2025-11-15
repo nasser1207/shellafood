@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FaTimes, FaMapMarkerAlt, FaHome, FaBuilding, FaStore, FaSave, FaMap } from "react-icons/fa";
 import MapSelectionModal from "./MapSelectionModal";
@@ -38,6 +39,12 @@ export default function AddEditAddressModal({ isOpen, onClose, onSave, editingAd
 	});
 	const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 	const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		return () => setMounted(false);
+	}, []);
 
 	useEffect(() => {
 		if (editingAddress) {
@@ -96,11 +103,11 @@ export default function AddEditAddressModal({ isOpen, onClose, onSave, editingAd
 		{ value: "other", label: isArabic ? "أخرى" : "Other", icon: FaMapMarkerAlt }
 	];
 
-	if (!isOpen) return null;
+	if (!isOpen || !mounted) return null;
 
-	return (
+	const modalContent = (
 		<div 
-			className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 animate-in fade-in duration-200" 
+			className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-[9999] animate-in fade-in duration-200" 
 			dir={direction}
 			onClick={onClose}
 		>
@@ -280,4 +287,6 @@ export default function AddEditAddressModal({ isOpen, onClose, onSave, editingAd
 			/>
 		</div>
 	);
+
+	return createPortal(modalContent, document.body);
 }

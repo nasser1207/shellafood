@@ -1,7 +1,7 @@
 import CategoryPage from '@/components/Categories/Category/CategoryPage';
 import { Metadata } from 'next';
 import { generateCategoryMetadata } from '@/lib/utils/categories/metadata';
-import { TEST_STORES } from '@/lib/data/categories/testData';
+import { getStoresByCategorySlug, getCategoryBySlug } from '@/lib/data/categories/testData';
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
 	const { category } = await params;
@@ -11,5 +11,12 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 export default async function CategoryRoute({ params }: { params: Promise<{ category: string }> }) {
 	const { category } = await params;
 
-	return <CategoryPage stores={TEST_STORES} categoryName={category} />;
+	// Get category info and filter stores by category slug
+	const categoryData = getCategoryBySlug(category);
+	const stores = getStoresByCategorySlug(category);
+	
+	// Use category name from data if available, otherwise use the slug
+	const categoryName = categoryData?.name || category;
+
+	return <CategoryPage stores={stores} categoryName={categoryName} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, memo } from "react";
 import Image from "next/image";
 import ProductCard, { Product } from "@/components/Utils/ProductCard";
 import { SectionHeader } from "@/components/Utils/SectionHeader";
@@ -12,6 +12,9 @@ import { useCart } from "@/hooks/useCart";
 import { navigateToProductFromContext } from "@/lib/utils/categories/navigation";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { Store } from "@/components/Utils/StoreCard";
+import MobileProductView from "./MobileProductView";
+import { useMobile } from "@/hooks/useMobile";
+import { getImageBlurDataURL, getImageSizes, getImageQuality } from "@/lib/utils/imageOptimization";
 
 
 interface ProductViewProps {
@@ -25,7 +28,9 @@ interface ProductViewProps {
  * Displays product details with related products, bilingual support
  * Route: /categories/[category]/[store]/[department]/[product]
  */
-export default function ProductView({ product, relatedProducts, store }: ProductViewProps) {
+function ProductView({ product, relatedProducts, store }: ProductViewProps) {
+	// Call all hooks first (hooks rules - must be called in same order)
+	const isMobile = useMobile(768);
 	const { isArabic, direction } = useLanguageDirection();
 	const router = useRouter();
 	const { addToCart, clearCart, isLoading: cartLoading } = useCart();
@@ -47,6 +52,39 @@ export default function ProductView({ product, relatedProducts, store }: Product
 	});
 
 	const isOutOfStock = useMemo(() => product?.inStock === false, [product]);
+
+	const categorySlug = useMemo(() => {
+		if (params?.category) {
+			return Array.isArray(params.category) ? params.category[0] : params.category;
+		}
+		return '';
+	}, [params?.category]);
+
+	const storeSlug = useMemo(() => {
+		if (params?.store) {
+			return Array.isArray(params.store) ? params.store[0] : params.store;
+		}
+		return '';
+	}, [params?.store]);
+
+	const departmentSlug = useMemo(() => {
+		if (params?.department) {
+			return Array.isArray(params.department) ? params.department[0] : params.department;
+		}
+		return 'food';
+	}, [params?.department]);
+
+	const handleRelatedProductClick = useCallback((id: string) => {
+		const relatedProduct = relatedProducts.find(p => p.id === id);
+		if (relatedProduct) {
+			navigateToProductFromContext(router, relatedProduct, categorySlug, storeSlug, departmentSlug);
+		}
+	}, [router, relatedProducts, categorySlug, storeSlug, departmentSlug]);
+
+	// Use mobile view on mobile devices (after all hooks are called)
+	if (isMobile) {
+		return <MobileProductView product={product} relatedProducts={relatedProducts} store={store} />;
+	}
 
 	const handleAddToCart = async () => {
 		if (!product.storeId && !store?.id) {
@@ -116,34 +154,6 @@ export default function ProductView({ product, relatedProducts, store }: Product
 		}
 	};
 
-	const categorySlug = useMemo(() => {
-		if (params?.category) {
-			return Array.isArray(params.category) ? params.category[0] : params.category;
-		}
-		return '';
-	}, [params?.category]);
-
-	const storeSlug = useMemo(() => {
-		if (params?.store) {
-			return Array.isArray(params.store) ? params.store[0] : params.store;
-		}
-		return '';
-	}, [params?.store]);
-
-	const departmentSlug = useMemo(() => {
-		if (params?.department) {
-			return Array.isArray(params.department) ? params.department[0] : params.department;
-		}
-		return 'food';
-	}, [params?.department]);
-
-	const handleRelatedProductClick = useCallback((id: string) => {
-		const relatedProduct = relatedProducts.find(p => p.id === id);
-		if (relatedProduct) {
-			navigateToProductFromContext(router, relatedProduct, categorySlug, storeSlug, departmentSlug);
-		}
-	}, [router, relatedProducts, categorySlug, storeSlug, departmentSlug]);
-
 	if (!product) {
 		return (
 			<div className="min-h-screen bg-gray-50" dir={direction}>
@@ -189,7 +199,10 @@ export default function ProductView({ product, relatedProducts, store }: Product
 									className="object-cover"
 									loading="eager"
 									priority
-									sizes="(max-width: 768px) 100vw, 50vw"
+									sizes={getImageSizes('gallery')}
+									quality={getImageQuality('gallery')}
+									placeholder="blur"
+									blurDataURL={getImageBlurDataURL()}
 								/>
 							) : (
 								<div className="w-full h-full bg-gradient-to-br from-gray-200 dark:from-gray-600 to-gray-300 dark:to-gray-700 flex items-center justify-center">
@@ -214,8 +227,8 @@ export default function ProductView({ product, relatedProducts, store }: Product
 
 						{/* Rating & Reviews */}
 						{product.rating && (
-							<div className={`flex items-center gap-2 mb-4 ${isArabic ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
-								<div className={`flex items-center ${isArabic ? 'gap-1 flex-row-reverse' : 'gap-1'}`}>
+							<div className={`flex items-center gap-2 mb-4 ${isArabic ? ' justify-end' : 'justify-start'}`}>
+								<div className={`flex items-center ${isArabic ? 'gap-1 ' : 'gap-1'}`}>
 									<svg className="h-5 w-5 text-yellow-400 dark:text-yellow-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.462a1 1 0 00.951-.69l1.07-3.292z" />
 									</svg>
@@ -231,7 +244,7 @@ export default function ProductView({ product, relatedProducts, store }: Product
 
 						{/* Price */}
 						{product.price && (
-							<div className={`flex items-center gap-3 mb-4 ${isArabic ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+							<div className={`flex items-center gap-3 mb-4 ${isArabic ? ' justify-end' : 'justify-start'}`}>
 								<span className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
 									{product.price} {isArabic ? "ريال" : "SAR"}
 								</span>
@@ -253,7 +266,7 @@ export default function ProductView({ product, relatedProducts, store }: Product
 						{/* Stock Status */}
 						{!isOutOfStock && (
 							<div className={`mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800`}>
-								<div className={`flex items-center gap-2 ${isArabic ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+								<div className={`flex items-center gap-2 ${isArabic ? ' justify-end' : 'justify-start'}`}>
 									<svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 									</svg>
@@ -277,7 +290,7 @@ export default function ProductView({ product, relatedProducts, store }: Product
 
 						{/* Delivery Time */}
 						{product.deliveryTime && (
-							<div className={`flex items-center gap-2 mb-4 ${isArabic ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+							<div className={`flex items-center gap-2 mb-4 ${isArabic ? ' justify-end' : 'justify-start'}`}>
 								<svg className="h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
@@ -320,7 +333,7 @@ export default function ProductView({ product, relatedProducts, store }: Product
 							</div>
 
 							{/* Action Buttons */}
-							<div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isArabic ? 'sm:flex-row-reverse' : ''}`}>
+							<div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isArabic ? 'sm:' : ''}`}>
 								{/* Add to Cart Button */}
 								<button
 									onClick={handleAddToCart}
@@ -432,3 +445,5 @@ export default function ProductView({ product, relatedProducts, store }: Product
 		</div>
 	);
 }
+
+export default memo(ProductView);

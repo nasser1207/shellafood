@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { LoginForm } from "@/components/Login";
-import { loginAction } from "@/app/actions/login/post-login.action";
 
 // Metadata for SEO - Arabic
 export const metadata: Metadata = {
@@ -74,5 +73,5 @@ export const metadata: Metadata = {
  * User authentication with clean modular structure
  */
 export default function LoginPage() {
-	return <LoginForm loginAction={loginAction} />;
+	return <LoginForm  />;
 }

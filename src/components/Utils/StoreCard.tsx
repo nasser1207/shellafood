@@ -11,6 +11,8 @@ export interface Store {
 	id: string;
 	name: string;
 	nameAr?: string;
+	description?: string;
+	descriptionAr?: string;
 	slug?: string;
 	type: string;
 	typeAr?: string;

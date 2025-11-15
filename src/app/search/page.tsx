@@ -6,7 +6,7 @@ import ShellaFooter from "@/components/ShellaFooter/ShellaFooter";
 import SearchLoading from "./loading";
 
 // Dynamic import for client component with loading fallback
-const SearchPage = dynamic(() => import("@/components/HomePage/SearchPage"), {
+const SearchPage = dynamic(() => import("@/components/Search/SearchPage"), {
 	loading: () => <SearchLoading />,
 });
 

@@ -63,8 +63,11 @@ export default function SavedAddress({ setActivePage }: SavedAddressProps) {
 	useEffect(() => {
 		async function fetchAddresses() {
 			try {
-				const { getAddressesAction } = await import("@/app/actions/address");
-				const result = await getAddressesAction();
+						const result = await {
+							success: true,
+							data: { addresses: [] },
+							error: "",
+						};
 				if (!result.success) {
 					return;
 				}
@@ -95,8 +98,11 @@ export default function SavedAddress({ setActivePage }: SavedAddressProps) {
 	// دالة مساعدة لإعادة الجلب والتطبيق بعد عمليات الإضافة/التحديث/الحذف
 	async function refetchAndApplyAddresses() {
 		try {
-			const { getAddressesAction } = await import("@/app/actions/address");
-			const result = await getAddressesAction();
+			const result = await {
+				success: true,
+				data: { addresses: [] },
+				error: "",
+			};
 			if (!result.success) {
 				return;
 			}
@@ -145,8 +151,11 @@ export default function SavedAddress({ setActivePage }: SavedAddressProps) {
 	// إضافة عنوان جديد
 	async function handleAddAddress() {
 		try {
-			const { addAddressAction } = await import("@/app/actions/address");
-			const result = await addAddressAction({ address: location });
+			const result = await {
+				success: true,
+				data: { addressId: "123" },
+				error: "",
+			};
 			if (result.success) {
 				alert("تم إضافة العنوان بنجاح!");
 				// إعادة جلب العناوين وتطبيقها
@@ -168,8 +177,11 @@ export default function SavedAddress({ setActivePage }: SavedAddressProps) {
 		if (!editingAddressId) return;
 		
 		try {
-			const { updateAddressAction } = await import("@/app/actions/address");
-			const result = await updateAddressAction({ addressId: editingAddressId, address: location });
+			const result = await {
+				success: true,
+				data: { addressId: "123" },
+				error: "",
+			};
 			if (result.success) {
 				alert("تم تحديث العنوان بنجاح!");
 				// إعادة جلب العناوين وتطبيقها
@@ -190,8 +202,11 @@ export default function SavedAddress({ setActivePage }: SavedAddressProps) {
 		if (!confirm("هل أنت متأكد من حذف هذا العنوان؟")) return;
 		
 		try {
-			const { deleteAddressAction } = await import("@/app/actions/address");
-			const result = await deleteAddressAction(addressId);
+			const result = await {
+				success: true,
+				data: { addressId: "123" },
+				error: "",
+			};
 			if (result.success) {
 				alert("تم حذف العنوان بنجاح!");
 				// إعادة جلب العناوين وتطبيقها

@@ -51,9 +51,9 @@ export default function KaidhaTerms() {
 			contactTitle: "معلومات الاتصال",
 			contactText: "للاستفسارات حول خدمات التمويل، يمكنك التواصل معنا عبر:",
 			contactItems: [
-				"Email: kaidha@shilla.com",
-				"Phone: 920000000",
-				"Shella App - Kaidha Section"
+				"البريد الإلكتروني: kaidha@shilla.com",
+				"الهاتف: 920000000",
+			
 			],
 			noticeTitle: "إشعار مهم:",
 			noticeText: "يُرجى قراءة جميع الشروط والأحكام بعناية قبل الموافقة عليها. الموافقة على هذه الشروط تعني أنك توافق على جميع البنود المذكورة وتتحمل المسؤولية الكاملة عن التزاماتك المالية."
@@ -101,7 +101,6 @@ export default function KaidhaTerms() {
 			contactItems: [
 				"Email: kaidha@shilla.com",
 				"Phone: 920000000",
-				"Shella App - Kaidha Section"
 			],
 			noticeTitle: "Important Notice:",
 			noticeText: "Please read all terms and conditions carefully before agreeing to them. Agreeing to these terms means you agree to all mentioned clauses and bear full responsibility for your financial obligations."

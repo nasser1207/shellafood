@@ -40,9 +40,9 @@ export default function PrivacyPolicy() {
 			contactTitle: "معلومات الاتصال",
 			contactText: "للاستفسارات حول سياسة الخصوصية، يمكنك التواصل معنا عبر:",
 			contactItems: [
-				"Email: privacy@shilla.com",
-				"Phone: 920000000",
-				"Shella App - Privacy Settings Section"
+				"البريد الإلكتروني: privacy@shilla.com",
+				"الهاتف: 920000000",
+			
 			],
 			noticeTitle: "إشعار مهم:",
 			noticeText: "نحتفظ بالحق في تحديث هذه السياسة من وقت لآخر. سيتم إشعارك بأي تغييرات مهمة عبر البريد الإلكتروني أو التطبيق."
@@ -79,7 +79,7 @@ export default function PrivacyPolicy() {
 			contactItems: [
 				"Email: privacy@shilla.com",
 				"Phone: 920000000",
-				"Shella App - Privacy Settings Section"
+			
 			],
 			noticeTitle: "Important Notice:",
 			noticeText: "We reserve the right to update this policy from time to time. You will be notified of any significant changes via email or the app."

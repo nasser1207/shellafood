@@ -1,6 +1,10 @@
 import { Metadata } from "next";
-import CategoriesPage from "@/components/Categories/CategoriesPage";
+import CategoriesPageComponent from "@/components/Categories/CategoriesPage/index";
 import { TEST_CATEGORIES } from "@/lib/data/categories/testData";
+
+// Remove static forcing to allow proper rendering
+// export const dynamic = 'force-static';
+// export const revalidate = false;
 
 export const metadata: Metadata = {
 	title: "الأقسام | شلة فود",
@@ -67,10 +71,19 @@ export const metadata: Metadata = {
 	metadataBase: new URL("https://shellafood.com"),
 };
 
-export default async function CategoriesPageRoute() {
+export default function CategoriesPageRoute() {
+	// Ensure we have categories data
+	const categories = TEST_CATEGORIES || [];
 	
-	
-	return <CategoriesPage categories={TEST_CATEGORIES} />;
+	if (categories.length === 0) {
+		return (
+			<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+				<p className="text-gray-600 dark:text-gray-400">No categories available</p>
+			</div>
+		);
+	}
+
+	return <CategoriesPageComponent categories={categories} />;
 }
 
 

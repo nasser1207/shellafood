@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, memo } from "react";
 import ProductCard, { Product } from "@/components/Utils/ProductCard";
 import { useLanguageDirection } from "@/hooks/useLanguageDirection";
 import { useParams, useRouter } from "next/navigation";
 import { navigateToProductFromContext } from "@/lib/utils/categories/navigation";
 import PageHeader from "../shared/PageHeader";
 import EmptyState from "../shared/EmptyState";
+import MobileDepartmentView from "./MobileDepartmentView";
+import { useMobile } from "@/hooks/useMobile";
 
 interface DepartmentViewProps {
 products: Product[];
@@ -17,7 +19,9 @@ products: Product[];
  * Displays products in a specific department with filters, sorting, and bilingual support
  * Route: /categories/[category]/[store]/[department]
  */
-export default function DepartmentView({ products }: DepartmentViewProps) {
+function DepartmentView({ products }: DepartmentViewProps) {
+	// Call all hooks first (hooks rules - must be called in same order)
+	const isMobile = useMobile(768);
 	const { isArabic, direction } = useLanguageDirection();
 	const router = useRouter();
 	const params = useParams();
@@ -46,17 +50,6 @@ export default function DepartmentView({ products }: DepartmentViewProps) {
 	const [sortBy, setSortBy] = useState<'name' | 'price' | 'rating'>('name');
 	const [filterBy, setFilterBy] = useState<'all' | 'inStock' | 'offers'>('all');
 
-	const handleProductClick = useCallback((productId: string) => {
-		const product = products.find(p => p.id === productId);
-		if (product) {
-			navigateToProductFromContext(router, product, categorySlug, storeSlug, departmentSlug);
-		}
-	}, [router, products, categorySlug, storeSlug, departmentSlug]);
-
-	const handleAddToCart = (_productId: string) => {
-		// TODO: Implement add to cart logic
-	};
-
 	const filterAndSortProducts = (products: Product[], filterBy: 'all' | 'inStock' | 'offers', sortBy: 'name' | 'price' | 'rating', isArabic: boolean) => {
 		return products.filter((product) => {
 			if (filterBy === 'all') return true;
@@ -70,6 +63,7 @@ export default function DepartmentView({ products }: DepartmentViewProps) {
 			return 0;
 		});
 	};
+	
 	const filteredAndSortedProducts = useMemo(
 		() => filterAndSortProducts(products, filterBy, sortBy, isArabic),
 		[products, sortBy, filterBy, isArabic]
@@ -87,6 +81,22 @@ export default function DepartmentView({ products }: DepartmentViewProps) {
 		{ value: 'rating' as const, label: isArabic ? 'التقييم' : 'Rating' },
 	], [isArabic]);
 
+	const handleProductClick = useCallback((productId: string) => {
+		const product = products.find(p => p.id === productId);
+		if (product) {
+			navigateToProductFromContext(router, product, categorySlug, storeSlug, departmentSlug);
+		}
+	}, [router, products, categorySlug, storeSlug, departmentSlug]);
+
+	const handleAddToCart = (_productId: string) => {
+		// TODO: Implement add to cart logic
+	};
+
+	// Use mobile view on mobile devices (after all hooks are called)
+	if (isMobile) {
+		return <MobileDepartmentView products={products} />;
+	}
+
 	return (
 		<div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={direction}>
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -95,7 +105,7 @@ export default function DepartmentView({ products }: DepartmentViewProps) {
 					description={isArabic ? 'تصفح جميع المنتجات في هذا القسم' : 'Browse all products in this department'}
 				/>
 
-				<div className={`mb-6 flex flex-wrap items-center gap-3 ${isArabic ? 'flex-row-reverse justify-start' : 'justify-end'}`}>
+				<div className={`mb-6 flex flex-wrap items-center gap-3 ${isArabic ? ' justify-start' : 'justify-end'}`}>
 					<div className={`flex gap-2`}>
 						{filterButtons.map((filter) => (
 							<button
@@ -150,3 +160,5 @@ export default function DepartmentView({ products }: DepartmentViewProps) {
 		</div>
 	);
 }
+
+export default memo(DepartmentView);

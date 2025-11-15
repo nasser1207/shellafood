@@ -35,8 +35,11 @@ export default function Favorites() {
 		// جلب المنتجات المفضلة
 		const fetchFavoriteProducts = async () => {
 			try {
-				const { getFavoritesAction } = await import("@/app/actions/favorites");
-				const result = await getFavoritesAction();
+				const result = await {
+					success: true,
+					data: { favProducts: [], favStores: [] },
+					error: "",
+				};
 				if (result.success && result.data) {
 					setProducts(result.data.favProducts || []);
 					setStores(result.data.favStores || []);
@@ -78,8 +81,11 @@ export default function Favorites() {
 
 	const handleRemoveFromFavorites = async (productId: string) => {
 		try {
-			const { removeProductFromFavoritesAction } = await import("@/app/actions/favorites");
-			const result = await removeProductFromFavoritesAction({ productId });
+			const result = await {
+				success: true,
+				data: { productId: "123" },
+				error: "",
+			};
 
 			if (result.success) {
 				setProducts(products.filter(p => p.id !== productId));
@@ -95,8 +101,11 @@ export default function Favorites() {
 
 	const handleRemoveStoreFromFavorites = async (storeId: string) => {
 		try {
-			const { removeStoreFromFavoritesAction } = await import("@/app/actions/favorites");
-			const result = await removeStoreFromFavoritesAction({ storeId });
+			const result = await {
+				success: true,
+				data: { storeId: "123" },
+				error: "",
+			};
 
 			if (result.success) {
 				setStores(stores.filter(s => s.id !== storeId));

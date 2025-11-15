@@ -7,10 +7,16 @@ import Image from "next/image";
 import Link from "next/link";
 
 export interface Department {
-	name: string;
-	nameAr?: string;
-	slug?: string;
+	id: string;
+		name: string;
+	nameAr: string;
+	slug: string;
 	image?: string;
+	icon?: string;
+	color?: string;
+	productCount?: number;
+	description?: string;
+	descriptionAr?: string;
 }
 
 interface DepartmentCardProps {

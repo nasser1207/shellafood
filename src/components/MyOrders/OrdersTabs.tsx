@@ -2,11 +2,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Package, Wrench } from "lucide-react";
+import { Package, Wrench, Truck } from "lucide-react";
 
 interface OrdersTabsProps {
-	activeTab: "products" | "services";
-	onTabChange: (tab: "products" | "services") => void;
+	activeTab: "products" | "services" | "delivery";
+	onTabChange: (tab: "products" | "services" | "delivery") => void;
 	language: "en" | "ar";
 }
 
@@ -25,6 +25,12 @@ export default function OrdersTabs({ activeTab, onTabChange, language }: OrdersT
 			labelEn: "Services",
 			labelAr: "الخدمات",
 			icon: Wrench,
+		},
+		{
+			id: "delivery" as const,
+			labelEn: "Pick & Order",
+			labelAr: "جلب وتوصيل",
+			icon: Truck,
 		},
 	];
 
@@ -48,7 +54,11 @@ export default function OrdersTabs({ activeTab, onTabChange, language }: OrdersT
 						${isActive ? "border-green-600 dark:border-green-500" : "border-transparent dark:border-transparent"}`}
 					>
 						<Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? "text-white" : "text-gray-600 dark:text-gray-400"}`} />
-						<span className={`hidden sm:inline ${isActive ? "text-white" : "text-gray-600 dark:text-gray-400"}`}>{label}</span>
+						{isActive ? (
+							<span className="inline text-white">{label}</span>
+						) : (
+							<span className="hidden sm:inline text-gray-600 dark:text-gray-400">{label}</span>
+						)}
 
 						{/* Active indicator with gradient */}
 						{isActive && (

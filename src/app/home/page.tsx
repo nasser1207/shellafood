@@ -1,8 +1,7 @@
 // app/home/page.tsx
 import { Metadata } from "next";
 import HomePageComponent from "@/components/HomePage/HomePage";
-import { getCategoriesAction } from "@/lib/ServerAction/category";
-import { getNearbyStoresAction } from "@/lib/ServerAction/nebry";
+
 
 // Metadata for SEO - Arabic
 export const metadata: Metadata = {
@@ -75,10 +74,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
 	return (
-		<HomePageComponent
-			getCategoriesAction={getCategoriesAction}
-			getNearbyStoresAction={getNearbyStoresAction}
-		/>
+		<HomePageComponent/>
 	);
 }
 

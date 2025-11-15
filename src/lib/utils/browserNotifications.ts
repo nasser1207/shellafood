@@ -84,29 +84,32 @@ export function showBrowserNotification(
 }
 
 /**
- * Show notification for order status change
+ * Show notification for order status change (type-aware)
  */
 export function notifyOrderStatusChange(
 	status: string,
 	orderId: string,
-	language: "en" | "ar"
+	language: "en" | "ar",
+	orderType?: "product" | "service"
 ): void {
+	const isService = orderType === "service";
+	
 	const statusMessages: Record<string, { en: string; ar: string }> = {
 		confirmed: {
-			en: "Order confirmed",
-			ar: "تم تأكيد الطلب",
+			en: isService ? "Booking confirmed" : "Order confirmed",
+			ar: isService ? "تم تأكيد الحجز" : "تم تأكيد الطلب",
 		},
 		assigned: {
-			en: "Technician assigned",
-			ar: "تم تعيين الفني",
+			en: isService ? "Technician assigned" : "Driver assigned",
+			ar: isService ? "تم تعيين الفني" : "تم تعيين السائق",
 		},
 		preparing: {
 			en: "Order is being prepared",
 			ar: "جاري تحضير الطلب",
 		},
 		on_the_way: {
-			en: "Technician is on the way",
-			ar: "الفني في الطريق",
+			en: isService ? "Technician is on the way" : "Driver is on the way",
+			ar: isService ? "الفني في الطريق" : "السائق في الطريق",
 		},
 		in_progress: {
 			en: "Work in progress",
@@ -117,8 +120,8 @@ export function notifyOrderStatusChange(
 			ar: "تم التوصيل",
 		},
 		completed: {
-			en: "Service completed",
-			ar: "تم إكمال الخدمة",
+			en: isService ? "Service completed" : "Order completed",
+			ar: isService ? "تم إكمال الخدمة" : "تم إكمال الطلب",
 		},
 	};
 
@@ -139,24 +142,30 @@ export function notifyOrderStatusChange(
 }
 
 /**
- * Show notification for technician approaching
+ * Show notification for technician/driver approaching (type-aware)
  */
 export function notifyTechnicianApproaching(
 	etaMinutes: number,
-	technicianName: string,
-	language: "en" | "ar"
+	workerName: string,
+	language: "en" | "ar",
+	orderType?: "product" | "service"
 ): void {
+	const isService = orderType === "service";
+	const workerLabel = isService
+		? language === "ar" ? "الفني" : "Technician"
+		: language === "ar" ? "السائق" : "Driver";
+
 	const title = language === "ar"
-		? `الفني قريب! الوصول خلال ${etaMinutes} ${etaMinutes === 1 ? "دقيقة" : "دقائق"}`
-		: `Technician approaching! Arriving in ${etaMinutes} ${etaMinutes === 1 ? "min" : "mins"}`;
+		? `${workerLabel} قريب! الوصول خلال ${etaMinutes} ${etaMinutes === 1 ? "دقيقة" : "دقائق"}`
+		: `${workerLabel} approaching! Arriving in ${etaMinutes} ${etaMinutes === 1 ? "min" : "mins"}`;
 
 	const body = language === "ar"
-		? `${technicianName} في طريقه إليك`
-		: `${technicianName} is on the way to you`;
+		? `${workerName} في طريقه إليك`
+		: `${workerName} is on the way to you`;
 
 	showBrowserNotification(title, {
 		body,
-		tag: "technician-approaching",
+		tag: `${orderType || "worker"}-approaching`,
 		requireInteraction: true,
 	});
 }

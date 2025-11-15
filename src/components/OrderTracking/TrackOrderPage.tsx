@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import dynamic from "next/dynamic";
-import { TrackOrderPageProps } from "./types";
+import { TrackOrderPageProps, ORDER_TYPE } from "./types";
 import { useOrderTracking } from "./hooks/useOrderTracking";
 import { useOrderActions } from "./hooks/useOrderActions";
 
@@ -123,11 +123,11 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 
 	// Memoized callbacks for route navigation
 	const handleViewDetails = useCallback(() => {
-		if (!serviceInfo) return;
+		if (!serviceInfo || !orderData) return;
 
-		const { service, serviceType, workerId } = serviceInfo;
-		if (service && serviceType && workerId) {
-			const detailsPath = buildWorkerDetailsRoute(service, serviceType, workerId);
+		const { workerId } = serviceInfo;
+		if (workerId) {
+			const detailsPath = buildWorkerDetailsRoute(workerId, orderData.type);
 			router.push(detailsPath);
 		} else {
 			showNotification({
@@ -139,7 +139,7 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 				duration: 3000,
 			});
 		}
-	}, [serviceInfo, router, showNotification, isArabic]);
+	}, [serviceInfo, orderData, router, showNotification, isArabic]);
 
 	const handleChatClick = useCallback(() => {
 		if (!serviceInfo) return;
@@ -217,6 +217,7 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 					driverOrWorker={orderData.driver_or_worker}
 					language={language}
 					onViewDetails={handleViewDetails}
+					orderType={orderData.type}
 				/>
 
 				{/* Order Header */}
@@ -230,7 +231,7 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 				/>
 
 				{/* Main Content Grid */}
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
 					{/* Left Column - Timeline & Details */}
 					<div className="lg:col-span-2 space-y-6">
 						{/* Tracking Timeline */}
@@ -258,6 +259,8 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 							onCall={handleCallDriverClick}
 							onChat={handleChatClick}
 							onViewDetails={handleViewDetails}
+							orderType={orderData.type}
+							orderStatus={orderData.status}
 						/>
 
 						{/* Action Buttons */}
@@ -301,7 +304,15 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 					onClose={handleCloseRatingModal}
 					onSubmit={handleRatingSubmit}
 					language={language}
-					serviceName={orderData.type === "service" ? "Service" : "Order"}
+					serviceName={
+						orderData.type === ORDER_TYPE.SERVICE
+							? isArabic
+								? "الخدمة"
+								: "Service"
+							: isArabic
+								? "المتجر"
+								: "Store"
+					}
 				/>
 			)}
 		</div>

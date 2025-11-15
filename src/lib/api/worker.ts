@@ -9,6 +9,7 @@ export interface WorkerRegistrationData {
 	first_name: string;
 	last_name: string;
 	email: string;
+	phone_number: string;
 	driver_type: string; // 'delivery', 'service', etc.
 	area: string;
 	vehicle_type: string; // 'motorcycle', 'car', 'bicycle', etc.
@@ -39,6 +40,7 @@ export async function registerWorker(
 		formData.append('first_name', data.first_name);
 		formData.append('last_name', data.last_name);
 		formData.append('email', data.email);
+		formData.append('phone_number', data.phone_number);
 		formData.append('driver_type', data.driver_type);
 		formData.append('area', data.area);
 		formData.append('vehicle_type', data.vehicle_type);

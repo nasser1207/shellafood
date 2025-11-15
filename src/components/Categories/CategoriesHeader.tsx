@@ -2,7 +2,6 @@
 
 import { memo, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import Breadcrumb from "@/components/HomePage/Breadcrumb";
 
 function CategoriesHeader({ onBreadcrumbClick }: { onBreadcrumbClick: (index: number) => void }) {
 	const { language } = useLanguage();
@@ -27,10 +26,7 @@ function CategoriesHeader({ onBreadcrumbClick }: { onBreadcrumbClick: (index: nu
 	return (
 		<div dir={direction}>
 			<div className="mb-6">
-				<Breadcrumb
-					path={currentContent.breadcrumb}
-					onBreadcrumbClick={onBreadcrumbClick}
-				/>
+				
 			</div>
 
 			<div className={`mb-8 ${isArabic ? 'text-right' : 'text-center'}`}>

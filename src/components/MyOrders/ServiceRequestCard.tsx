@@ -26,6 +26,7 @@ interface ServiceRequest {
 	serviceNameAr?: string;
 	serviceImage?: string;
 	status: "pending" | "assigned" | "in_progress" | "completed" | "cancelled";
+	workerId?: string;
 	workerName?: string;
 	workerPhoto?: string;
 	address?: string;
@@ -73,7 +74,7 @@ export default function ServiceRequestCard({
 	const StatusIcon = status.icon;
 	const urgency = urgencyConfig[request.urgency];
 	const canRate = request.status === "completed" && !hasExistingRating;
-	const canChat = (request.status === "in_progress" || request.status === "completed") && request.workerName;
+	const canChat = (request.status === "in_progress" || request.status === "completed") && request.workerId;
 
 	const handleRatingSubmit = async (rating: number, feedback: string) => {
 		console.log("Worker rating submitted:", { requestId: request.id, rating, feedback });
@@ -270,7 +271,9 @@ export default function ServiceRequestCard({
 						</button>
 						{canChat && (
 							<button
-								onClick={() => window.location.href = `/chat/${request.id}`}
+								onClick={() => {
+									window.location.href = `/worker/${request.workerId}/chat`;
+								}}
 								className={`flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all active:scale-95 ${
 									isArabic ? "flex-row-reverse" : ""
 								}`}

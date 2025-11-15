@@ -6,6 +6,7 @@ import { NotificationDialog } from "@/components/Utils/NotificationDialog";
 import { FormInput } from "@/components/Utils/FormInput";
 import { SectionHeader } from "@/components/Utils/SectionHeader";
 import { UploadFileInput } from "@/components/Utils/UploadFileInput";
+import { PhoneInputField } from "@/components/Utils/PhoneInput";
 import { registerWorker, WorkerRegistrationData } from "@/lib/api/worker";
 import { getZonesList, getModulesByZone, Zone, Module } from "@/lib/api/partner";
 
@@ -14,6 +15,7 @@ interface WorkerFormData {
 	first_name: string;
 	last_name: string;
 	email: string;
+	phone_number: string;
 	
 	// Work Information
 	driver_type: string;
@@ -34,6 +36,7 @@ const INITIAL_FORM_DATA: WorkerFormData = {
 	first_name: "",
 	last_name: "",
 	email: "",
+	phone_number: "",
 	driver_type: "",
 	area: "",
 	vehicle_type: "",
@@ -53,6 +56,7 @@ export default function WorkerForm() {
 	const [modules, setModules] = useState<Module[]>([]);
 	const [loadingZones, setLoadingZones] = useState(true);
 	const [loadingModules, setLoadingModules] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [notification, setNotification] = useState({
 		message: "",
 		type: "success" as "success" | "error",
@@ -170,6 +174,7 @@ export default function WorkerForm() {
 			"first_name",
 			"last_name",
 			"email",
+			"phone_number",
 			"driver_type",
 			"area",
 			"vehicle_type",
@@ -209,6 +214,14 @@ export default function WorkerForm() {
 			return {
 				isValid: false,
 				message: isArabic ? "البريد الإلكتروني غير صحيح" : "Invalid email address",
+			};
+		}
+
+		// Validate phone number
+		if (!formData.phone_number || formData.phone_number.trim() === "") {
+			return {
+				isValid: false,
+				message: isArabic ? "يرجى إدخال رقم الهاتف" : "Please enter phone number",
 			};
 		}
 
@@ -273,6 +286,7 @@ export default function WorkerForm() {
 			return;
 		}
 
+		setIsSubmitting(true);
 		try {
 			// Convert image URL to File if it exists
 			const idImageFile = formData.id_image 
@@ -284,6 +298,7 @@ export default function WorkerForm() {
 				first_name: formData.first_name,
 				last_name: formData.last_name,
 				email: formData.email,
+				phone_number: formData.phone_number,
 				driver_type: formData.driver_type,
 				area: formData.area,
 				vehicle_type: formData.vehicle_type,
@@ -317,11 +332,14 @@ export default function WorkerForm() {
 				type: "error",
 				isVisible: true,
 			});
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
 	const handleReset = () => {
 		setFormData(INITIAL_FORM_DATA);
+		setModules([]);
 	};
 
 	return (
@@ -338,6 +356,7 @@ export default function WorkerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -349,6 +368,7 @@ export default function WorkerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -360,6 +380,17 @@ export default function WorkerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
+				/>
+
+				<PhoneInputField
+					label={isArabic ? "رقم الهاتف" : "Phone Number"}
+					value={formData.phone_number}
+					onChange={(phone) => setFormData({ ...formData, phone_number: phone })}
+					isArabic={isArabic}
+					required
+					name="phone_number"
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -371,6 +402,7 @@ export default function WorkerForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -390,7 +422,8 @@ export default function WorkerForm() {
 						name="driver_type"
 						value={formData.driver_type}
 						onChange={handleChange}
-						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none ${isArabic ? "text-right" : "text-left"}`}
+						disabled={isSubmitting}
+						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 ${isArabic ? "text-right" : "text-left"}`}
 						required
 					>
 						<option value="">{isArabic ? "اختر نوع العمل" : "Select work type"}</option>
@@ -415,7 +448,8 @@ export default function WorkerForm() {
 						name="vehicle_type"
 						value={formData.vehicle_type}
 						onChange={handleChange}
-						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none ${isArabic ? "text-right" : "text-left"}`}
+						disabled={isSubmitting}
+						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 ${isArabic ? "text-right" : "text-left"}`}
 						required
 					>
 						<option value="">{isArabic ? "اختر نوع المركبة" : "Select vehicle type"}</option>
@@ -445,7 +479,8 @@ export default function WorkerForm() {
 						name="id_type"
 						value={formData.id_type}
 						onChange={handleChange}
-						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none ${isArabic ? "text-right" : "text-left"}`}
+						disabled={isSubmitting}
+						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 ${isArabic ? "text-right" : "text-left"}`}
 						required
 					>
 						<option value="">{isArabic ? "اختر نوع الهوية" : "Select ID type"}</option>
@@ -470,6 +505,7 @@ export default function WorkerForm() {
 					}}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -499,8 +535,8 @@ export default function WorkerForm() {
 						name="zone_id"
 						value={formData.zone_id}
 						onChange={handleChange}
-						disabled={loadingZones}
-						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+						disabled={loadingZones || isSubmitting}
+						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						<option value="">
 							{loadingZones 
@@ -527,8 +563,8 @@ export default function WorkerForm() {
 						name="module_id"
 						value={formData.module_id}
 						onChange={handleChange}
-						disabled={!formData.zone_id || loadingModules}
-						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+						disabled={!formData.zone_id || loadingModules || isSubmitting}
+						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						<option value="">
 							{!formData.zone_id 

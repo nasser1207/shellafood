@@ -98,22 +98,23 @@ export function useOrderTracking(
 
 		// Check if status changed
 		if (orderData.status !== previousStatus) {
+			const isService = orderData.type === "service";
 			const statusMessages: Record<string, { en: string; ar: string }> = {
 				confirmed: {
-					en: "Order confirmed",
-					ar: "تم تأكيد الطلب",
+					en: isService ? "Booking confirmed" : "Order confirmed",
+					ar: isService ? "تم تأكيد الحجز" : "تم تأكيد الطلب",
 				},
 				assigned: {
-					en: "Technician assigned to your order",
-					ar: "تم تعيين فني لطلبك",
+					en: isService ? "Technician assigned to your booking" : "Driver assigned to your order",
+					ar: isService ? "تم تعيين فني لحجزك" : "تم تعيين سائق لطلبك",
 				},
 				preparing: {
 					en: "Your order is being prepared",
 					ar: "جاري تحضير طلبك",
 				},
 				on_the_way: {
-					en: "Technician is on the way",
-					ar: "الفني في الطريق إليك",
+					en: isService ? "Technician is on the way" : "Driver is on the way",
+					ar: isService ? "الفني في الطريق إليك" : "السائق في الطريق إليك",
 				},
 				in_progress: {
 					en: "Work in progress",
@@ -124,8 +125,8 @@ export function useOrderTracking(
 					ar: "تم التوصيل بنجاح",
 				},
 				completed: {
-					en: "Service completed",
-					ar: "تم إكمال الخدمة",
+					en: isService ? "Service completed" : "Order completed",
+					ar: isService ? "تم إكمال الخدمة" : "تم إكمال الطلب",
 				},
 			};
 
@@ -141,8 +142,8 @@ export function useOrderTracking(
 					duration: 5000,
 				});
 
-				// Show browser notification
-				notifyOrderStatusChange(orderData.status, orderData.order_id, language);
+				// Show browser notification (type-aware)
+				notifyOrderStatusChange(orderData.status, orderData.order_id, language, orderData.type);
 			}
 
 			setPreviousStatus(orderData.status);
@@ -161,21 +162,25 @@ export function useOrderTracking(
 			currentETA <= 5 &&
 			currentETA > 0 &&
 			!nearArrivalNotified &&
-			orderData.status === "on_the_way" &&
+			(orderData.status === "on_the_way" || orderData.status === "in_progress") &&
 			orderData.driver_or_worker?.name
 		) {
-			const technicianName = orderData.driver_or_worker.name;
+			const workerName = orderData.driver_or_worker.name;
+			const isService = orderData.type === "service";
+			const workerLabel = isService
+				? language === "ar" ? "الفني" : "Technician"
+				: language === "ar" ? "السائق" : "Driver";
 			
-			// Show toast notification
+			// Show toast notification (type-aware)
 			showNotification({
-				message: `Technician ${technicianName} is arriving in ${currentETA} ${currentETA === 1 ? "min" : "mins"}!`,
-				messageAr: `الفني ${technicianName} سيصل خلال ${currentETA} ${currentETA === 1 ? "دقيقة" : "دقائق"}!`,
+				message: `${workerLabel} ${workerName} is arriving in ${currentETA} ${currentETA === 1 ? "min" : "mins"}!`,
+				messageAr: `${workerLabel} ${workerName} سيصل خلال ${currentETA} ${currentETA === 1 ? "دقيقة" : "دقائق"}!`,
 				type: "warning",
 				duration: 8000,
 			});
 
-			// Show browser notification
-			notifyTechnicianApproaching(currentETA, technicianName, language);
+			// Show browser notification (type-aware)
+			notifyTechnicianApproaching(currentETA, workerName, language, orderData.type);
 			
 			setNearArrivalNotified(true);
 		}

@@ -2,6 +2,14 @@
  * Shared types for Order Tracking components
  */
 
+// Type-safe order type constants
+export const ORDER_TYPE = {
+	PRODUCT: "product",
+	SERVICE: "service",
+} as const;
+
+export type OrderType = typeof ORDER_TYPE[keyof typeof ORDER_TYPE];
+
 export interface TimelineStep {
 	label: string;
 	labelAr?: string;
@@ -33,6 +41,7 @@ export interface OrderItem {
 	nameAr?: string;
 	quantity: number;
 	price: number;
+	image?: string;
 }
 
 export interface OrderData {

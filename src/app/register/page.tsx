@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { RegisterForm } from "@/components/Register";
-import { registerAction } from "@/app/actions/register/post-register.action";
 
 // Metadata for SEO - Arabic
 export const metadata: Metadata = {
@@ -74,5 +73,5 @@ export const metadata: Metadata = {
  * User registration with clean modular structure
  */
 export default function RegisterPage() {
-	return <RegisterForm registerAction={registerAction} />;
+	return <RegisterForm  />;
 }

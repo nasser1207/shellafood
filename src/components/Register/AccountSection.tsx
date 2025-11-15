@@ -11,6 +11,7 @@ interface AccountSectionProps {
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	isArabic: boolean;
 	t: (key: string) => string;
+	disabled?: boolean;
 	errors?: {
 		email?: string;
 		password?: string;
@@ -30,6 +31,7 @@ export const AccountSection: React.FC<AccountSectionProps> = ({
 	isArabic,
 	t,
 	errors,
+	disabled = false,
 }) => {
 	return (
 		<div>
@@ -50,6 +52,7 @@ export const AccountSection: React.FC<AccountSectionProps> = ({
 					required
 					isArabic={isArabic}
 					error={errors?.email}
+					disabled={disabled}
 				/>
 
 				<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -63,6 +66,7 @@ export const AccountSection: React.FC<AccountSectionProps> = ({
 						required
 						isArabic={isArabic}
 						error={errors?.password}
+						disabled={disabled}
 					/>
 
 					{/* Confirm Password */}
@@ -75,6 +79,7 @@ export const AccountSection: React.FC<AccountSectionProps> = ({
 						required
 						isArabic={isArabic}
 						error={errors?.confirmPassword}
+						disabled={disabled}
 					/>
 				</div>
 			</div>

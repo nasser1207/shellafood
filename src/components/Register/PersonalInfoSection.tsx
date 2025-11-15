@@ -12,6 +12,7 @@ interface PersonalInfoSectionProps {
 	onPhoneChange: (phone: string) => void;
 	isArabic: boolean;
 	t: (key: string) => string;
+	disabled?: boolean;
 	errors?: {
 		fullName?: string;
 		phoneNumber?: string;
@@ -32,6 +33,7 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 	isArabic,
 	t,	
 	errors,
+	disabled = false,
 }) => {
 	return (
 		<div>
@@ -51,6 +53,7 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 					required
 					isArabic={isArabic}
 					error={errors?.fullName}
+					disabled={disabled}
 				/>
 
 				{/* Phone Number */}
@@ -62,6 +65,7 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 					required
 					name="phoneNumber"
 					error={errors?.phoneNumber}
+					disabled={disabled}
 				/>
 
 				{/* Birth Date */}
@@ -75,6 +79,7 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 					isArabic={isArabic}
 					max={new Date().toISOString().split('T')[0]}
 					error={errors?.birthDate}
+					disabled={disabled}
 				/>
 			</div>
 		</div>

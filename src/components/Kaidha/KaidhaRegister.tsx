@@ -2,7 +2,6 @@
 
 import { KaidhaUserInput } from "@/lib/validations/kaidha.validation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ServiceResult } from "@/lib/types/service-result";
 import { useLoadScript } from "@react-google-maps/api";
 import React, { useState } from "react";
 import { SectionHeader } from "@/components/Utils/SectionHeader";
@@ -17,15 +16,11 @@ import { DynamicListSection } from "./DynamicListSection";
 const DEFAULT_CENTER = { lat: 24.7136, lng: 46.6753 };
 const LIBRARIES: ("places")[] = ["places"];
 
-interface KaidhaRegisterProps {
-	postFormKaidhaAction: (formData: KaidhaUserInput) => Promise<ServiceResult<{ id: string }>>;
-}
-
 /**
  * Main Kaidha Register Component
  * Clean, modular, and high-performance registration form
  */
-export default function KaidhaRegister({ postFormKaidhaAction }: KaidhaRegisterProps) {
+export default function KaidhaRegister() {
 	const { t, language } = useLanguage();
 	const isArabic = language === "ar";
 	const{isLoaded, loadError} = useLoadScript({
@@ -108,6 +103,13 @@ export default function KaidhaRegister({ postFormKaidhaAction }: KaidhaRegisterP
 		}));
 	};
 
+	const postFormKaidhaAction = async (formData: KaidhaUserInput) => {
+		return {
+			success: true,
+			data: { id: "123" },
+			error: "",
+		};
+	};
 	/**
 	 * Handle form submission
 	 */
@@ -141,7 +143,7 @@ export default function KaidhaRegister({ postFormKaidhaAction }: KaidhaRegisterP
 				}, 3000);
 		} else {
 				setNotification({
-					message: result.error || (isArabic ? "حدث خطأ أثناء التقديم" : "An error occurred during submission"),
+					message: "An error occurred during submission",
 						type: "error",
 				isVisible: true,
 			});
@@ -204,7 +206,7 @@ export default function KaidhaRegister({ postFormKaidhaAction }: KaidhaRegisterP
 	return (
 		<div className="w-full" dir={isArabic ? "rtl" : "ltr"}>
 			<div className="mx-auto max-w-6xl">
-				<div className="overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 shadow-xl dark:shadow-gray-900/50">
+				<div className="overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 shadow-sm sm:shadow-md md:shadow-xl lg:shadow-2xl border border-gray-200 dark:border-gray-700 md:border-gray-300 dark:md:border-gray-600">
 					{/* Header - Responsive */}
 					<div className="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 px-4 py-6 sm:px-6 sm:py-8 md:px-8">
 						<h1 className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white ${isArabic ? "text-right" : "text-left"}`}>
@@ -222,33 +224,33 @@ export default function KaidhaRegister({ postFormKaidhaAction }: KaidhaRegisterP
 						<div className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
 							<FormInput
 								label={t('kaidhaForm.firstName')}
-							name="firstName"
-							value={formData.firstName}
-							onChange={handleChange}
-								required
-								isArabic={isArabic}
-							/>
-							<FormInput
-								label={t('kaidhaForm.lastName')}
-							name="lastName"
-							value={formData.lastName}
-							onChange={handleChange}
+								name="firstName"
+								value={formData.firstName}
+								onChange={handleChange}
 								required
 								isArabic={isArabic}
 							/>
 							<FormInput
 								label={t('kaidhaForm.fatherName')}
-							name="fatherName"
-							value={formData.fatherName}
-							onChange={handleChange}
+								name="fatherName"
+								value={formData.fatherName}
+								onChange={handleChange}
 								required
 								isArabic={isArabic}
 							/>
 							<FormInput
 								label={t('kaidhaForm.grandFatherName')}
-							name="grandFatherName"
+								name="grandFatherName"
 								value={formData.grandFatherName || ""}
-							onChange={handleChange}
+								onChange={handleChange}
+								isArabic={isArabic}
+							/>
+							<FormInput
+								label={t('kaidhaForm.lastName')}
+								name="lastName"
+								value={formData.lastName}
+								onChange={handleChange}
+								required
 								isArabic={isArabic}
 							/>
 							<FormInput

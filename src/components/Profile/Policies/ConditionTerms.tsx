@@ -105,9 +105,8 @@ export default function ConditionTerms() {
 			contactTitle: "معلومات الاتصال",
 			contactText: "للاستفسارات حول الشروط والأحكام، يمكنك التواصل معنا عبر:",
 			contactItems: [
-				"Email: legal@shilla.com",
-				"Phone: 920000000",
-				"Shella App - Legal Section"
+				"البريد الإلكتروني: legal@shilla.com",
+				"الهاتف: 920000000",
 			],
 			noticeTitle: "إشعار مهم:",
 			noticeText: "تُشكل هذه الشروط والأحكام إطاراً قانونياً شاملاً يحكم العلاقة بين شلة التجارية وعملائها، ويهدف إلى ضمان حقوق جميع الأطراف وخلق بيئة عمل آمنة وشفافة."
@@ -209,7 +208,6 @@ export default function ConditionTerms() {
 			contactItems: [
 				"Email: legal@shilla.com",
 				"Phone: 920000000",
-				"Shella App - Legal Section"
 			],
 			noticeTitle: "Important Notice:",
 			noticeText: "These terms and conditions form a comprehensive legal framework that governs the relationship between Shilla Commercial and its customers, aiming to ensure the rights of all parties and create a safe and transparent work environment."

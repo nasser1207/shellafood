@@ -55,6 +55,7 @@ export default function DriverForm() {
 	const [formData, setFormData] = useState<DriverFormData>(INITIAL_FORM_DATA);
 	const [zones, setZones] = useState<Zone[]>([]);
 	const [loadingZones, setLoadingZones] = useState(true);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [notification, setNotification] = useState({
 		message: "",
 		type: "success" as "success" | "error",
@@ -194,7 +195,7 @@ export default function DriverForm() {
 		}
 
 		// Validate identity type
-		if (formData.identity_type !== "national_id" && formData.identity_type !== "iqama") {
+		if (formData.identity_type !== "nid" && formData.identity_type !== "residence" && formData.identity_type !== "passport" && formData.identity_type !== "driving_license") {
 			return {
 				isValid: false,
 				message: isArabic ? "نوع الهوية غير صالح" : "Invalid identity type",
@@ -249,6 +250,7 @@ export default function DriverForm() {
 			return;
 		}
 
+		setIsSubmitting(true);
 		try {
 			// Convert image URLs to Files if they exist
 			const identityImageFile = formData.identity_image 
@@ -274,23 +276,24 @@ export default function DriverForm() {
 			// Remove any leading zeros
 			normalizedPhone = normalizedPhone.replace(/^0+/, "");
 			
-			// Ensure it starts with 0 and has 9 digits after (total 10 digits: 0XXXXXXXXX)
-			if (normalizedPhone.length === 9) {
-				normalizedPhone = "0" + normalizedPhone;
-			} else if (normalizedPhone.length === 10 && !normalizedPhone.startsWith("0")) {
-				// If it's 10 digits without leading 0, add it
-				normalizedPhone = "0" + normalizedPhone;
+			// Ensure we have 9 digits (without leading 0)
+			if (normalizedPhone.length === 10 && normalizedPhone.startsWith("0")) {
+				// If it's 10 digits starting with 0, remove the leading 0
+				normalizedPhone = normalizedPhone.substring(1);
 			}
 			
-			// Final validation - should be 10 digits starting with 0
-			if (!/^0\d{9}$/.test(normalizedPhone)) {
+			// Final validation - should be 9 digits (without leading 0)
+			if (!/^\d{9}$/.test(normalizedPhone)) {
 				setNotification({
-					message: isArabic ? "صيغة رقم الهاتف غير صالحة. يجب أن يكون 10 أرقام تبدأ بـ 0" : "Invalid phone format. Must be 10 digits starting with 0",
+					message: isArabic ? "صيغة رقم الهاتف غير صالحة. يجب أن يكون 9 أرقام" : "Invalid phone format. Must be 9 digits",
 					type: "error",
 					isVisible: true,
 				});
 				return;
 			}
+			
+			// Format as +966XXXXXXXXX
+			normalizedPhone = "+966" + normalizedPhone;
 
 			// Prepare data for API
 			const registrationData: DriverRegistrationData = {
@@ -330,6 +333,8 @@ export default function DriverForm() {
 				type: "error",
 				isVisible: true,
 			});
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -351,6 +356,7 @@ export default function DriverForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -362,6 +368,7 @@ export default function DriverForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<PhoneInputField
@@ -373,6 +380,7 @@ export default function DriverForm() {
 					isArabic={isArabic}
 					required
 					name="phone"
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -384,6 +392,7 @@ export default function DriverForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<FormInput
@@ -395,6 +404,7 @@ export default function DriverForm() {
 					onChange={handleChange}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -414,6 +424,7 @@ export default function DriverForm() {
 					}}
 					required
 					isArabic={isArabic}
+					disabled={isSubmitting}
 				/>
 
 				<div className="flex flex-col">
@@ -429,12 +440,15 @@ export default function DriverForm() {
 						name="identity_type"
 						value={formData.identity_type}
 						onChange={handleChange}
-						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none ${isArabic ? "text-right" : "text-left"}`}
+						disabled={isSubmitting}
+						className={`rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 ${isArabic ? "text-right" : "text-left"}`}
 						required
 					>
 						<option value="">{isArabic ? "اختر نوع الهوية" : "Select identity type"}</option>
-						<option value="national_id">{isArabic ? "هوية وطنية" : "National ID"}</option>
-						<option value="iqama">{isArabic ? "إقامة" : "Iqama (Residence)"}</option>
+						<option value="nid">{isArabic ? "هوية وطنية" : "National ID"}</option>
+						<option value="residence">{isArabic ? "إقامة" : "Iqama (Residence)"}</option>
+						<option value="passport">{isArabic ? "رقم الجواز" : "Passport"}</option>
+						<option value="driving_license">{isArabic ? "رخصة القيادة" : "Driving license"}</option>
 					</select>
 					<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
 						{isArabic ? "اختر نوع وثيقة الهوية الخاصة بك" : "Select your identity document type"}
@@ -451,8 +465,8 @@ export default function DriverForm() {
 						name="zone_id"
 						value={formData.zone_id}
 						onChange={handleChange}
-						disabled={loadingZones}
-						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+						disabled={loadingZones || isSubmitting}
+						className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 px-4 py-3 shadow-sm focus:border-green-500 dark:focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 						required
 					>
 						<option value="">
@@ -529,14 +543,22 @@ export default function DriverForm() {
 			<div className="mt-8 flex flex-col justify-start gap-4 sm:flex-row">
 				<button
 					type="submit"
-					className="w-full rounded-lg bg-green-500 dark:bg-green-600 px-10 py-3 font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-green-600 dark:hover:bg-green-700 focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500 focus:outline-none sm:w-auto"
+					disabled={isSubmitting}
+					className="w-full rounded-lg bg-green-500 dark:bg-green-600 px-10 py-3 font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-green-600 dark:hover:bg-green-700 focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500 focus:outline-none sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 				>
-					{isArabic ? "إرسال الطلب" : "Submit Application"}
+					{isSubmitting && (
+						<svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+							<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+					)}
+					{isSubmitting ? (isArabic ? "جاري الإرسال..." : "Submitting...") : (isArabic ? "إرسال الطلب" : "Submit Application")}
 				</button>
 				<button
 					type="button"
 					onClick={handleReset}
-					className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-10 py-3 font-semibold text-gray-500 dark:text-gray-300 shadow-sm transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:outline-none sm:w-auto"
+					disabled={isSubmitting}
+					className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-10 py-3 font-semibold text-gray-500 dark:text-gray-300 shadow-sm transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:outline-none sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{isArabic ? "إعادة تعيين" : "Reset"}
 				</button>

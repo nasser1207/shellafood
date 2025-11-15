@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import MyOrdersPage from "@/components/MyOrders/MyOrdersPage";
+import MyOrdersPage from "@/components/MyOrders/MyOrdersPage/index";
 
 export const dynamic = "force-dynamic";
 

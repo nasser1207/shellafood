@@ -42,10 +42,10 @@ export default function SupportPage() {
 			contactInfoTitle: "معلومات الاتصال",
 			contactInfoText: "تواصل معنا عبر القنوات التالية:",
 			contactInfoItems: [
-				"Phone: 920000000",
-				"Email: support@shilla.com",
-				"Address: KSA, Saudi Arabia, Umm Al Hammam",
-				"Shella App - Support Section"
+				"الهاتف: 920000000",
+				"البريد الإلكتروني: support@shilla.com",
+				"العنوان: المملكة العربية السعودية, الرياض, المنطقة الشرقية",
+			
 			],
 			noticeTitle: "ملاحظة مهمة:",
 			noticeText: "نحن ملتزمون بتقديم أفضل خدمة عملاء ممكنة. لا تتردد في التواصل معنا في أي وقت، وسنكون سعداء لمساعدتك."
@@ -84,7 +84,7 @@ export default function SupportPage() {
 				"Phone: 920000000",
 				"Email: support@shilla.com",
 				"Address: KSA, Saudi Arabia, Umm Al Hammam",
-				"Shella App - Support Section"
+			
 			],
 			noticeTitle: "Important Note:",
 			noticeText: "We are committed to providing the best possible customer service. Don't hesitate to contact us anytime, and we'll be happy to help you."

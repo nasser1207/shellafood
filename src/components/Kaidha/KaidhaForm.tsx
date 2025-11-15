@@ -2,16 +2,9 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import KaidhaRegister from "./KaidhaRegister";
-import { KaidhaUserInput } from "@/lib/validations/kaidha.validation";
-import { ServiceResult } from "@/lib/types/service-result";
 
-interface KaidhaFormProps {
-  postFormKaidhaAction: (
-    formData: KaidhaUserInput
-  ) => Promise<ServiceResult<{ id: string }>>;
-}
 
-export default function KaidhaForm({ postFormKaidhaAction }: KaidhaFormProps) {
+export default function KaidhaForm() {
   const { t, language } = useLanguage();
   const isArabic = language === 'ar';
   const direction = isArabic ? 'rtl' : 'ltr';
@@ -31,7 +24,7 @@ export default function KaidhaForm({ postFormKaidhaAction }: KaidhaFormProps) {
         {/* Form Section - Responsive */}
         <section className="mb-6 sm:mb-8 rounded-xl bg-[#FFFFFF] dark:bg-gray-800 p-0 sm:p-2 md:p-4 shadow-md">
           <div className="w-full">
-            <KaidhaRegister postFormKaidhaAction={postFormKaidhaAction} />
+            <KaidhaRegister />
           </div>
         </section>
       </div>

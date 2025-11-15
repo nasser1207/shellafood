@@ -12,11 +12,14 @@ import {
 	HelpCircle,
 	Loader2,
 } from "lucide-react";
+import { OrderType, ORDER_TYPE } from "../types";
+import { canCancelOrder } from "../utils/orderStatus";
+import { getCancelButtonLabel, getReorderButtonLabel, getRatingButtonLabel, hasChatAvailable } from "../utils/routeHelpers";
 
 interface ActionButtonsProps {
 	language: "en" | "ar";
 	status: string;
-	type: "product" | "service";
+	type: OrderType;
 	isActive: boolean;
 	isCompleted: boolean;
 	supportPhone?: string;
@@ -44,12 +47,21 @@ export default React.memo(function ActionButtons({
 	onReorder,
 	onChat,
 	isDownloadingInvoice = false,
-	hasChatAvailable = false,
+	hasChatAvailable: chatAvailable = false,
 }: ActionButtonsProps) {
 	const isArabic = language === "ar";
+	const isService = type === ORDER_TYPE.SERVICE;
 	
-	// Only show chat for service orders where chat is available
-	const shouldShowChat = type === "service" && hasChatAvailable && onChat;
+	// Show chat for both types if available
+	const shouldShowChat = chatAvailable && onChat;
+	
+	// Check if order can be cancelled (type-aware)
+	const canCancel = canCancelOrder(status, type);
+	
+	// Get type-aware labels
+	const cancelLabel = getCancelButtonLabel(type, language);
+	const reorderLabel = getReorderButtonLabel(type, language);
+	const ratingLabel = getRatingButtonLabel(type, language);
 
 	return (
 		<>
@@ -83,7 +95,7 @@ export default React.memo(function ActionButtons({
 									<span>{isArabic ? "محادثة" : "Chat"}</span>
 								</motion.button>
 							)}
-							{onCancel && (
+							{onCancel && canCancel && (
 								<motion.button
 									whileHover={{ scale: 1.02 }}
 									whileTap={{ scale: 0.98 }}
@@ -91,7 +103,7 @@ export default React.memo(function ActionButtons({
 									className={`flex items-center justify-center gap-2 px-6 py-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors ${isArabic ? "flex-row-reverse" : ""}`}
 								>
 									<X className="w-5 h-5" />
-									<span>{isArabic ? "إلغاء الطلب" : "Cancel Order"}</span>
+									<span>{cancelLabel}</span>
 								</motion.button>
 							)}
 						</>
@@ -106,7 +118,7 @@ export default React.memo(function ActionButtons({
 									className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg font-semibold transition-colors shadow-md ${isArabic ? "flex-row-reverse" : ""}`}
 								>
 									<Star className="w-5 h-5" />
-									<span>{isArabic ? "قيم التجربة" : "Rate Experience"}</span>
+									<span>{ratingLabel}</span>
 								</motion.button>
 							)}
 							{onDownloadInvoice && (
@@ -133,7 +145,7 @@ export default React.memo(function ActionButtons({
 									</span>
 								</motion.button>
 							)}
-							{type === "product" && onReorder && (
+							{onReorder && (
 								<motion.button
 									whileHover={{ scale: 1.02 }}
 									whileTap={{ scale: 0.98 }}
@@ -141,7 +153,7 @@ export default React.memo(function ActionButtons({
 									className={`flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${isArabic ? "flex-row-reverse" : ""}`}
 								>
 									<RotateCcw className="w-5 h-5" />
-									<span>{isArabic ? "إعادة الطلب" : "Order Again"}</span>
+									<span>{reorderLabel}</span>
 								</motion.button>
 							)}
 						</>
@@ -172,13 +184,13 @@ export default React.memo(function ActionButtons({
 									<span>{isArabic ? "محادثة" : "Chat"}</span>
 								</button>
 							)}
-							{onCancel && (
+							{onCancel && canCancel && (
 								<button
 									onClick={onCancel}
 									className="flex items-center justify-center gap-2 px-4 py-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-semibold text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
 								>
 									<X className="w-4 h-4" />
-									<span className="hidden sm:inline">{isArabic ? "إلغاء" : "Cancel"}</span>
+									<span className="hidden sm:inline">{isArabic ? (isService ? "إلغاء الحجز" : "إلغاء") : (isService ? "Cancel Booking" : "Cancel")}</span>
 								</button>
 							)}
 						</>
@@ -191,16 +203,16 @@ export default React.memo(function ActionButtons({
 									className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg font-semibold text-sm transition-colors shadow-md"
 								>
 									<Star className="w-4 h-4" />
-									<span>{isArabic ? "قيم" : "Rate"}</span>
+									<span>{isArabic ? (isService ? "قيم الخدمة" : "قيم") : (isService ? "Rate Service" : "Rate")}</span>
 								</button>
 							)}
-							{type === "product" && onReorder && (
+							{onReorder && (
 								<button
 									onClick={onReorder}
 									className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
 								>
 									<RotateCcw className="w-4 h-4" />
-									<span>{isArabic ? "إعادة طلب" : "Reorder"}</span>
+									<span>{isArabic ? (isService ? "حجز مرة أخرى" : "إعادة طلب") : (isService ? "Book Again" : "Reorder")}</span>
 								</button>
 							)}
 						</>

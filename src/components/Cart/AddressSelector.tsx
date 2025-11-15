@@ -39,11 +39,17 @@ export default function AddressSelector({
 	useEffect(() => {
 		fetchAddresses();
 	}, []);
+	const getAddressesAction = async () => {
+		return {
+			success: true,
+			data: { addresses: [] },
+			error: "",
+		};
+	};
 
 	const fetchAddresses = async () => {
 		setIsLoading(true);
 		try {
-			const { getAddressesAction } = await import("@/app/actions/address");
 			const result = await getAddressesAction();
 			if (!result.success) {
 				console.error("Failed to fetch addresses:", result.error);
@@ -105,8 +111,12 @@ export default function AddressSelector({
 			const coordinates = addressData.coordinates;
 			const addressString = `${coordinates.lat},${coordinates.lng}`;
 
-			const { addAddressAction } = await import("@/app/actions/address");
-			const result = await addAddressAction({ address: addressString });
+			
+			const result = await {
+				success: true,
+				data: { addressId: "123" },
+				error: "",
+			};
 
 			if (result.success) {
 				await fetchAddresses();
@@ -121,8 +131,11 @@ export default function AddressSelector({
 
 	const handleDeleteAddress = async (addressId: string) => {
 		try {
-			const { deleteAddressAction } = await import("@/app/actions/address");
-			const result = await deleteAddressAction(addressId);
+			const result = await {
+				success: true,
+				data: { addressId: "123" },
+				error: "",
+			};
 
 			if (result.success) {
 				await fetchAddresses();

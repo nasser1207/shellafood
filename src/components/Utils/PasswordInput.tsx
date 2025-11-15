@@ -11,6 +11,7 @@ interface PasswordInputProps {
 	required?: boolean;
 	isArabic?: boolean;
 	error?: string;
+	disabled?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 	required = false,
 	isArabic = true,
 	error,
+	disabled = false,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -45,7 +47,8 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 					placeholder={placeholder}
 					value={value}
 					onChange={onChange}
-					className={`w-full rounded-lg border ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 p-3 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:border-green-500 dark:focus:border-green-400 focus:outline-none transition-all duration-200 ${
+					disabled={disabled}
+					className={`w-full rounded-lg border ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 p-3 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-400/20 focus:border-green-500 dark:focus:border-green-400 focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 ${
 						isArabic ? "text-right pr-12 pl-3" : "text-left pl-3 pr-12"
 					}`}
 					required={required}
@@ -53,7 +56,8 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 				<button
 					type="button"
 					onClick={() => setShowPassword(!showPassword)}
-					className={`absolute top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none ${
+					disabled={disabled}
+					className={`absolute top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
 						isArabic ? "left-3" : "right-3"
 					}`}
 					tabIndex={-1}

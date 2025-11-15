@@ -2,9 +2,8 @@
  * Helper functions for store-related data operations
  */
 
-import { Store } from '@/components/Utils/StoreCard';
+
 import { Department } from '@/components/Utils/DepartmentCard';
-import { Product } from '@/components/Utils/ProductCard';
 import { TEST_PRODUCTS, TEST_DEPARTMENTS } from './testData';
 
 /**

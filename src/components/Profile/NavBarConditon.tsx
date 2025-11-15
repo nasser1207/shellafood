@@ -168,11 +168,11 @@ const MobileMenu = ({
 									</div>
 
 									{/* Label & Badge */}
-									<div className="flex flex-1 items-center justify-between">
+									<div className="flex flex-1 items-center justify-between min-w-0">
 										<span
-											className={`font-semibold text-sm ${
+											className={`font-semibold text-sm truncate ${
 												isActive ? "text-[#10b981] dark:text-green-400" : "text-gray-900 dark:text-gray-100"
-											} ${item.id === "login" ? "truncate max-w-32" : ""}`}
+											} ${item.id === "login" ? "max-w-[140px]" : ""}`}
 										>
 											{item.label}
 										</span>
@@ -233,9 +233,9 @@ export default function NavBarCondition() {
 		{ id: "cart", label: "السلة", icon: ShoppingBag, href: "/cart", badge: cartCount },
 		{
 			id: "login",
-			label:  "ملفي الشخصي",
+			label: "الملف الشخصي",
 			icon: User,
-			href:  "/profile" 
+			href: "/profile" 
 		},
 		{ id: "contact", label: "اتصل بنا", icon: Mail, href: "#", action: () => setShowAterms(true) },
 		{ id: "language", label: "عربية", icon: Globe, href: "/" },
@@ -305,7 +305,7 @@ export default function NavBarCondition() {
 													handleClick(item.id, item.href);
 												}
 											}}
-											className={`group relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
+											className={`group relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all min-w-0 ${
 												isActive
 													? "bg-gradient-to-l from-[#10b981]/10 dark:from-green-500/20 to-transparent text-[#10b981] dark:text-green-400"
 													: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#10b981] dark:hover:text-green-400"
@@ -330,7 +330,7 @@ export default function NavBarCondition() {
 											{/* Label */}
 											<span
 												className={`hidden lg:inline ${
-													item.id === "login" ? "max-w-20 truncate" : ""
+													item.id === "login" ? "max-w-32 truncate" : ""
 												}`}
 											>
 												{item.label}

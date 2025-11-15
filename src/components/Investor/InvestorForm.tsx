@@ -2,6 +2,10 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import React, { useState } from "react";
+import { FormInput } from "@/components/Utils/FormInput";
+import { SectionHeader } from "@/components/Utils/SectionHeader";
+import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import { CheckCircle2 } from "lucide-react";
 import ContractModal from "./ContractModal";
 
 // Types
@@ -509,115 +513,220 @@ const direction = isArabic ? 'rtl' : 'ltr';
     <section className="mb-6 bg-white dark:bg-gray-900 p-3 md:mb-8 md:p-12" dir={direction}>
       <div className="mx-auto max-w-5xl">
         {/* Progress Indicator */}
-        <div className="mb-6 rounded-lg bg-gray-100 dark:bg-gray-800 p-4 shadow-lg dark:shadow-gray-900/50 sm:mb-8 sm:p-6">
+        <div className="mb-6 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 shadow-sm sm:mb-8 sm:p-6">
           <div className="flex items-center justify-between">
             {[
-              { key: 'form', label: isArabic ? 'البيانات' : 'Form', icon: '📝' },
-              { key: 'verification', label: isArabic ? 'التحقق' : 'Verify', icon: '🔐' },
-              { key: 'complete', label: isArabic ? 'مكتمل' : 'Done', icon: '✅' }
-            ].map((step, index) => (
-              <div key={step.key} className="flex items-center flex-1">
-                <div className="flex flex-col items-center flex-1">
-                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl transition-all duration-500 transform ${
-                    (currentStep === 'form' && step.key === 'form') ||
-                    (currentStep === 'verification' && ['form', 'verification'].includes(step.key)) ||
-                    (currentStep === 'complete')
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-lg dark:shadow-gray-900/50 scale-110'
-                      : 'bg-gray-200 dark:bg-gray-700 scale-100'
-                  }`}>
-                    {step.icon}
+              { key: 'form', label: isArabic ? 'البيانات' : 'Form',  },
+              { key: 'verification', label: isArabic ? 'التحقق' : 'Verify' },
+              { key: 'complete', label: isArabic ? 'مكتمل' : 'Done' }
+            ].map((step, index) => {
+              const isCompleted = 
+                (currentStep === 'verification' && step.key === 'form') ||
+                (currentStep === 'complete' && step.key !== 'complete');
+              const isCurrent = 
+                (currentStep === 'form' && step.key === 'form') ||
+                (currentStep === 'verification' && step.key === 'verification') ||
+                (currentStep === 'complete' && step.key === 'complete');
+              const isActive = isCompleted || isCurrent;
+
+              return (
+                <div key={step.key} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isCompleted
+                        ? 'bg-green-600 dark:bg-green-500 text-white'
+                        : isCurrent
+                        ? 'bg-green-600 dark:bg-green-500 text-white border-2 border-green-700 dark:border-green-400'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 border-2 border-gray-200 dark:border-gray-600'
+                    }`}>
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                      ) : (
+                        <span className="text-sm sm:text-base font-semibold">{index + 1}</span>
+                      )}
+                    </div>
+                    <span className={`mt-2 sm:mt-3 text-xs sm:text-sm font-medium transition-colors duration-300 ${
+                      isActive
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {step.label}
+                    </span>
                   </div>
-                  <span className={`mt-2 sm:mt-3 text-xs sm:text-sm font-semibold transition-colors duration-300 ${
-                    (currentStep === 'form' && step.key === 'form') ||
-                    (currentStep === 'verification' && ['form', 'verification'].includes(step.key)) ||
-                    (currentStep === 'complete')
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {step.label}
-                  </span>
+                  {index < 2 && (
+                    <div className={`h-0.5 flex-1 mx-2 sm:mx-3 transition-all duration-300 ${
+                      isCompleted
+                        ? 'bg-green-600 dark:bg-green-500'
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    }`}></div>
+                  )}
                 </div>
-                {index < 2 && (
-                  <div className={`h-2 flex-1 mx-2 sm:mx-3 transition-all duration-500 rounded-full ${
-                    (currentStep === 'verification' && step.key === 'form') ||
-                    (currentStep === 'complete')
-                      ? 'bg-gradient-to-r from-green-500 to-green-600'
-                      : 'bg-gray-200 dark:bg-gray-700'
-                  }`}></div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Step 1: Form */}
         {currentStep === 'form' && (
           <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow-lg dark:shadow-gray-900/50 p-4 sm:p-6 md:p-8">
-            <div className={`flex items-center gap-3 mb-6 sm:mb-8 `}>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-xl sm:text-2xl shadow-md">
-                📝
-              </div>
-              <div className={isArabic ? 'text-right' : 'text-left'}>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                  {isArabic ? 'تسجيل مستثمر جديد' : 'New Investor Registration'}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields'}
-                </p>
-              </div>
+            <div className={`mb-6 sm:mb-8 ${isArabic ? 'text-right' : 'text-left'}`}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-100">
+                {isArabic ? 'تسجيل مستثمر جديد' : 'New Investor Registration'}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields'}
+              </p>
             </div>
             
             <div className="space-y-6 sm:space-y-8">
               {/* Personal Information */}
-              <div className="space-y-4 sm:space-y-5">
-                <div className={`flex items-center gap-2 pb-3 border-b-2 border-gray-200 dark:border-gray-700 `}>
-                  <span className="text-lg sm:text-xl">👤</span>
-                  <h3 className={`text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
-                    {t('personalInfo')}
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label={t('firstName')} name="first_name" value={formData.first_name} onChange={handleChange} required />
-                  <FormField label={t('fatherName')} name="father_name" value={formData.father_name} onChange={handleChange} required />
-                  <FormField label={t('familyName')} name="family_name" value={formData.family_name} onChange={handleChange} required />
-                  <FormField label={t('grandfatherName')} name="grandfather_name" value={formData.grandfather_name} onChange={handleChange} required />
-                  <FormField label={t('birthDate')} name="birth_date" type="date" value={formData.birth_date} onChange={handleChange} required />
-                  <FormField label={t('nationalId')} name="national_id" type="text" value={formData.national_id} onChange={(e) => {
-                    const numericValue = e.target.value.replace(/\D/g, '').slice(0, 10);
-                    setFormData(prev => ({ ...prev, national_id: numericValue }));
-                  }} placeholder="1234567890" required helper={isArabic ? '10 أرقام بالضبط' : '10 digits exactly'} />
+              <div>
+                <SectionHeader title={t('personalInfo')} isArabic={isArabic} />
+                <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 mb-8">
+                  <FormInput
+                    label={t('firstName')}
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('fatherName')}
+                    name="father_name"
+                    value={formData.father_name}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('grandfatherName')}
+                    name="grandfather_name"
+                    value={formData.grandfather_name}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('familyName')}
+                    name="family_name"
+                    value={formData.family_name}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('birthDate')}
+                    name="birth_date"
+                    type="date"
+                    value={formData.birth_date}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('nationalId')}
+                    name="national_id"
+                    value={formData.national_id}
+                    onChange={(e) => {
+                      const numericValue = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setFormData(prev => ({ ...prev, national_id: numericValue }));
+                    }}
+                    placeholder="1234567890"
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
 
               {/* Contact Information */}
-              <div className="space-y-4 sm:space-y-5">
-                <div className={`flex items-center gap-2 pb-3 border-b-2 border-gray-200 dark:border-gray-700 `}>
-                  <span className="text-lg sm:text-xl">📞</span>
-                  <h3 className={`text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
-                    {t('contactInfo')}
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label={t('email')} name="email" type="email" value={formData.email} onChange={handleChange} required />
-                  <FormField label={t('phone')} name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+966500000000" required />
-                  <FormField label={t('nationalAddressEmail')} name="national_address_email" type="email" value={formData.national_address_email} onChange={handleChange} required />
-                  <FormField label={t('region')} name="region" value={formData.region} onChange={handleChange} placeholder={isArabic ? 'الرياض' : 'Riyadh'} required />
+              <div>
+                <SectionHeader title={t('contactInfo')} isArabic={isArabic} />
+                <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 mb-8">
+                  <FormInput
+                    label={t('email')}
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <PhoneInputField
+                    label={t('phone')}
+                    value={formData.phone}
+                    onChange={(phone) => setFormData({ ...formData, phone })}
+                    isArabic={isArabic}
+                    required
+                    name="phone"
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('nationalAddressEmail')}
+                    name="national_address_email"
+                    type="email"
+                    value={formData.national_address_email}
+                    onChange={handleChange}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('region')}
+                    name="region"
+                    value={formData.region}
+                    onChange={handleChange}
+                    placeholder={isArabic ? 'الرياض' : 'Riyadh'}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
 
               {/* Banking Information */}
-              <div className="space-y-4 sm:space-y-5">
-                <div className={`flex items-center gap-2 pb-3 border-b-2 border-gray-200 dark:border-gray-700 `}>
-                  <span className="text-lg sm:text-xl">🏦</span>
-                  <h3 className={`text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
-                    {t('bankingInfo')}
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label={t('iban')} name="iban" value={formData.iban} onChange={handleChange} placeholder="SA1234567890123456789012" required />
-                  <FormField label={t('bankName')} name="bank_name" value={formData.bank_name} onChange={handleChange} placeholder={isArabic ? 'مصرف الراجحي' : 'Al Rajhi Bank'} required />
+              <div>
+                <SectionHeader title={t('bankingInfo')} isArabic={isArabic} />
+                <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 mb-8">
+                  <FormInput
+                    label={t('iban')}
+                    name="iban"
+                    value={formData.iban}
+                    onChange={handleChange}
+                    placeholder="SA1234567890123456789012"
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
+                  <FormInput
+                    label={t('bankName')}
+                    name="bank_name"
+                    value={formData.bank_name}
+                    onChange={handleChange}
+                    placeholder={isArabic ? 'مصرف الراجحي' : 'Al Rajhi Bank'}
+                    required
+                    isArabic={isArabic}
+                    disabled={isLoading}
+                  />
                   <div className="md:col-span-2">
-                    <FormField label={t('amount')} name="amount" type="number" value={formData.amount} onChange={handleChange} placeholder="50000" required helper={isArabic ? '1,000 - 10,000,000 ريال سعودي' : '1,000 - 10,000,000 SAR'} />
+                    <FormInput
+                      label={t('amount')}
+                      name="amount"
+                      type="number"
+                      value={formData.amount}
+                      onChange={handleChange}
+                      placeholder="50000"
+                      required
+                      isArabic={isArabic}
+                      disabled={isLoading}
+                    />
                   </div>
                 </div>
               </div>
@@ -639,13 +748,10 @@ const direction = isArabic ? 'rtl' : 'ltr';
               {/* Contract Preview Section (if already loaded) */}
               {contractPdfUrl && currentStep === 'form' && (
                 <div className="mt-6 p-4 sm:p-5 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
-                  <div className={`flex items-center justify-between mb-4 `}>
-                    <div className={`flex items-center gap-2 `}>
-                      <span className="text-lg sm:text-xl">📄</span>
-                      <span className={`font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
-                        {isArabic ? 'تم تحميل العقد' : 'Contract Loaded'}
-                      </span>
-                    </div>
+                  <div className={`flex items-center justify-between mb-4 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <span className={`font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
+                      {isArabic ? 'تم تحميل العقد' : 'Contract Loaded'}
+                    </span>
                     <button
                       onClick={() => setShowPdfModal(true)}
                       className="px-3 sm:px-4 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white transition-all text-xs sm:text-sm"
@@ -668,10 +774,7 @@ const direction = isArabic ? 'rtl' : 'ltr';
                   disabled={isLoading}
                   className="flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                 >
-                  <div className={`flex items-center justify-center gap-2 `}>
-                    <span>📄</span>
-                    <span>{t('previewContract')}</span>
-                  </div>
+                  {t('previewContract')}
                 </button>
                 <button
                   onClick={handleSubmit}
@@ -684,10 +787,7 @@ const direction = isArabic ? 'rtl' : 'ltr';
                       <span>{t('processing')}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <span>🚀</span>
-                      <span>{t('submit')}</span>
-                    </div>
+                    t('submit')
                   )}
                 </button>
               </div>
@@ -698,14 +798,11 @@ const direction = isArabic ? 'rtl' : 'ltr';
         {/* Step 2: Nafath Verification */}
         {currentStep === 'verification' && (
           <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow-lg dark:shadow-gray-900/50 p-4 sm:p-6 md:p-8 text-center">
-            <div className="mb-6 sm:mb-8">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 sm:mb-6 shadow-lg dark:shadow-gray-900/50">
-                <span className="text-4xl sm:text-5xl">🔐</span>
-              </div>
-              <h2 className={`text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-2 sm:mb-3 ${isArabic ? 'text-right' : 'text-left'}`}>
+            <div className={`mb-6 sm:mb-8 ${isArabic ? 'text-right' : 'text-left'}`}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-2 sm:mb-3">
                 {t('nafathTitle')}
               </h2>
-              <p className={`text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto ${isArabic ? 'text-right' : 'text-left'}`}>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                 {t('nafathInstructions')}
               </p>
             </div>
@@ -779,14 +876,11 @@ const direction = isArabic ? 'rtl' : 'ltr';
         {/* Step 3: Complete */}
         {currentStep === 'complete' && (
           <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow-lg dark:shadow-gray-900/50 p-4 sm:p-6 md:p-8">
-            <div className="mb-6 sm:mb-8 text-center">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 sm:mb-6 shadow-lg dark:shadow-gray-900/50 animate-bounce">
-                <span className="text-4xl sm:text-5xl">✅</span>
-              </div>
-              <h2 className={`text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-2 sm:mb-3 ${isArabic ? 'text-right' : 'text-left'}`}>
+            <div className={`mb-6 sm:mb-8 text-center ${isArabic ? 'text-right' : 'text-left'}`}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-2 sm:mb-3">
                 {t('successTitle')}
               </h2>
-              <p className={`text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto ${isArabic ? 'text-right' : 'text-left'}`}>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
                 {t('successMessage')}
               </p>
               
@@ -854,12 +948,9 @@ const direction = isArabic ? 'rtl' : 'ltr';
             {signedContractUrl && (
               <div className="mb-6 bg-white dark:bg-gray-700 rounded-lg p-4 sm:p-5 border border-gray-200 dark:border-gray-600 shadow-sm">
                 <div className={`flex items-center justify-between mb-4 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`flex items-center gap-2 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <span className="text-lg sm:text-xl">📄</span>
-                    <span className={`font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
-                      {isArabic ? 'العقد الموقع' : 'Signed Contract'}
-                    </span>
-                  </div>
+                  <span className={`font-semibold text-gray-800 dark:text-gray-200 ${isArabic ? 'text-right' : 'text-left'}`}>
+                    {isArabic ? 'العقد الموقع' : 'Signed Contract'}
+                  </span>
                   <button
                     onClick={() => {
                       setContractPdfUrl(signedContractUrl);
@@ -883,20 +974,14 @@ const direction = isArabic ? 'rtl' : 'ltr';
                     }}
                     className="flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white transition-all shadow-md hover:shadow-lg"
                   >
-                    <div className={`flex items-center justify-center gap-2 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
-                      <span>👁️</span>
-                      <span>{isArabic ? 'عرض العقد' : 'View Contract'}</span>
-                    </div>
+                    {isArabic ? 'عرض العقد' : 'View Contract'}
                   </button>
                   <a
                     href={signedContractUrl}
                     download="signed-investment-contract.pdf"
                     className="flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-center shadow-sm hover:shadow-md"
                   >
-                    <div className={`flex items-center justify-center gap-2 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
-                      <span>⬇️</span>
-                      <span>{t('downloadContract')}</span>
-                    </div>
+                    {t('downloadContract')}
                   </a>
                 </div>
               </div>
@@ -907,10 +992,7 @@ const direction = isArabic ? 'rtl' : 'ltr';
                 onClick={resetForm}
                 className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-all shadow-md hover:shadow-lg"
               >
-                <div className={`flex items-center gap-2 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <span>🔄</span>
-                  <span>{t('startNew')}</span>
-                </div>
+                {t('startNew')}
               </button>
             </div>
           </div>
@@ -976,46 +1058,5 @@ const direction = isArabic ? 'rtl' : 'ltr';
         }
       `}</style>
     </section>
-  );
-}
-
-// Form Field Component
-function FormField({ 
-  label, 
-  name, 
-  type = 'text', 
-  value, 
-  onChange, 
-  placeholder, 
-  required = false,
-  helper
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  required?: boolean;
-  helper?: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm sm:text-base"
-      />
-      {helper && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">{helper}</p>
-      )}
-    </div>
   );
 }

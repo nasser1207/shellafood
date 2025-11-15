@@ -2,10 +2,13 @@
 
 import React from "react";
 import { CheckCircle, Clock, Loader2, Truck, XCircle, Navigation } from "lucide-react";
+import { OrderType, ORDER_TYPE } from "./types";
+import { getStatusLabel } from "./utils/orderStatus";
 
 interface StatusBadgeProps {
 	status: string;
 	language: "en" | "ar";
+	type?: OrderType;
 }
 
 const statusConfig: Record<
@@ -101,15 +104,31 @@ const statusConfig: Record<
 	},
 };
 
-export default function StatusBadge({ status, language }: StatusBadgeProps) {
+export default function StatusBadge({ status, language, type = ORDER_TYPE.PRODUCT }: StatusBadgeProps) {
 	const isArabic = language === "ar";
+	const isService = type === ORDER_TYPE.SERVICE;
 	const config = statusConfig[status] || statusConfig.pending;
 	const Icon = config.icon;
 	const isAnimating = status === "preparing" || status === "in_progress" || status === "on_the_way";
+	
+	// Use type-aware status label
+	const statusLabel = getStatusLabel(status, type, language);
+	
+	// Apply type-specific color theme: Blue for product, Green/Teal for service
+	const typeColorOverrides: Record<string, { color: string; bgColor: string; borderColor: string }> = {
+		confirmed: isService 
+			? { color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-900/30", borderColor: "border-green-300 dark:border-green-700" }
+			: { color: "text-blue-700 dark:text-blue-300", bgColor: "bg-blue-100 dark:bg-blue-900/30", borderColor: "border-blue-300 dark:border-blue-700" },
+		assigned: isService
+			? { color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-900/30", borderColor: "border-green-300 dark:border-green-700" }
+			: { color: "text-blue-700 dark:text-blue-300", bgColor: "bg-blue-100 dark:bg-blue-900/30", borderColor: "border-blue-300 dark:border-blue-700" },
+	};
+	
+	const finalConfig = typeColorOverrides[status] || config;
 
 	return (
 		<div
-			className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 ${config.bgColor} ${config.color} ${config.borderColor} ${
+			className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 ${finalConfig.bgColor} ${finalConfig.color} ${finalConfig.borderColor} ${
 				isArabic ? "flex-row-reverse" : ""
 			}`}
 		>
@@ -117,7 +136,7 @@ export default function StatusBadge({ status, language }: StatusBadgeProps) {
 				className={`w-4 h-4 flex-shrink-0 ${isAnimating ? "animate-spin" : ""}`}
 			/>
 			<span className="text-sm font-semibold">
-				{isArabic ? config.labelAr : config.labelEn}
+				{statusLabel}
 			</span>
 		</div>
 	);
