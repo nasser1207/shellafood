@@ -8,6 +8,7 @@ import { Product } from "../Utils/ProductCard";
 import DeliveryAddressHero from "./DeliveryAddressHero";
 import PromotionalBanner from "./PromotionalBanner";
 import CategoriesSection from "./CategoriesSection";
+import PreviouslyOrderedStores from "./PreviouslyOrderedStores";
 import NearbyStores from "./NearbyStores";
 import Discounts from "./Discounts";
 import PopularStores from "./PopularStores";
@@ -17,6 +18,8 @@ import Testimonials from "./Testimonials";
 import FloatingCart from "./FloatingCart";
 import { getCartItemsCount } from "@/lib/utils/cartStorage";
 import { TEST_STORES, TEST_CATEGORIES, TEST_PRODUCTS } from "@/lib/data/categories/testData";
+import { ArrowUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
 	const router = useRouter();
@@ -25,6 +28,7 @@ export default function HomePage() {
 
 	const [selectedDeliveryAddress, setSelectedDeliveryAddress] = useState<any>(null);
 	const [cartCount, setCartCount] = useState(0);
+	const [showScrollToTop, setShowScrollToTop] = useState(false);
 
 	const handleDeliveryAddressChange = useCallback((address: any) => {
 		setSelectedDeliveryAddress(address);
@@ -48,9 +52,24 @@ export default function HomePage() {
 			"/nearby-stores",
 			"/discounts",
 			"/popular-stores",
+			"/previously-ordered-stores",
 		];
 		routesToPrefetch.forEach((route) => router.prefetch(route));
 	}, [router]);
+
+	// Handle scroll to top visibility
+	useEffect(() => {
+		const handleScroll = () => {
+			setShowScrollToTop(window.scrollY > 400);
+		};
+
+		window.addEventListener('scroll', handleScroll);
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	const scrollToTop = useCallback(() => {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}, []);
 
 	// Prepare categories with additional routes
 	const categories = TEST_CATEGORIES.map((cat) => ({
@@ -92,8 +111,11 @@ export default function HomePage() {
 				{/* Promotional Banner */}
 				<PromotionalBanner />
 
+				{/* Previously Ordered Stores */}
+				<PreviouslyOrderedStores stores={TEST_STORES.slice(0, 5) as Store[]} />
+
 				{/* Nearby Stores */}
-				<NearbyStores stores={TEST_STORES.slice(0, 10) as Store[]} />
+				<NearbyStores stores={TEST_STORES.slice(0, 4) as Store[]} />
 
 				{/* Discounts */}
 				<Discounts
@@ -103,20 +125,24 @@ export default function HomePage() {
 				/>
 
 				{/* Popular Stores */}
-				<PopularStores stores={TEST_STORES.slice(0, 10) as Store[]} />
+				<PopularStores stores={TEST_STORES.slice(0, 4) as Store[]} />
 			</div>
 
-			{/* How It Works Section */}
-			{/* <HowItWorks /> */}
-
-			{/* App Download Section */}
-		{/* <AppDownload /> */}
-
-			{/* Testimonials Section */}
-			{/* <Testimonials /> */}
-
-			{/* Floating Cart Button */}
-			{/* <FloatingCart cartCount={cartCount} /> */}
+			{/* Scroll to Top Button - Square like cart button */}
+			<AnimatePresence>
+				{showScrollToTop && (
+					<motion.button
+						initial={{ scale: 0, opacity: 0 }}
+						animate={{ scale: 1, opacity: 1 }}
+						exit={{ scale: 0, opacity: 0 }}
+						onClick={scrollToTop}
+						className={`fixed ${isArabic ? "right-4" : "left-4"} bottom-6 z-50 w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg shadow-2xl flex items-center justify-center active:scale-95 transition-transform hover:shadow-green-500/50`}
+						aria-label={isArabic ? 'الانتقال إلى الأعلى' : 'Scroll to top'}
+					>
+						<ArrowUp className="w-6 h-6 text-white" />
+					</motion.button>
+				)}
+			</AnimatePresence>
 		</div>
 	);
 }

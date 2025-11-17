@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import ProductCard, { Product } from "@/components/Utils/ProductCard";
@@ -11,6 +11,8 @@ import { useLanguageDirection } from "@/hooks/useLanguageDirection";
 import { Store } from "@/components/Utils/StoreCard";
 import DepartmentCard, { Department } from "@/components/Utils/DepartmentCard";
 import { navigateToProductFromContext } from "@/lib/utils/categories/navigation";
+import { ArrowUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface StoreViewProps {
 	recommendedProducts?: Product[];
@@ -45,6 +47,7 @@ export default function StoreView({ recommendedProducts, popularProducts, store,
 	}, [params?.store]);
 
 	const [activeFilter, setActiveFilter] = useState<string>('all');
+	const [showScrollToTop, setShowScrollToTop] = useState(false);
 	const { isFavorite: isStoreFavorite, isLoading: isStoreFavoriteLoading, toggleFavorite: toggleStoreFavorite } = useStoreFavorites(store.id, {
 		name: store.name,
 		nameAr: store.nameAr,
@@ -54,6 +57,20 @@ export default function StoreView({ recommendedProducts, popularProducts, store,
 		typeAr: store.typeAr,
 		rating: store.rating,
 	});
+
+	// Handle scroll to top visibility
+	useEffect(() => {
+		const handleScroll = () => {
+			setShowScrollToTop(window.scrollY > 400);
+		};
+
+		window.addEventListener('scroll', handleScroll);
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	const scrollToTop = useCallback(() => {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}, []);
 
 	const handleAddToCart = (_productId: string) => {
 		// TODO: Implement add to cart logic
@@ -283,6 +300,22 @@ export default function StoreView({ recommendedProducts, popularProducts, store,
 					)}
 				</div>
 			</section>
+
+			{/* Scroll to Top Button - Square like cart button */}
+			<AnimatePresence>
+				{showScrollToTop && (
+					<motion.button
+						initial={{ scale: 0, opacity: 0 }}
+						animate={{ scale: 1, opacity: 1 }}
+						exit={{ scale: 0, opacity: 0 }}
+						onClick={scrollToTop}
+						className={`fixed ${isArabic ? "right-4" : "left-4"} bottom-6 z-50 w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg shadow-2xl flex items-center justify-center active:scale-95 transition-transform hover:shadow-green-500/50`}
+						aria-label={isArabic ? 'الانتقال إلى الأعلى' : 'Scroll to top'}
+					>
+						<ArrowUp className="w-6 h-6 text-white" />
+					</motion.button>
+				)}
+			</AnimatePresence>
 		</div>
 	);
 }

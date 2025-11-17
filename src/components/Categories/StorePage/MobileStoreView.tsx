@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Store } from "@/components/Utils/StoreCard";
 import { Product } from "@/components/Utils/ProductCard";
 import { Department } from "@/components/Utils/DepartmentCard";
-import { Search, MapPin, Star, Clock, ShoppingCart, Heart, Share2, ArrowLeft } from "lucide-react";
+import { Search, MapPin, Star, Clock, ShoppingCart, Heart, Share2, ArrowLeft, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileProductCard from "../shared/MobileProductCard";
 import BottomSheet from "../shared/BottomSheet";
@@ -43,6 +43,7 @@ function MobileStoreView({
 	const [searchTerm, setSearchTerm] = useState("");
 	const [showSearchModal, setShowSearchModal] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+	const [showScrollToTop, setShowScrollToTop] = useState(false);
 	const [cartItems, setCartItems] = useState(getCartItems());
 	const departmentsRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +82,20 @@ function MobileStoreView({
 		if (!cartItems || !Array.isArray(cartItems)) return 0;
 		return cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 	}, [cartItems]);
+
+	// Handle scroll to top visibility
+	useEffect(() => {
+		const handleScroll = () => {
+			setShowScrollToTop(window.scrollY > 400);
+		};
+
+		window.addEventListener('scroll', handleScroll);
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	const scrollToTop = useCallback(() => {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}, []);
 
 	const filteredProducts = useMemo(() => {
 		if (!searchTerm) return productsByDepartment;
@@ -343,12 +358,28 @@ function MobileStoreView({
 						animate={{ scale: 1, opacity: 1 }}
 						exit={{ scale: 0, opacity: 0 }}
 						onClick={() => router.push("/cart")}
-						className={`fixed ${isArabic ? "left-4" : "right-4"} bottom-6 z-50 w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-transform`}
+						className={`fixed ${isArabic ? "left-4" : "right-4"} bottom-6 z-50 w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-all duration-300`}
 					>
 						<ShoppingCart className="w-6 h-6 text-white" />
 						<span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
 							{cartCount > 99 ? "99+" : cartCount}
 						</span>
+					</motion.button>
+				)}
+			</AnimatePresence>
+
+			{/* Scroll to Top Button - Square like cart button */}
+			<AnimatePresence>
+				{showScrollToTop && (
+					<motion.button
+						initial={{ scale: 0, opacity: 0 }}
+						animate={{ scale: 1, opacity: 1 }}
+						exit={{ scale: 0, opacity: 0 }}
+						onClick={scrollToTop}
+						className={`fixed ${isArabic ? "right-4" : "left-4"} bottom-6 z-50 w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg shadow-2xl flex items-center justify-center active:scale-95 transition-transform hover:shadow-green-500/50`}
+						aria-label={isArabic ? 'الانتقال إلى الأعلى' : 'Scroll to top'}
+					>
+						<ArrowUp className="w-6 h-6 text-white" />
 					</motion.button>
 				)}
 			</AnimatePresence>

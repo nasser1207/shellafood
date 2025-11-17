@@ -4,12 +4,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Clock,
   Star,
-  DollarSign,
+  MapPin,
   Truck,
   Tag,
   BadgeCheck,
   SlidersHorizontal,
   CheckSquare,
+  Filter,
+  ShoppingBag,
 } from "lucide-react";
 import { memo } from "react";
 import FilterSection from "./FilterSection";
@@ -17,13 +19,14 @@ import FilterSection from "./FilterSection";
 interface Filters {
   deliveryTime: [number, number];
   rating: number[];
-  priceRange: [number, number];
+  distanceRange: [number, number];
   features: {
     freeDelivery: boolean;
     openNow: boolean;
     offers: boolean;
     verified: boolean;
     topRated: boolean;
+    previouslyOrdered: boolean;
   };
 }
 
@@ -66,13 +69,14 @@ function FiltersSidebar({
       clearAll: "مسح الكل",
       deliveryTime: "وقت التوصيل",
       rating: "التقييم",
-      priceRange: "نطاق السعر",
+      distanceRange: "نطاق المسافة",
       features: "المميزات",
       freeDelivery: "توصيل مجاني",
       openNow: "مفتوح الآن",
       offers: "عروض متاحة",
       verified: "موثق",
       topRated: "الأعلى تقييماً",
+      previouslyOrdered: "طلبت منها من قبل",
       apply: "تطبيق الفلاتر",
       min: "دقيقة",
       andUp: "فأكثر",
@@ -82,13 +86,14 @@ function FiltersSidebar({
       clearAll: "Clear All",
       deliveryTime: "Delivery Time",
       rating: "Rating",
-      priceRange: "Price Range",
+      distanceRange: "Distance Range",
       features: "Features",
       freeDelivery: "Free Delivery",
       openNow: "Open Now",
       offers: "Offers Available",
       verified: "Verified",
       topRated: "Top Rated",
+      previouslyOrdered: "I Bought From Them",
       apply: "Apply Filters",
       min: "min",
       andUp: "& up",
@@ -104,8 +109,8 @@ function FiltersSidebar({
     >
       {/* Filter Header */}
       <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <SlidersHorizontal className="w-5 h-5" />
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
           {t.filters}
         </h3>
         <button
@@ -180,18 +185,18 @@ function FiltersSidebar({
         </div>
       </FilterSection>
 
-      {/* Price Range */}
-      <FilterSection title={t.priceRange} icon={DollarSign}>
+      {/* Distance Range */}
+      <FilterSection title={t.distanceRange} icon={MapPin}>
         <div className="space-y-4">
           <input
             type="range"
             min="0"
-            max="500"
-            step="10"
-            value={filters.priceRange[1]}
+            max="50"
+            step="1"
+            value={filters.distanceRange[1]}
             onChange={(e) =>
-              onFilterChange("priceRange", [
-                filters.priceRange[0],
+              onFilterChange("distanceRange", [
+                filters.distanceRange[0],
                 parseInt(e.target.value),
               ])
             }
@@ -200,27 +205,29 @@ function FiltersSidebar({
           <div className="flex items-center justify-between gap-2">
             <input
               type="number"
-              value={filters.priceRange[0]}
+              value={filters.distanceRange[0]}
               onChange={(e) =>
-                onFilterChange("priceRange", [
+                onFilterChange("distanceRange", [
                   parseInt(e.target.value) || 0,
-                  filters.priceRange[1],
+                  filters.distanceRange[1],
                 ])
               }
               className="w-24 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm border-0 focus:ring-2 focus:ring-green-500"
             />
+            <span className="text-gray-400">{isArabic ? "كم" : "km"}</span>
             <span className="text-gray-400">-</span>
             <input
               type="number"
-              value={filters.priceRange[1]}
+              value={filters.distanceRange[1]}
               onChange={(e) =>
-                onFilterChange("priceRange", [
-                  filters.priceRange[0],
-                  parseInt(e.target.value) || 500,
+                onFilterChange("distanceRange", [
+                  filters.distanceRange[0],
+                  parseInt(e.target.value) || 50,
                 ])
               }
               className="w-24 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm border-0 focus:ring-2 focus:ring-green-500"
             />
+            <span className="text-gray-400">{isArabic ? "كم" : "km"}</span>
           </div>
         </div>
       </FilterSection>
@@ -232,6 +239,7 @@ function FiltersSidebar({
             { id: "freeDelivery", label: t.freeDelivery, icon: Truck },
             { id: "openNow", label: t.openNow, icon: Clock },
             { id: "offers", label: t.offers, icon: Tag },
+            { id: "previouslyOrdered", label: t.previouslyOrdered, icon: ShoppingBag },
             { id: "verified", label: t.verified, icon: BadgeCheck },
             { id: "topRated", label: t.topRated, icon: Star },
           ].map((feature) => {

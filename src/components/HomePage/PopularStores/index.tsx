@@ -21,7 +21,8 @@ export default function PopularStores({ stores }: PopularStoresProps) {
 
 	if (stores.length === 0) return null;
 
-	const filteredStores = stores.slice(0, 10);
+	// Show first 10 stores
+	const displayedStores = stores.slice(0, 10);
 
 	return (
 		<motion.section
@@ -49,7 +50,7 @@ export default function PopularStores({ stores }: PopularStoresProps) {
 
 			{/* Stores Grid */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-				{filteredStores.map((store, index) => (
+				{displayedStores.map((store, index) => (
 					<motion.div
 						key={store.id}
 						initial={{ opacity: 0, y: 20 }}

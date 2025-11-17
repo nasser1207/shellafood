@@ -5,26 +5,28 @@ import { useState, useCallback, useMemo } from "react";
 export interface FilterState {
   deliveryTime: [number, number];
   rating: number[];
-  priceRange: [number, number];
+  distanceRange: [number, number];
   features: {
     freeDelivery: boolean;
     openNow: boolean;
     offers: boolean;
     verified: boolean;
     topRated: boolean;
+    previouslyOrdered: boolean; // I bought from them
   };
 }
 
 const defaultFilters: FilterState = {
   deliveryTime: [0, 60],
   rating: [],
-  priceRange: [0, 500],
+  distanceRange: [0, 50],
   features: {
     freeDelivery: false,
     openNow: false,
     offers: false,
     verified: false,
     topRated: false,
+    previouslyOrdered: false,
   },
 };
 
@@ -45,8 +47,8 @@ export function useFilters() {
   const hasActiveFilters = useMemo(() => {
     return (
       filters.rating.length > 0 ||
-      filters.priceRange[0] > 0 ||
-      filters.priceRange[1] < 500 ||
+      filters.distanceRange[0] > 0 ||
+      filters.distanceRange[1] < 10 ||
       Object.values(filters.features).some((v) => v === true)
     );
   }, [filters]);

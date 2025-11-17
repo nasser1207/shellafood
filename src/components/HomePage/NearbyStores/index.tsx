@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Star, Clock, Filter } from "lucide-react";
+import { MapPin, Star, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { Store } from "@/components/Utils/StoreCard";
-import StoreCard from "@/components/Utils/StoreCard";
 import Image from "next/image";
 import { navigateToStore } from "@/lib/utils/categories/navigation";
 import { TEST_CATEGORIES } from "@/lib/data/categories/testData";
@@ -19,11 +18,11 @@ export default function NearbyStores({ stores }: NearbyStoresProps) {
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
 	const router = useRouter();
-	const [distanceFilter, setDistanceFilter] = useState<string>("all");
 
 	if (stores.length === 0) return null;
 
-	const filteredStores = stores.slice(0, 10);
+	// Show first 10 stores
+	const displayedStores = stores.slice(0, 10);
 
 	return (
 		<motion.section
@@ -32,7 +31,7 @@ export default function NearbyStores({ stores }: NearbyStoresProps) {
 			transition={{ duration: 0.4, delay: 0.4 }}
 			className="mb-12"
 		>
-			{/* Header with Filters */}
+			{/* Header */}
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-4">
 					<div className="flex items-center gap-3">
@@ -50,31 +49,11 @@ export default function NearbyStores({ stores }: NearbyStoresProps) {
 						{isArabic ? "عرض الكل" : "View All"} →
 					</button>
 				</div>
-
-				{/* Distance Filters */}
-				<div className={`flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide ${isArabic ? "flex-row-reverse justify-end" : ""}`}>
-					<Filter className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-					<div className={`flex items-center gap-2 ${isArabic ? "flex-row-reverse" : ""}`}>
-						{["all", "500m", "1km", "2km"].map((filter) => (
-							<button
-								key={filter}
-								onClick={() => setDistanceFilter(filter)}
-								className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap touch-manipulation ${
-									distanceFilter === filter
-										? "bg-green-600 text-white shadow-lg"
-										: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-								}`}
-							>
-								{filter === "all" ? (isArabic ? "الكل" : "All") : filter}
-							</button>
-						))}
-					</div>
-				</div>
 			</div>
 
 			{/* Stores Grid */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-				{filteredStores.map((store, index) => (
+				{displayedStores.map((store, index) => (
 					<motion.div
 						key={store.id}
 						initial={{ opacity: 0, y: 20 }}

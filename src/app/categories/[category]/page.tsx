@@ -18,5 +18,5 @@ export default async function CategoryRoute({ params }: { params: Promise<{ cate
 	// Use category name from data if available, otherwise use the slug
 	const categoryName = categoryData?.name || category;
 
-	return <CategoryPage stores={stores} categoryName={categoryName} />;
+	return <CategoryPage stores={stores} categoryName={categoryName} categorySlug={category} />;
 }

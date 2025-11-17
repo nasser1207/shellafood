@@ -4,6 +4,7 @@ import { memo, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { History } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useStoreFavorites } from "@/hooks/useFavorites";
 
@@ -37,12 +38,14 @@ interface StoreCardProps {
 	store: Store;
 	className?: string;
 	onClick: (store: Store) => void;
+	orderCount?: number; // Number of orders from this store
 }
 
 function StoreCard({
 	store,
 	className = "",	
 	onClick,
+	orderCount,
 }: StoreCardProps) {
 	const { language } = useLanguage();
 	const isArabic = language === 'ar';
@@ -122,6 +125,16 @@ function StoreCard({
 					/>
 				</div>
 
+				{/* Order Count Badge - On Image */}
+				{orderCount !== undefined && orderCount > 0 && (
+					<div className={`absolute ${isArabic ? 'left-2 sm:left-3' : 'right-2 sm:right-3'} bottom-2 sm:bottom-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 shadow-md z-10 flex items-center gap-1 sm:gap-1.5`}>
+						<History className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+						<span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
+							{orderCount} {isArabic ? (orderCount === 1 ? "طلب" : "طلبات") : (orderCount === 1 ? "order" : "orders")}
+						</span>
+					</div>
+				)}
+
 				{/* Location Button */}
 				{store.location && (
 					<button
@@ -140,7 +153,7 @@ function StoreCard({
 			</div>
 
 			{/* Store Info */}
-			<div className={`p-4 ${isArabic ? 'text-right' : 'text-left'}`}>
+			<div className={`p-4 flex flex-col ${isArabic ? 'text-right' : 'text-left'}`}>
 				{/* Store Name & Type */}
 				<h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1 truncate">{displayName}</h3>
 				{displayType && (

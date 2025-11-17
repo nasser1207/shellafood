@@ -54,7 +54,7 @@ const MobileMenu = ({
 	};
 
 	const menuItems = [
-		{ id: "home", label: "الرئيسية", icon: Home, href: "/" },
+		{ id: "home", label: "الرئيسية", icon: Home, href: "/home" },
 		{ id: "my-orders", label: "طلباتي", icon: ClipboardList, href: "/my-orders" },
 		{ id: "cart", label: "السلة", icon: ShoppingBag, href: "/cart", badge: cartCount },
 		{

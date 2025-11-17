@@ -5,58 +5,57 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useCallback } from "react";
 import { Store } from "@/components/Utils/StoreCard";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, Grid2x2, Grid3x3 } from "lucide-react";
-import StoreCard from "../StoreCard";
-import FiltersSidebar from "../shared/FiltersSidebar";
-import Breadcrumbs from "../shared/Breadcrumbs";
-import EmptyState from "../shared/EmptyState";
-import InfiniteScrollTrigger from "../shared/InfiniteScrollTrigger";
+import { SlidersHorizontal, ShoppingBag, Grid2x2, Grid3x3 } from "lucide-react";
+import StoreCard from "@/components/Utils/StoreCard";
+import FiltersSidebar from "@/components/Categories/shared/FiltersSidebar";
+import Breadcrumbs from "@/components/Categories/shared/Breadcrumbs";
+import EmptyState from "@/components/Categories/shared/EmptyState";
+import InfiniteScrollTrigger from "@/components/Categories/shared/InfiniteScrollTrigger";
 import { useFilters } from "@/hooks/useFilters";
 import { staggerContainer } from "@/lib/utils/categories/animations";
-import DailyNeeded from "./DailyNeeded";
 
-interface CategoryViewProps {
+interface PreviouslyOrderedStoresPageProps {
   stores: Store[];
-  categoryName?: string;
-  categorySlug?: string;
 }
 
 type MobileViewMode = "single" | "double";
 
-function CategoryView({
-  stores,
-  categoryName,
-  categorySlug,
-}: CategoryViewProps) {
+export default function PreviouslyOrderedStoresPage({ stores }: PreviouslyOrderedStoresPageProps) {
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const direction = isArabic ? "rtl" : "ltr";
-  const [mobileViewMode, setMobileViewMode] = useState<MobileViewMode>("single");
   const [showFilters, setShowFilters] = useState(false);
+  const [mobileViewMode, setMobileViewMode] = useState<MobileViewMode>("single");
   const { filters, updateFilter, clearFilters, hasActiveFilters } = useFilters();
 
   const breadcrumbItems = useMemo(
     () => [
       { label: isArabic ? "الرئيسية" : "Home", href: "/home" },
-      {
-        label: isArabic ? "الأقسام" : "Categories",
-        href: "/categories",
-      },
-      { label: categoryName || "" },
+      { label: isArabic ? "المتاجر التي طلبت منها" : "Stores You've Ordered From" },
     ],
-    [categoryName, isArabic]
+    [isArabic]
   );
 
   const router = useRouter();
-  
+
   const handleStoreClick = useCallback(
     (store: Store) => {
-      if (categorySlug && store?.slug) {
-        router.push(`/categories/${categorySlug}/${store.slug}`);
-      }
+      const categorySlug = store.categoryId ? "restaurants" : "general";
+      router.push(`/categories/${categorySlug}/${store.slug}`);
     },
-    [router, categorySlug]
+    [router]
   );
+
+  // Generate consistent order counts for each store (based on store.id for consistency)
+  const storeOrderCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    stores.forEach((store) => {
+      // Generate consistent order count based on store.id (1-15 orders)
+      const hash = store.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      counts[store.id] = (hash % 15) + 1;
+    });
+    return counts;
+  }, [stores]);
 
   // Filter and sort stores
   const filteredAndSortedStores = useMemo(() => {
@@ -93,12 +92,9 @@ function CategoryView({
     }
 
     if (filters.features.previouslyOrdered) {
-      // Mock: Check if user has ordered from this store before
-      // In real app, check user's order history
-      // For now, use a mock list based on store ID hash
+      // Filter stores that user has ordered from (orderCount > 0)
       result = result.filter((store) => {
-        const hash = store.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return hash % 4 === 0; // ~25% of stores are previously ordered
+        return storeOrderCounts[store.id] > 0;
       });
     }
 
@@ -109,32 +105,31 @@ function CategoryView({
       });
     }
 
-    // Apply sorting - default to rating (highest first)
+    // Apply sorting - default to last ordered (most recent first)
+    // Mock: Sort by rating as proxy for last ordered (in real app, use actual order date)
     result.sort((a, b) => {
       return parseFloat(b.rating || "0") - parseFloat(a.rating || "0");
     });
 
     return result;
-  }, [stores, filters]);
+  }, [stores, filters, storeOrderCounts]);
 
   const content = {
     ar: {
-      title: categoryName || "القسم",
-      subtitle: isArabic 
-        ? "اكتشف أفضل المتاجر والمطاعم في هذا القسم"
-        : "Discover the best stores and restaurants in this category",
+      title: "المتاجر التي طلبت منها",
+      subtitle: "أعد الطلب بسهولة من المتاجر التي طلبت منها سابقاً",
       description: `${filteredAndSortedStores.length} متجر متاح`,
       filters: "الفلاتر",
-      noStores: "لا توجد متاجر متاحة في هذا القسم",
-      noStoresDesc: "يرجى التحقق مرة أخرى لاحقاً",
+      noStores: "لا توجد متاجر متاحة",
+      noStoresDesc: "لم تطلب من أي متجر بعد. ابدأ التسوق الآن!",
     },
     en: {
-      title: categoryName || "Category",
-      subtitle: "Discover the best stores and restaurants in this category",
+      title: "Stores You've Ordered From",
+      subtitle: "Reorder easily from stores you've previously ordered from",
       description: `${filteredAndSortedStores.length} stores available`,
       filters: "Filters",
-      noStores: "No stores available in this category",
-      noStoresDesc: "Please check back later",
+      noStores: "No stores available",
+      noStoresDesc: "You haven't ordered from any store yet. Start shopping now!",
     },
   };
 
@@ -146,21 +141,22 @@ function CategoryView({
         {/* Breadcrumbs */}
         <Breadcrumbs items={breadcrumbItems} className="mb-6" />
 
-        {/* Daily Needed Section - Only for Supermarket (Shown First) */}
-        {categorySlug === "supermarket" && (
-          <DailyNeeded />
-        )}
-
-        {/* Page Header - Moved below Daily Needed for Supermarket */}
+        {/* Page Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
             <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg flex-shrink-0">
+                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white mb-1 sm:mb-2">
                   {t.title}
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-2">
                   {t.subtitle}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500">
+                  {t.description}
                 </p>
               </div>
             </div>
@@ -233,46 +229,17 @@ function CategoryView({
                   initial="initial"
                   animate="animate"
                   className={`grid ${
-                    mobileViewMode === "double" 
-                      ? "grid-cols-2 gap-2.5" 
-                      : "grid-cols-1 gap-4"
-                  } sm:grid-cols-2 sm:gap-4 lg:gap-5`}
+                    mobileViewMode === "double" ? "grid-cols-2" : "grid-cols-1"
+                  } sm:grid-cols-2 gap-4 sm:gap-5 lg:gap-6`}
                 >
-                  {filteredAndSortedStores.map((store) => {
-                    // Determine store tags/badges
-                    const storeTags: string[] = [];
-                    
-                    // Check if store is popular/common (high rating or many reviews)
-                    const rating = parseFloat(store.rating || "0");
-                    if (rating >= 4.5 || (store.reviewsCount && store.reviewsCount > 100)) {
-                      storeTags.push(isArabic ? "شائع" : "Popular");
-                    }
-                    
-                    // Check if store is close (mock distance check)
-                    if (store.location) {
-                      const mockDistance = parseFloat(store.location.split(',')[0] || "0") % 10;
-                      if (mockDistance <= 2) {
-                        storeTags.push(isArabic ? "قريب مني" : "Close to Me");
-                      }
-                    }
-                    
-                    // Check if previously ordered (mock check)
-                    const hash = store.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                    if (hash % 4 === 0) {
-                      storeTags.push(isArabic ? "طلبت منها من قبل" : "Previously Ordered");
-                    }
-                    
-                    return (
-                      <div key={store.id} className="w-full">
-                        <StoreCard
-                          store={store}
-                          onClick={handleStoreClick}
-                          tags={storeTags}
-                          isCompact={mobileViewMode === "double"}
-                        />
-                      </div>
-                    );
-                  })}
+                  {filteredAndSortedStores.map((store) => (
+                    <StoreCard
+                      key={store.id}
+                      store={store}
+                      onClick={handleStoreClick}
+                      orderCount={storeOrderCounts[store.id]}
+                    />
+                  ))}
                 </motion.div>
 
                 {/* Infinite Scroll Trigger */}
@@ -284,7 +251,7 @@ function CategoryView({
               </>
             ) : (
               <EmptyState
-                icon="🏪"
+                icon="🛍️"
                 title={t.noStores}
                 description={t.noStoresDesc}
               />
@@ -295,6 +262,4 @@ function CategoryView({
     </div>
   );
 }
-
-export default CategoryView;
 

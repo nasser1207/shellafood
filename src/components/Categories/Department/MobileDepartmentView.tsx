@@ -1,14 +1,12 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect, memo } from "react";
+import { useMemo, useState, useCallback, memo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Search, SlidersHorizontal, Package, Tag, Truck, Star, CheckCircle } from "lucide-react";
+import { ArrowLeft, Search, X } from "lucide-react";
 import { Product } from "@/components/Utils/ProductCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { navigateToProductFromContext } from "@/lib/utils/categories/navigation";
 import MobileProductCard from "../shared/MobileProductCard";
-import BottomSheet from "../shared/BottomSheet";
-import FilterChip from "../shared/FilterChip";
 import { getDepartmentBySlug } from "@/lib/data/categories/testData";
 
 interface MobileDepartmentViewProps {
@@ -23,14 +21,7 @@ function MobileDepartmentView({ products }: MobileDepartmentViewProps) {
 	const params = useParams();
 
 	const [sortBy, setSortBy] = useState<"name" | "price" | "rating">("name");
-	const [filters, setFilters] = useState({
-		inStock: false,
-		hasOffers: false,
-		freeDelivery: false,
-		topRated: false,
-	});
-	const [showFilters, setShowFilters] = useState(false);
-	const [showSearch, setShowSearch] = useState(false);
+	const [filterBy, setFilterBy] = useState<"all" | "inStock" | "offers">("all");
 	const [searchTerm, setSearchTerm] = useState("");
 
 	const categorySlug = useMemo(() => {
@@ -72,9 +63,8 @@ function MobileDepartmentView({ products }: MobileDepartmentViewProps) {
 	);
 
 	const filteredAndSortedProducts = useMemo(() => {
+		// Apply search filter first
 		let filtered = products;
-
-		// Apply search filter
 		if (searchTerm) {
 			filtered = filtered.filter((p) => {
 				const name = isArabic && p.nameAr ? p.nameAr : p.name;
@@ -82,16 +72,13 @@ function MobileDepartmentView({ products }: MobileDepartmentViewProps) {
 			});
 		}
 
-		// Apply filters
-		if (filters.inStock) {
-			filtered = filtered.filter((p) => p.inStock);
-		}
-		if (filters.hasOffers) {
-			filtered = filtered.filter((p) => p.badge || (p.originalPrice && p.originalPrice > (p.price || 0)));
-		}
-		if (filters.topRated) {
-			filtered = filtered.filter((p) => p.rating && p.rating >= 4.5);
-		}
+		// Apply other filters
+		filtered = filtered.filter((p) => {
+			if (filterBy === "all") return true;
+			if (filterBy === "inStock") return p.inStock;
+			if (filterBy === "offers") return p.originalPrice && p.originalPrice > (p.price || 0);
+			return false;
+		});
 
 		// Apply sorting
 		const sorted = [...filtered].sort((a, b) => {
@@ -109,11 +96,19 @@ function MobileDepartmentView({ products }: MobileDepartmentViewProps) {
 		});
 
 		return sorted;
-	}, [products, searchTerm, filters, sortBy, isArabic]);
+	}, [products, searchTerm, filterBy, sortBy, isArabic]);
 
-	const toggleFilter = useCallback((key: keyof typeof filters) => {
-		setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
-	}, []);
+	const filterButtons = useMemo(() => [
+		{ key: "all" as const, label: isArabic ? "الكل" : "All" },
+		{ key: "inStock" as const, label: isArabic ? "متوفر" : "In Stock" },
+		{ key: "offers" as const, label: isArabic ? "العروض" : "Offers" },
+	], [isArabic]);
+
+	const sortOptions = useMemo(() => [
+		{ value: "name" as const, label: isArabic ? "الاسم" : "Name" },
+		{ value: "price" as const, label: isArabic ? "السعر" : "Price" },
+		{ value: "rating" as const, label: isArabic ? "التقييم" : "Rating" },
+	], [isArabic]);
 
 	const departmentName = department
 		? isArabic && department.nameAr
@@ -123,76 +118,84 @@ function MobileDepartmentView({ products }: MobileDepartmentViewProps) {
 
 	return (
 		<div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={direction}>
-			{/* Mobile Header - Sticky */}
-			<div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
 				{/* Back button + Title */}
-				<div className="px-4 py-4 flex items-center gap-3">
+				<div className="mb-4 sm:mb-6 flex items-center gap-3">
 					<button
 						onClick={() => router.back()}
-						className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95"
+						className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95 flex-shrink-0"
 					>
-						<ArrowLeft className="w-5 h-5 text-gray-900 dark:text-white" />
+						<ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900 dark:text-white" />
 					</button>
 					<div className="flex-1 min-w-0">
-						<h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+						<h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
 							{departmentName}
 						</h1>
-						<p className="text-sm text-gray-600 dark:text-gray-400">
+						<p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
 							{filteredAndSortedProducts.length} {isArabic ? "منتج" : "items"}
 						</p>
 					</div>
-					<button
-						onClick={() => setShowSearch(true)}
-						className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95"
-					>
-						<Search className="w-5 h-5 text-gray-900 dark:text-white" />
-					</button>
 				</div>
 
-				{/* Filters bar - horizontal scroll */}
-				<div className="px-4 pb-3 overflow-x-auto scrollbar-hide momentum-scroll">
-					<div className={`flex gap-2 `}>
-						<FilterChip
-							icon={SlidersHorizontal}
-							label={isArabic ? "جميع الفلاتر" : "All Filters"}
-							active={Object.values(filters).some((v) => v)}
-							onClick={() => setShowFilters(true)}
+				{/* Search Bar - Responsive */}
+				<div className="mb-4 sm:mb-6">
+					<div className="relative">
+						<Search className={`absolute top-1/2 -translate-y-1/2 ${isArabic ? 'right-3 sm:right-4' : 'left-3 sm:left-4'} w-4 h-4 sm:w-5 sm:h-5 text-gray-400`} />
+						<input
+							type="text"
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							placeholder={isArabic ? 'ابحث عن منتجات...' : 'Search products...'}
+							className={`w-full ${isArabic ? 'pr-10 sm:pr-11 pl-3 sm:pl-4' : 'pl-10 sm:pl-11 pr-3 sm:pr-4'} py-2.5 sm:py-3 text-sm sm:text-base bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all`}
 						/>
-						<FilterChip
-							label={isArabic ? "متوفر" : "In Stock"}
-							active={filters.inStock}
-							onClick={() => toggleFilter("inStock")}
-						/>
-						<FilterChip
-							label={isArabic ? "عروض" : "Offers"}
-							active={filters.hasOffers}
-							onClick={() => toggleFilter("hasOffers")}
-						/>
-						<FilterChip
-							label={isArabic ? "الأعلى تقييماً" : "Top Rated"}
-							active={filters.topRated}
-							onClick={() => toggleFilter("topRated")}
-						/>
-						{/* Sort dropdown */}
-						<select
-							value={sortBy}
-							onChange={(e) => setSortBy(e.target.value as "name" | "price" | "rating")}
-							className={`px-4 py-2 rounded-full font-semibold text-sm border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 ${
-								isArabic ? "text-right" : "text-left"
-							}`}
-						>
-							<option value="name">{isArabic ? "الاسم" : "Name"}</option>
-							<option value="price">{isArabic ? "السعر" : "Price"}</option>
-							<option value="rating">{isArabic ? "التقييم" : "Rating"}</option>
-						</select>
+						{searchTerm && (
+							<button
+								onClick={() => setSearchTerm('')}
+								className={`absolute top-1/2 -translate-y-1/2 ${isArabic ? 'left-3 sm:left-4' : 'right-3 sm:right-4'} w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors`}
+							>
+								<X className="w-4 h-4 sm:w-5 sm:h-5" />
+							</button>
+						)}
 					</div>
 				</div>
-			</div>
 
-			{/* Products Grid - 2 columns on mobile */}
-			<div className="px-4 py-4 pb-24">
+				{/* Filters and Sort - Responsive */}
+				<div className={`mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4 ${isArabic ? 'sm:justify-start' : 'sm:justify-end'}`}>
+					{/* Filter Buttons - Responsive */}
+					<div className="flex flex-wrap gap-2 sm:gap-2">
+						{filterButtons.map((filter) => (
+							<button
+								key={filter.key}
+								onClick={() => setFilterBy(filter.key)}
+								className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+									filterBy === filter.key
+										? 'bg-green-600 dark:bg-green-500 text-white shadow-md dark:shadow-green-900/50'
+										: 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+								}`}
+							>
+								{filter.label}
+							</button>
+						))}
+					</div>
+
+					{/* Sort Dropdown - Responsive */}
+					<select
+						value={sortBy}
+						onChange={(e) => setSortBy(e.target.value as "name" | "price" | "rating")}
+						className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto`}
+						dir={direction}
+					>
+						{sortOptions.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+				</div>
+
+				{/* Products Grid - Responsive */}
 				{filteredAndSortedProducts.length > 0 ? (
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
 						{filteredAndSortedProducts.map((product, index) => (
 							<MobileProductCard
 								key={product.id}
@@ -203,119 +206,15 @@ function MobileDepartmentView({ products }: MobileDepartmentViewProps) {
 						))}
 					</div>
 				) : (
-					<div className="py-12 text-center">
-						<p className="text-gray-600 dark:text-gray-400">
+					<div className="py-12 sm:py-16 text-center">
+						<p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
 							{isArabic ? "لا توجد منتجات" : "No products found"}
 						</p>
 					</div>
 				)}
 			</div>
-
-			{/* Search Modal */}
-			<BottomSheet
-				isOpen={showSearch}
-				onClose={() => setShowSearch(false)}
-				title={isArabic ? "البحث" : "Search"}
-			>
-				<div className="space-y-4">
-					<div className="relative">
-						<Search
-							className={`absolute top-1/2 -translate-y-1/2 ${isArabic ? "right-3" : "left-3"} w-5 h-5 text-gray-400`}
-						/>
-						<input
-							type="text"
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							placeholder={isArabic ? "ابحث عن منتجات..." : "Search products..."}
-							className={`w-full ${isArabic ? "pr-11 pl-4" : "pl-11 pr-4"} py-3 bg-gray-100 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white`}
-							autoFocus
-						/>
-					</div>
-				</div>
-			</BottomSheet>
-
-			{/* Filters Modal */}
-			<BottomSheet
-				isOpen={showFilters}
-				onClose={() => setShowFilters(false)}
-				title={isArabic ? "الفلاتر" : "Filters"}
-			>
-				<div className="space-y-6 pb-6">
-					<div className="flex items-center justify-between">
-						<h2 className="text-lg font-bold text-gray-900 dark:text-white">
-							{isArabic ? "الفلاتر" : "Filters"}
-						</h2>
-						<button
-							onClick={() => setFilters({ inStock: false, hasOffers: false, freeDelivery: false, topRated: false })}
-							className="text-sm text-green-600 font-semibold"
-						>
-							{isArabic ? "مسح الكل" : "Clear All"}
-						</button>
-					</div>
-
-					{/* Quick Filters */}
-					<div className="space-y-2">
-						<button
-							onClick={() => toggleFilter("inStock")}
-							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${
-								filters.inStock
-									? "border-green-500 bg-green-50 dark:bg-green-900/20"
-									: "border-gray-200 dark:border-gray-700"
-							}`}
-						>
-							<Package
-								className={`w-5 h-5 ${filters.inStock ? "text-green-600" : "text-gray-400"}`}
-							/>
-							<span className="flex-1 text-left font-semibold text-gray-900 dark:text-white">
-								{isArabic ? "متوفر فقط" : "In Stock Only"}
-							</span>
-							{filters.inStock && (
-								<CheckCircle className="w-5 h-5 text-green-600" />
-							)}
-						</button>
-
-						<button
-							onClick={() => toggleFilter("hasOffers")}
-							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${
-								filters.hasOffers
-									? "border-green-500 bg-green-50 dark:bg-green-900/20"
-									: "border-gray-200 dark:border-gray-700"
-							}`}
-						>
-							<Tag
-								className={`w-5 h-5 ${filters.hasOffers ? "text-green-600" : "text-gray-400"}`}
-							/>
-							<span className="flex-1 text-left font-semibold text-gray-900 dark:text-white">
-								{isArabic ? "لديه عروض" : "Has Offers"}
-							</span>
-							{filters.hasOffers && (
-								<CheckCircle className="w-5 h-5 text-green-600" />
-							)}
-						</button>
-
-						<button
-							onClick={() => toggleFilter("topRated")}
-							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${
-								filters.topRated
-									? "border-green-500 bg-green-50 dark:bg-green-900/20"
-									: "border-gray-200 dark:border-gray-700"
-							}`}
-						>
-							<Star
-								className={`w-5 h-5 ${filters.topRated ? "text-green-600 fill-green-600" : "text-gray-400"}`}
-							/>
-							<span className="flex-1 text-left font-semibold text-gray-900 dark:text-white">
-								{isArabic ? "الأعلى تقييماً (4.5+)" : "Top Rated (4.5+)"}
-							</span>
-							{filters.topRated && (
-								<CheckCircle className="w-5 h-5 text-green-600" />
-							)}
-						</button>
-					</div>
-				</div>
-                        </BottomSheet>
-                </div>
-        );
+		</div>
+	);
 }
 
 export default memo(MobileDepartmentView);

@@ -9,17 +9,18 @@ import CategoryViewComponent from "../CategoryPage/CategoryView";
 interface CategoryViewProps {
 	stores: Store[];
 	categoryName?: string;
+	categorySlug?: string;
 }
 
-export default function CategoryView({ stores, categoryName }: CategoryViewProps) {
+export default function CategoryView({ stores, categoryName,categorySlug }: CategoryViewProps) {
 	const params = useParams();
-	const categorySlug = useMemo(() => getSlugFromParam(params?.category), [params?.category]);
+	const slug =categorySlug || useMemo(() => getSlugFromParam(params?.category), [params?.category]);
 
 	return (
 		<CategoryViewComponent
 			stores={stores}
 			categoryName={categoryName}
-			categorySlug={categorySlug}
+			categorySlug={slug}
 		/>
 	);
 }
