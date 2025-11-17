@@ -2,9 +2,10 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Department } from "@/types/categories";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, Grid3x3, ArrowRight } from "lucide-react";
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface DepartmentsSidebarProps {
   departments: Department[];
@@ -48,6 +49,7 @@ function DepartmentsSidebar({
       away: "بعيد",
       minOrder: "الحد الأدنى للطلب",
       freeDelivery: "توصيل مجاني فوق",
+      showAll: "عرض الكل",
     },
     en: {
       categories: "Categories",
@@ -57,6 +59,7 @@ function DepartmentsSidebar({
       away: "away",
       minOrder: "Min. Order",
       freeDelivery: "Free delivery over",
+      showAll: "Show All",
     },
   };
 
@@ -95,6 +98,24 @@ function DepartmentsSidebar({
               </button>
             );
           })}
+          
+          {/* Show All Button */}
+          {categorySlug && storeSlug && (
+            <Link
+              href={`/categories/${categorySlug}/${storeSlug}/departments`}
+              className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 flex items-center justify-between gap-2 sm:gap-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base ${
+                isArabic ? "flex-row-reverse" : ""
+              }`}
+            >
+              <span className="flex items-center gap-1.5 sm:gap-2">
+                <Grid3x3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">{t.showAll}</span>
+              </span>
+              <ArrowRight
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${isArabic ? "rotate-180" : ""}`}
+              />
+            </Link>
+          )}
         </nav>
       </div>
 

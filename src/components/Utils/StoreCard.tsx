@@ -1,10 +1,11 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { History } from "lucide-react";
+import { History, RefreshCw } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useStoreFavorites } from "@/hooks/useFavorites";
 
@@ -39,6 +40,8 @@ interface StoreCardProps {
 	className?: string;
 	onClick: (store: Store) => void;
 	orderCount?: number; // Number of orders from this store
+	showOrderAgain?: boolean; // Show "Order Again" button
+	onOrderAgain?: (store: Store) => void; // Handler for "Order Again" click
 }
 
 function StoreCard({
@@ -46,6 +49,8 @@ function StoreCard({
 	className = "",	
 	onClick,
 	orderCount,
+	showOrderAgain = false,
+	onOrderAgain,
 }: StoreCardProps) {
 	const { language } = useLanguage();
 	const isArabic = language === 'ar';
@@ -80,6 +85,13 @@ function StoreCard({
 			window.open(`https://www.google.com/maps/search/${encodeURIComponent(displayName)}`, '_blank');
 		}
 	};
+
+	const handleOrderAgain = useCallback((e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (onOrderAgain) {
+			onOrderAgain(store);
+		}
+	}, [onOrderAgain, store]);
 
 	return (
 		<div
@@ -124,6 +136,7 @@ function StoreCard({
 						size="md"
 					/>
 				</div>
+
 
 				{/* Order Count Badge - On Image */}
 				{orderCount !== undefined && orderCount > 0 && (
@@ -216,6 +229,33 @@ function StoreCard({
 							{isArabic ? "قريباً" : "Coming Soon"}
 						</p>
 					</div>
+				)}
+
+				{/* Order Again Button - Positioned below image as expert UX */}
+				{showOrderAgain && onOrderAgain && orderCount !== undefined && orderCount > 0 && (
+					<motion.button
+						onClick={handleOrderAgain}
+						whileHover={{ scale: 1.02 }}
+						whileTap={{ scale: 0.98 }}
+						className={`
+							w-full mt-3
+							flex items-center justify-center gap-1.5 
+							px-3 py-2 sm:px-4 sm:py-2.5
+							bg-gradient-to-r from-green-600 to-emerald-600
+							hover:from-green-700 hover:to-emerald-700
+							active:from-green-800 active:to-emerald-800
+							text-white text-xs sm:text-sm font-semibold
+							rounded-lg shadow-md shadow-green-500/30
+							hover:shadow-lg hover:shadow-green-500/40
+							border border-green-500/20
+							transition-all duration-300
+							group
+						`}
+						aria-label={isArabic ? 'اطلب مجدداً' : 'Order Again'}
+					>
+						<RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:rotate-180" />
+						<span className="drop-shadow-sm">{isArabic ? 'اطلب مجدداً' : 'Order Again'}</span>
+					</motion.button>
 				)}
 			</div>
 		</div>

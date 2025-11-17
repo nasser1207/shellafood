@@ -1,14 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ShoppingBag, Star, Clock, CheckCircle2, History } from "lucide-react";
+import { ShoppingBag, Star, Clock, CheckCircle2, History, RefreshCw } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { Store } from "@/components/Utils/StoreCard";
 import Image from "next/image";
 import { navigateToStore } from "@/lib/utils/categories/navigation";
 import { TEST_CATEGORIES } from "@/lib/data/categories/testData";
+import ReorderModal from "./ReorderModal";
+import { getLastOrderItems, getLastOrderDate } from "@/lib/utils/orderHistory";
 
 interface PreviouslyOrderedStoresProps {
 	stores: Store[];
@@ -18,11 +20,20 @@ export default function PreviouslyOrderedStores({ stores }: PreviouslyOrderedSto
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
 	const router = useRouter();
+	const [reorderModalStore, setReorderModalStore] = useState<Store | null>(null);
 
 	if (stores.length === 0) return null;
 
 	// Show first 10 stores
 	const displayedStores = stores.slice(0, 10);
+
+	const handleOrderAgain = useCallback((store: Store) => {
+		setReorderModalStore(store);
+	}, []);
+
+	const handleCloseModal = useCallback(() => {
+		setReorderModalStore(null);
+	}, []);
 
 	const content = {
 		ar: {
@@ -104,6 +115,8 @@ export default function PreviouslyOrderedStores({ stores }: PreviouslyOrderedSto
 				{displayedStores.map((store, index) => {
 							// Mock order count (in real app, get from user's order history)
 							const orderCount = Math.floor(Math.random() * 10) + 1;
+							const category = store.categoryId ? TEST_CATEGORIES.find(c => c.id === store.categoryId) : null;
+							const categorySlug = category?.slug;
 							
 							return (
 								<motion.div
@@ -114,11 +127,8 @@ export default function PreviouslyOrderedStores({ stores }: PreviouslyOrderedSto
 									whileHover={{ y: -4 }}
 									className="group cursor-pointer"
 									onClick={() => {
-										if (store.categoryId && store.slug) {
-											const category = TEST_CATEGORIES.find(c => c.id === store.categoryId);
-											if (category) {
-												navigateToStore(router, category.slug, store);
-											}
+										if (store.categoryId && store.slug && categorySlug) {
+											navigateToStore(router, categorySlug, store);
 										}
 									}}
 								>
@@ -137,14 +147,15 @@ export default function PreviouslyOrderedStores({ stores }: PreviouslyOrderedSto
 												<div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800" />
 											)}
 
+
 											{/* Ordered Before Badge */}
-											<div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg">
+											<div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg z-10">
 												<CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
 												<span className="whitespace-nowrap">{t.orderedBefore}</span>
 											</div>
 
-											{/* Order Count Badge */}
-											<div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 shadow-md">
+											{/* Order Count Badge - Moved to bottom right to avoid overlap */}
+											<div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 shadow-md z-10">
 												<History className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-600 dark:text-amber-400" />
 												<span className="text-gray-900 dark:text-gray-100 whitespace-nowrap">
 													{orderCount} {orderCount === 1 ? t.orderCount : t.orders}
@@ -174,7 +185,7 @@ export default function PreviouslyOrderedStores({ stores }: PreviouslyOrderedSto
 												</p>
 											)}
 
-											<div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+											<div className="flex items-center justify-between text-xs sm:text-sm gap-2 mb-3">
 												<span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
 													<span className="whitespace-nowrap">
 													 {t.lastOrder} {t.lastOrderTime}	 {isArabic ? " أسبوع" : "1 week"}
@@ -184,12 +195,42 @@ export default function PreviouslyOrderedStores({ stores }: PreviouslyOrderedSto
 													{isArabic ? "توصيل مجاني" : "Free delivery"}
 												</span>
 											</div>
+
+											{/* Order Again Button - Positioned below image as expert UX */}
+											{orderCount > 0 && (
+												<motion.button
+													onClick={(e) => {
+														e.stopPropagation();
+														handleOrderAgain(store);
+													}}
+													whileHover={{ scale: 1.02 }}
+													whileTap={{ scale: 0.98 }}
+													className="w-full flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:from-green-800 active:to-emerald-800 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-md shadow-green-500/30 hover:shadow-lg hover:shadow-green-500/40 border border-green-500/20 transition-all duration-300 group"
+													aria-label={isArabic ? 'اطلب مجدداً' : 'Order Again'}
+												>
+													<RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:rotate-180" />
+													<span className="drop-shadow-sm">{isArabic ? 'اطلب مجدداً' : 'Order Again'}</span>
+												</motion.button>
+											)}
 										</div>
 									</div>
 								</motion.div>
 							);
 						})}
 			</div>
+
+			{/* Reorder Modal */}
+			{reorderModalStore && (
+				<ReorderModal
+					isOpen={!!reorderModalStore}
+					onClose={handleCloseModal}
+					store={reorderModalStore}
+					lastOrderItems={getLastOrderItems(reorderModalStore.id)}
+					lastOrderDate={getLastOrderDate(reorderModalStore.id, language)}
+					categorySlug={reorderModalStore.categoryId ? TEST_CATEGORIES.find(c => c.id === reorderModalStore.categoryId)?.slug : undefined}
+					storeSlug={reorderModalStore.slug}
+				/>
+			)}
 		</motion.section>
 	);
 }

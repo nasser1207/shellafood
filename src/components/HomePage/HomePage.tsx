@@ -7,6 +7,7 @@ import { Store } from "../Utils/StoreCard";
 import { Product } from "../Utils/ProductCard";
 import DeliveryAddressHero from "./DeliveryAddressHero";
 import PromotionalBanner from "./PromotionalBanner";
+import OffersStrip from "./OffersStrip";
 import CategoriesSection from "./CategoriesSection";
 import PreviouslyOrderedStores from "./PreviouslyOrderedStores";
 import NearbyStores from "./NearbyStores";
@@ -110,6 +111,9 @@ export default function HomePage() {
 
 				{/* Promotional Banner */}
 				<PromotionalBanner />
+
+				{/* Offers Strip */}
+				<OffersStrip />
 
 				{/* Previously Ordered Stores */}
 				<PreviouslyOrderedStores stores={TEST_STORES.slice(0, 5) as Store[]} />

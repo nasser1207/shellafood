@@ -1,13 +1,13 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useMemo, useState, useCallback, useRef, useEffect, memo } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, memo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Store } from "@/components/Utils/StoreCard";
 import { Product } from "@/components/Utils/ProductCard";
 import { Department } from "@/components/Utils/DepartmentCard";
-import { Search, MapPin, Star, Clock, ShoppingCart, Heart, Share2, ArrowLeft, ArrowUp } from "lucide-react";
+import { Search, MapPin, Star, Clock, ShoppingCart, Heart, Share2, ArrowLeft, ArrowUp, Grid3x3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileProductCard from "../shared/MobileProductCard";
 import BottomSheet from "../shared/BottomSheet";
@@ -45,7 +45,9 @@ function MobileStoreView({
 	const [showFilters, setShowFilters] = useState(false);
 	const [showScrollToTop, setShowScrollToTop] = useState(false);
 	const [cartItems, setCartItems] = useState(getCartItems());
+	const [headerHeight, setHeaderHeight] = useState(0);
 	const departmentsRef = useRef<HTMLDivElement>(null);
+	const headerRef = useRef<HTMLDivElement>(null);
 
 	// Update cart items when cart changes
 	useEffect(() => {
@@ -95,6 +97,31 @@ function MobileStoreView({
 
 	const scrollToTop = useCallback(() => {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}, []);
+
+	// Calculate total header height
+	useLayoutEffect(() => {
+		const calculateHeight = () => {
+			setHeaderHeight(headerRef.current?.offsetHeight || 360);
+		};
+
+		calculateHeight();
+		
+		// Use ResizeObserver for better accuracy
+		const resizeObserver = new ResizeObserver(() => {
+			calculateHeight();
+		});
+
+		if (headerRef.current) {
+			resizeObserver.observe(headerRef.current);
+		}
+
+		window.addEventListener('resize', calculateHeight);
+		
+		return () => {
+			resizeObserver.disconnect();
+			window.removeEventListener('resize', calculateHeight);
+		};
 	}, []);
 
 	const filteredProducts = useMemo(() => {
@@ -149,117 +176,119 @@ function MobileStoreView({
 
 	return (
 		<div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={direction}>
-			{/* Mobile Hero - Compact */}
-			<div className="relative h-48 overflow-hidden">
-				{store.image ? (
-					<Image
-						src={store.image}
-						alt={displayName}
-						fill
-						priority
-						className="object-cover"
-						sizes={getImageSizes('hero')}
-						quality={getImageQuality('hero')}
-						placeholder="blur"
-						blurDataURL={getImageBlurDataURL()}
-					/>
-				) : (
-					<div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600" />
-				)}
+			{/* Fixed Header - All Elements Combined */}
+			<div ref={headerRef} className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900">
+				{/* Mobile Hero */}
+				<div className="relative h-48 overflow-hidden">
+					{store.image ? (
+						<Image
+							src={store.image}
+							alt={displayName}
+							fill
+							priority
+							className="object-cover"
+							sizes={getImageSizes('hero')}
+							quality={getImageQuality('hero')}
+							placeholder="blur"
+							blurDataURL={getImageBlurDataURL()}
+						/>
+					) : (
+						<div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600" />
+					)}
 
-				<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+					<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-				{/* Back button */}
-				<button
-					onClick={() => router.back()}
-					className={`absolute top-4 ${isArabic ? "right-4" : "left-4"} z-10 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center`}
-				>
-					<ArrowLeft className="w-5 h-5 text-white" />
-				</button>
+					{/* Back button */}
+					<button
+						onClick={() => router.back()}
+						className={`absolute top-4 ${isArabic ? "right-4" : "left-4"} z-10 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center`}
+					>
+						<ArrowLeft className="w-5 h-5 text-white" />
+					</button>
 
-				{/* Store info overlay */}
-				<div className="absolute bottom-0 left-0 right-0 p-4">
-					<div className={`flex items-end gap-3 `}>
-						{/* Small logo */}
-						{store.logo && (
-							<div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-lg flex-shrink-0">
-								<Image
-									src={store.logo}
-									alt={displayName}
-									width={64}
-									height={64}
-									className="object-cover w-full h-full"
-									quality={getImageQuality('thumbnail')}
-									placeholder="blur"
-									blurDataURL={getImageBlurDataURL(64, 64)}
+					{/* Store info overlay */}
+					<div className="absolute bottom-0 left-0 right-0 p-4">
+						<div className={`flex items-end gap-3 `}>
+							{/* Small logo */}
+							{store.logo && (
+								<div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-lg flex-shrink-0">
+									<Image
+										src={store.logo}
+										alt={displayName}
+										width={64}
+										height={64}
+										className="object-cover w-full h-full"
+										quality={getImageQuality('thumbnail')}
+										placeholder="blur"
+										blurDataURL={getImageBlurDataURL(64, 64)}
+									/>
+								</div>
+							)}
+
+							<div className="flex-1 min-w-0 text-white">
+								<h1 className="text-xl font-black truncate mb-1">{displayName}</h1>
+								<div className={`flex items-center gap-2 text-sm flex-wrap `}>
+									{store.rating && (
+										<div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm">
+											<Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+											<span className="font-bold text-xs">{store.rating}</span>
+										</div>
+									)}
+									{displayDeliveryTime && (
+										<>
+											<span className="text-white/80">•</span>
+											<div className="flex items-center gap-1">
+												<Clock className="w-3 h-3" />
+												<span className="text-xs">{displayDeliveryTime}</span>
+											</div>
+										</>
+									)}
+								</div>
+							</div>
+
+							{/* Favorite - in thumb zone */}
+							<div onClick={(e) => e.stopPropagation()}>
+								<FavoriteButton
+									isFavorite={isFavorite}
+									isLoading={favoriteLoading}
+									onToggle={toggleFavorite}
+									size="sm"
+									className="bg-white/20 backdrop-blur-sm"
 								/>
 							</div>
-						)}
-
-						<div className="flex-1 min-w-0 text-white">
-							<h1 className="text-xl font-black truncate mb-1">{displayName}</h1>
-							<div className={`flex items-center gap-2 text-sm flex-wrap `}>
-								{store.rating && (
-									<div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm">
-										<Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-										<span className="font-bold text-xs">{store.rating}</span>
-									</div>
-								)}
-								{displayDeliveryTime && (
-									<>
-										<span className="text-white/80">•</span>
-										<div className="flex items-center gap-1">
-											<Clock className="w-3 h-3" />
-											<span className="text-xs">{displayDeliveryTime}</span>
-										</div>
-									</>
-								)}
-							</div>
-						</div>
-
-						{/* Favorite - in thumb zone */}
-						<div onClick={(e) => e.stopPropagation()}>
-							<FavoriteButton
-								isFavorite={isFavorite}
-								isLoading={favoriteLoading}
-								onToggle={toggleFavorite}
-								size="sm"
-								className="bg-white/20 backdrop-blur-sm"
-							/>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			{/* Quick info bar */}
-			<div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm">
-				<button
-					onClick={handleLocationClick}
-					className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 `}
-				>
-					<MapPin className="w-4 h-4" />
-					<span>2.5 km</span>
-				</button>
-				<div className="text-gray-600 dark:text-gray-400">
-					{store.fee === "0" || store.fee === "Free" || store.feeAr === "مجاني" ? (
-						<span className="text-green-600 font-bold">
-							{isArabic ? "توصيل مجاني" : "Free Delivery"}
-						</span>
-					) : (
-						<span>
-							{isArabic ? "رسوم: " : "Fee: "}
-							{isArabic && store.feeAr ? store.feeAr : store.fee}
-						</span>
-					)}
+				{/* Quick info bar */}
+				<div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm">
+					<button
+						onClick={handleLocationClick}
+						className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 `}
+					>
+						<MapPin className="w-4 h-4" />
+						<span>2.5 km</span>
+					</button>
+					<div className="text-gray-600 dark:text-gray-400">
+						{store.fee === "0" || store.fee === "Free" || store.feeAr === "مجاني" ? (
+							<span className="text-green-600 font-bold">
+								{isArabic ? "توصيل مجاني" : "Free Delivery"}
+							</span>
+						) : (
+							<span>
+								{isArabic ? "رسوم: " : "Fee: "}
+								{isArabic && store.feeAr ? store.feeAr : store.fee}
+							</span>
+						)}
+					</div>
+					<div className="text-gray-600 dark:text-gray-400">
+						{isArabic ? "الحد الأدنى: " : "Min: "}
+						{isArabic && store.minimumOrderAr ? store.minimumOrderAr : store.minimumOrder}
+					</div>
 				</div>
-				<div className="text-gray-600 dark:text-gray-400">
-					{isArabic ? "الحد الأدنى: " : "Min: "}
-					{isArabic && store.minimumOrderAr ? store.minimumOrderAr : store.minimumOrder}
-				</div>
-			</div>
 
-			{/* Sticky Search & Filters */}
-			<div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b shadow-sm">
+				{/* Search & Filters */}
+				<div className="bg-white dark:bg-gray-900 border-b shadow-sm">
 				{/* Search bar */}
 				<div className="px-4 py-3">
 					<button
@@ -285,27 +314,43 @@ function MobileStoreView({
 								<button
 									key={dept.slug || dept.name}
 									onClick={() => handleDepartmentClick(dept.slug || "")}
-									className={`flex-shrink-0 px-4 py-2 rounded-full font-semibold text-sm transition-all active:scale-95 ${
+									className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all active:scale-95 ${
 										isActive
 											? "bg-green-600 text-white"
 											: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 									}`}
 								>
-									{isArabic && dept.nameAr ? dept.nameAr : dept.name}
-									{products.length > 0 && (
-										<span className={`ml-2 text-xs ${isActive ? "text-white/80" : "text-gray-500"}`}>
-											({products.length})
-										</span>
-									)}
+									<span className="whitespace-nowrap">
+										{isArabic && dept.nameAr ? dept.nameAr : dept.name}
+										{products.length > 0 && (
+											<span className={`ml-1.5 sm:ml-2 text-[10px] sm:text-xs ${isActive ? "text-white/80" : "text-gray-500"}`}>
+												({products.length})
+											</span>
+										)}
+									</span>
 								</button>
 							);
 						})}
+						
+						{/* Show All Tab */}
+						{categorySlug && storeSlug && (
+							<Link
+								href={`/categories/${categorySlug}/${storeSlug}/departments`}
+								className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 ${
+									"bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg"
+								}`}
+							>
+								<Grid3x3 className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+								<span className="whitespace-nowrap">{isArabic ? "عرض الكل" : "Show All"}</span>
+							</Link>
+						)}
 					</div>
+				</div>
 				</div>
 			</div>
 
 			{/* Products by Department */}
-			<div className="px-4 py-4 space-y-8 pb-24">
+			<div className="px-4 py-4 space-y-8 pb-24" style={{ paddingTop: `${headerHeight + 16}px` }}>
 				{departments.map((dept) => {
 					const deptKey = dept.slug || dept.name || "";
 					const products = filteredProducts[deptKey] || [];

@@ -9,7 +9,6 @@ import PageHeader from "../shared/PageHeader";
 import EmptyState from "../shared/EmptyState";
 import MobileDepartmentView from "./MobileDepartmentView";
 import { useMobile } from "@/hooks/useMobile";
-import { Search, X } from "lucide-react";
 
 interface DepartmentViewProps {
 products: Product[];
@@ -50,42 +49,24 @@ function DepartmentView({ products }: DepartmentViewProps) {
 
 	const [sortBy, setSortBy] = useState<'name' | 'price' | 'rating'>('name');
 	const [filterBy, setFilterBy] = useState<'all' | 'inStock' | 'offers'>('all');
-	const [searchTerm, setSearchTerm] = useState('');
 
-	const filterAndSortProducts = (products: Product[], filterBy: 'all' | 'inStock' | 'offers', sortBy: 'name' | 'price' | 'rating', searchTerm: string, isArabic: boolean) => {
-		// Apply search filter first
-		let filtered = products;
-		if (searchTerm) {
-			filtered = filtered.filter((product) => {
-				const name = isArabic && product.nameAr ? product.nameAr : product.name;
-				return name.toLowerCase().includes(searchTerm.toLowerCase());
-			});
-		}
-
-		// Apply other filters
-		filtered = filtered.filter((product) => {
+	const filterAndSortProducts = (products: Product[], filterBy: 'all' | 'inStock' | 'offers', sortBy: 'name' | 'price' | 'rating', isArabic: boolean) => {
+		return products.filter((product) => {
 			if (filterBy === 'all') return true;
 			if (filterBy === 'inStock') return product.inStock;
 			if (filterBy === 'offers') return product.originalPrice && product.originalPrice && product.originalPrice > (product.price || 0);
 			return false;
-		});
-
-		// Apply sorting
-		return filtered.sort((a, b) => {
-			if (sortBy === 'name') {
-				const nameA = (isArabic && a.nameAr ? a.nameAr : a.name).toLowerCase();
-				const nameB = (isArabic && b.nameAr ? b.nameAr : b.name).toLowerCase();
-				return nameA.localeCompare(nameB);
-			}
-			if (sortBy === 'price') return (a.price || 0) - (b.price || 0);
-			if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+		}).sort((a, b) => {
+			if (sortBy === 'name') return a.name.localeCompare(b.name);
+			if (sortBy === 'price') return (a.originalPrice && a.originalPrice > (a.price || 0)) ? 1 : -1;
+			if (sortBy === 'rating') return (a.rating && b.rating) ? a.rating > b.rating ? 1 : -1 : 0;
 			return 0;
 		});
 	};
 	
 	const filteredAndSortedProducts = useMemo(
-		() => filterAndSortProducts(products, filterBy, sortBy, searchTerm, isArabic),
-		[products, sortBy, filterBy, searchTerm, isArabic]
+		() => filterAndSortProducts(products, filterBy, sortBy, isArabic),
+		[products, sortBy, filterBy, isArabic]
 	);
 
 	const filterButtons = useMemo(() => [
@@ -124,37 +105,13 @@ function DepartmentView({ products }: DepartmentViewProps) {
 					description={isArabic ? 'تصفح جميع المنتجات في هذا القسم' : 'Browse all products in this department'}
 				/>
 
-				{/* Search Bar - Responsive */}
-				<div className="mb-4 sm:mb-6">
-					<div className="relative">
-						<Search className={`absolute top-1/2 -translate-y-1/2 ${isArabic ? 'right-3' : 'left-3'} w-5 h-5 text-gray-400`} />
-						<input
-							type="text"
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							placeholder={isArabic ? 'ابحث عن منتجات...' : 'Search products...'}
-							className={`w-full ${isArabic ? 'pr-11 pl-4' : 'pl-11 pr-4'} py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all`}
-						/>
-						{searchTerm && (
-							<button
-								onClick={() => setSearchTerm('')}
-								className={`absolute top-1/2 -translate-y-1/2 ${isArabic ? 'left-3' : 'right-3'} w-5 h-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300`}
-							>
-								<X className="w-5 h-5" />
-							</button>
-						)}
-					</div>
-				</div>
-
-				{/* Filters and Sort - Responsive */}
-				<div className={`mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4 ${isArabic ? 'sm:justify-start' : 'sm:justify-end'}`}>
-					{/* Filter Buttons - Responsive */}
-					<div className="flex flex-wrap gap-2 sm:gap-2">
+				<div className={`mb-6 flex flex-wrap items-center gap-3 ${isArabic ? ' justify-start' : 'justify-end'}`}>
+					<div className={`flex gap-2`}>
 						{filterButtons.map((filter) => (
 							<button
 								key={filter.key}
 								onClick={() => setFilterBy(filter.key)}
-								className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+								className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 									filterBy === filter.key
 										? 'bg-green-600 dark:bg-green-500 text-white shadow-md dark:shadow-green-900/50'
 										: 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -165,11 +122,10 @@ function DepartmentView({ products }: DepartmentViewProps) {
 						))}
 					</div>
 
-					{/* Sort Dropdown - Responsive */}
 					<select
 						value={sortBy}
 						onChange={(e) => setSortBy(e.target.value as 'name' | 'price' | 'rating')}
-						className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto`}
+						className={`px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors`}
 						dir={direction}
 					>
 						{sortOptions.map((option) => (

@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Store } from "@/components/Utils/StoreCard";
 import { motion } from "framer-motion";
 import { SlidersHorizontal, Grid2x2, Grid3x3 } from "lucide-react";
@@ -10,10 +10,11 @@ import StoreCard from "../StoreCard";
 import FiltersSidebar from "../shared/FiltersSidebar";
 import Breadcrumbs from "../shared/Breadcrumbs";
 import EmptyState from "../shared/EmptyState";
-import InfiniteScrollTrigger from "../shared/InfiniteScrollTrigger";
+import Pagination from "./Pagination";
 import { useFilters } from "@/hooks/useFilters";
 import { staggerContainer } from "@/lib/utils/categories/animations";
 import DailyNeeded from "./DailyNeeded";
+import { useMobile } from "@/hooks/useMobile";
 
 interface CategoryViewProps {
   stores: Store[];
@@ -33,7 +34,18 @@ function CategoryView({
   const direction = isArabic ? "rtl" : "ltr";
   const [mobileViewMode, setMobileViewMode] = useState<MobileViewMode>("single");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const isMobile = useMobile(768);
   const { filters, updateFilter, clearFilters, hasActiveFilters } = useFilters();
+
+  // Responsive items per page
+  // Lowered for testing - increase when you have more stores (e.g., 12 for desktop, 10 for mobile)
+  const itemsPerPage = useMemo(() => {
+    if (isMobile) {
+      return mobileViewMode === "double" ? 2 : 2; // Very low for testing with 4 restaurants
+    }
+    return 2; // Desktop and tablet - Very low for testing (should be 12 normally)
+  }, [isMobile, mobileViewMode]);
 
   const breadcrumbItems = useMemo(
     () => [
@@ -116,6 +128,78 @@ function CategoryView({
 
     return result;
   }, [stores, filters]);
+
+  // Paginate stores
+  const paginatedStores = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredAndSortedStores.slice(startIndex, endIndex);
+  }, [filteredAndSortedStores, currentPage, itemsPerPage]);
+
+  // Calculate total pages
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredAndSortedStores.length / itemsPerPage) || 1;
+  }, [filteredAndSortedStores.length, itemsPerPage]);
+
+  // Reset to page 1 when filters change - use stringified filters to avoid unnecessary resets
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filters.rating.length,
+    filters.features.openNow,
+    filters.features.freeDelivery,
+    filters.features.offers,
+    filters.features.previouslyOrdered,
+    filters.distanceRange[0],
+    filters.distanceRange[1],
+  ]);
+
+  // Reset to page 1 when view mode changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mobileViewMode]);
+
+  // Reset to page 1 if current page is invalid
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  // Handle page change with smooth scroll
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    
+    // Smooth scroll to top of stores list
+    setTimeout(() => {
+      const storesElement = document.getElementById("stores-list");
+      if (storesElement) {
+        const offset = 100; // Header offset
+        const elementPosition = storesElement.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      } else {
+        // Fallback to top of page
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 100);
+  }, []);
+
+  // Handle filter changes - reset to page 1
+  const handleFilterChange = useCallback((filterType: string, value: any) => {
+    setCurrentPage(1);
+    updateFilter(filterType, value);
+  }, [updateFilter]);
+
+  // Handle clear filters - reset to page 1
+  const handleClearFilters = useCallback(() => {
+    setCurrentPage(1);
+    clearFilters();
+  }, [clearFilters]);
 
   const content = {
     ar: {
@@ -219,16 +303,17 @@ function CategoryView({
           <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
             <FiltersSidebar
               filters={filters}
-              onFilterChange={updateFilter}
-              onClearAll={clearFilters}
+              onFilterChange={handleFilterChange}
+              onClearAll={handleClearFilters}
             />
           </div>
 
           {/* Stores Grid - Always 2 columns */}
-          <div>
+          <div id="stores-list">
             {filteredAndSortedStores.length > 0 ? (
               <>
                 <motion.div
+                  key={`stores-page-${currentPage}`}
                   variants={staggerContainer}
                   initial="initial"
                   animate="animate"
@@ -238,7 +323,7 @@ function CategoryView({
                       : "grid-cols-1 gap-4"
                   } sm:grid-cols-2 sm:gap-4 lg:gap-5`}
                 >
-                  {filteredAndSortedStores.map((store) => {
+                  {paginatedStores.map((store) => {
                     // Determine store tags/badges
                     const storeTags: string[] = [];
                     
@@ -275,12 +360,17 @@ function CategoryView({
                   })}
                 </motion.div>
 
-                {/* Infinite Scroll Trigger */}
-                <InfiniteScrollTrigger
-                  hasMore={false}
-                  isLoading={false}
-                  onLoadMore={() => {}}
-                />
+                {/* Pagination */}
+                {totalPages > 1 && filteredAndSortedStores.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    totalItems={filteredAndSortedStores.length}
+                    itemsPerPage={itemsPerPage}
+                    maxVisiblePages={isMobile ? 5 : 7}
+                  />
+                )}
               </>
             ) : (
               <EmptyState
