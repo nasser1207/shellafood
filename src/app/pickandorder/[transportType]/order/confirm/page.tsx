@@ -24,16 +24,19 @@ export async function generateMetadata({
 
 export default async function ConfirmPage({
 	params,
+	searchParams,
 }: {
 	params: Promise<{ transportType: string }>;
+	searchParams: Promise<{ type?: string }>;
 }) {
 	const { transportType } = await params;
+	const { type } = await searchParams;
 
 	return (
 		<>
 			<NavBarCondition />
 			<main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-				<OrderConfirmationPage transportType={transportType} />
+				<OrderConfirmationPage transportType={transportType} orderType={type || "one-way"} />
 			</main>
 			<ShellaFooter />
 		</>

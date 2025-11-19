@@ -9,13 +9,15 @@ import { calculatePricing, formatPrice } from "./utils/pricing";
 
 interface OrderConfirmationPageProps {
 	transportType: string;
+	orderType?: string;
 }
 
-export default function OrderConfirmationPage({ transportType }: OrderConfirmationPageProps) {
+export default function OrderConfirmationPage({ transportType, orderType }: OrderConfirmationPageProps) {
 	const router = useRouter();
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
 	const isMotorbike = transportType === "motorbike";
+	const isMultiDirection = orderType === "multi-direction";
 
 	// Generate order ID (in real app, this would come from API)
 	const orderId = useMemo(() => {
@@ -47,7 +49,8 @@ export default function OrderConfirmationPage({ transportType }: OrderConfirmati
 	};
 
 	const handleTrackOrder = () => {
-		router.push("/my-orders");
+		// Navigate to track order page for this specific order
+		router.push(`/my-orders/${orderId}/track`);
 	};
 
 	const containerVariants = {

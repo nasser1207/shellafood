@@ -33,11 +33,11 @@ export default async function DetailsPage({
 
 	return (
 		<>
-			<NavBarCondition />
-			<main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-				<OrderDetailsPage transportType={transportType} orderType={type || "one-way"} />
-			</main>
-			<ShellaFooter />
+		<NavBarCondition />
+		<main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+			<OrderDetailsPage transportType={transportType} orderType={type || "one-way"} />
+		</main>
+		<ShellaFooter />
 		</>
 	);
 }

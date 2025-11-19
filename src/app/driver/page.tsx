@@ -1,6 +1,7 @@
 // app/driver/page.tsx
 import { Metadata } from "next";
 import { DriverPage } from "@/components/Driver";
+import Navbar from "@/components/navbar";
 
 // Metadata for SEO - Arabic
 export const metadata: Metadata = {
@@ -68,5 +69,12 @@ export const metadata: Metadata = {
 };
 
 export default function DriverPageRoute() {
-	return <DriverPage />;
+	return(
+	<>
+	<Navbar />	
+	<main className="min-h-screen bg-white dark:bg-gray-900">
+		<DriverPage />
+	</main>
+	</>
+	)
 }
