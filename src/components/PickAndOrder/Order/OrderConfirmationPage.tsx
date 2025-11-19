@@ -1,11 +1,48 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CheckCircle, Calendar, ArrowLeft, Receipt, MapPin, FileText, Phone, UserCircle, Package, Truck, Bike, Info } from "lucide-react";
+import { CheckCircle, Calendar, ArrowLeft, Receipt, MapPin, FileText, Phone, UserCircle, Package, Truck, Bike, Info, Weight, Ruler, Image as ImageIcon, Video, AlertTriangle, Box } from "lucide-react";
+import Image from "next/image";
 import { calculatePricing, formatPrice } from "./utils/pricing";
+
+interface LocationPoint {
+	id: string;
+	type: "pickup" | "dropoff";
+	label: string;
+	location: { lat: number; lng: number } | null;
+	streetName: string;
+	areaName: string;
+	city: string;
+	building: string;
+	additionalDetails: string;
+	buildingPhoto: string | null;
+	recipientName: string;
+	recipientPhone: string;
+}
+
+interface OrderData {
+	transportType: string;
+	orderType: string;
+	locationPoints: LocationPoint[];
+	packageDescription: string;
+	packageWeight: string;
+	packageDimensions: string;
+	specialInstructions: string;
+	packageImages?: string[];
+	packageVideo?: string | null;
+	// Vehicle-specific fields
+	truckType?: string;
+	cargoType?: string;
+	isFragile?: boolean;
+	requiresRefrigeration?: boolean;
+	loadingEquipmentNeeded?: boolean;
+	packageType?: string;
+	isDocuments?: boolean;
+	isExpress?: boolean;
+}
 
 interface OrderConfirmationPageProps {
 	transportType: string;
@@ -17,7 +54,25 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
 	const isMotorbike = transportType === "motorbike";
+	const isTruck = transportType === "truck" || transportType === "track";
 	const isMultiDirection = orderType === "multi-direction";
+
+	const [orderData, setOrderData] = useState<OrderData | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+
+	// Load order data from sessionStorage
+	useEffect(() => {
+		const storedData = sessionStorage.getItem("pickAndOrderDetails");
+		if (storedData) {
+			try {
+				const parsed = JSON.parse(storedData);
+				setOrderData(parsed);
+			} catch (error) {
+				console.error("Error parsing order data:", error);
+			}
+		}
+		setIsLoading(false);
+	}, []);
 
 	// Generate order ID (in real app, this would come from API)
 	const orderId = useMemo(() => {
@@ -42,6 +97,26 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 			day: "numeric",
 		});
 	}, [isArabic]);
+
+	// Get pickup and dropoff points
+	const pickupPoints = useMemo(() => {
+		return orderData?.locationPoints.filter(p => p.type === "pickup") || [];
+	}, [orderData]);
+
+	const dropoffPoints = useMemo(() => {
+		return orderData?.locationPoints.filter(p => p.type === "dropoff") || [];
+	}, [orderData]);
+
+	// Helper function to get truck type name
+	const getTruckTypeName = (type: string) => {
+		const types: { [key: string]: { ar: string; en: string } } = {
+			"small": { ar: "صغيرة (حتى 1.5 طن)", en: "Small (up to 1.5 ton)" },
+			"medium": { ar: "متوسطة (1.5 - 3 طن)", en: "Medium (1.5 - 3 ton)" },
+			"large": { ar: "كبيرة (3 - 5 طن)", en: "Large (3 - 5 ton)" },
+			"extra-large": { ar: "كبيرة جداً (5+ طن)", en: "Extra Large (5+ ton)" },
+		};
+		return types[type] ? (isArabic ? types[type].ar : types[type].en) : type;
+	};
 
 	// Handlers
 	const handleBackToHome = () => {
@@ -107,99 +182,329 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 					</div>
 
 					{/* Content Section */}
-					<div className="p-6 sm:p-8 space-y-6">
-						{/* Order Details */}
-						<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
-							<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
-								<Receipt className="w-5 h-5 text-green-600 dark:text-green-400" />
-								{isArabic ? "تفاصيل الطلب" : "Order Details"}
-							</h2>
-							<div className="space-y-3">
-								<div className="flex justify-between items-center">
-									<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "رقم الطلب:" : "Order ID:"}</span>
-									<span className="font-semibold text-gray-900 dark:text-gray-100">{orderId}</span>
+					{isLoading ? (
+						<div className="p-6 sm:p-8 flex items-center justify-center py-12">
+							<div className="text-center">
+								<div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+								<p className="text-gray-600 dark:text-gray-400">{isArabic ? "جاري تحميل البيانات..." : "Loading data..."}</p>
+							</div>
+						</div>
+					) : orderData ? (
+						<div className="p-6 sm:p-8 space-y-6">
+							{/* Order Details */}
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<Receipt className="w-5 h-5 text-green-600 dark:text-green-400" />
+									{isArabic ? "تفاصيل الطلب" : "Order Details"}
+								</h2>
+								<div className="space-y-3">
+									<div className="flex justify-between items-center">
+										<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "رقم الطلب:" : "Order ID:"}</span>
+										<span className="font-semibold text-gray-900 dark:text-gray-100">{orderId}</span>
+									</div>
+									<div className="flex justify-between items-center">
+										<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "نوع النقل:" : "Transport Type:"}</span>
+										<span className={`font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+											{isMotorbike ? (
+												<>
+													<Bike className="w-5 h-5 text-[#FA9D2B]" />
+													{isArabic ? "دراجة نارية" : "Motorbike"}
+												</>
+											) : (
+												<>
+													<Truck className="w-5 h-5 text-[#31A342]" />
+													{isArabic ? "شاحنة" : "Truck"}
+												</>
+											)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center">
+										<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "نوع الطلب:" : "Order Type:"}</span>
+										<span className="font-semibold text-gray-900 dark:text-gray-100">
+											{isMultiDirection ? (isArabic ? "متعدد الاتجاهات" : "Multi-Direction") : (isArabic ? "ذهاب فقط" : "One-Way")}
+										</span>
+									</div>
+									<div className="flex justify-between items-center">
+										<span className={`text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2`}>
+											<Calendar className="w-4 h-4" />
+											{isArabic ? "التاريخ:" : "Date:"}
+										</span>
+										<span className="font-semibold text-gray-900 dark:text-gray-100">
+											{formattedDate}
+										</span>
+									</div>
 								</div>
-								<div className="flex justify-between items-center">
-									<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "نوع النقل:" : "Transport Type:"}</span>
-									<span className={`font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
-										{isMotorbike ? (
-											<>
-												<Bike className="w-5 h-5" />
-												{isArabic ? "دراجة نارية" : "Motorbike"}
-											</>
-										) : (
-											<>
-												<Truck className="w-5 h-5" />
-												{isArabic ? "شاحنة" : "Truck"}
-											</>
+							</section>
+
+							{/* Pickup Points */}
+							{pickupPoints.length > 0 && (
+								<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+									<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+										<MapPin className="w-5 h-5 text-[#31A342]" />
+										{isArabic ? (pickupPoints.length > 1 ? "عنوان الالتقاط" : "عنوان الالتقاط") : (pickupPoints.length > 1 ? "Pickup Addresses" : "Pickup Address")}
+									</h2>
+									<div className="space-y-4">
+										{pickupPoints.map((point, index) => (
+											<div key={point.id} className={`bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800 ${isArabic ? "text-right" : "text-left"}`}>
+												<div className="flex items-start gap-3 mb-3">
+													<div className="w-8 h-8 bg-[#31A342] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+														{index + 1}
+													</div>
+													<div className="flex-1">
+														<p className="text-sm font-semibold text-[#31A342] mb-1">{point.label}</p>
+														<p className="text-base text-gray-900 dark:text-gray-100 font-medium mb-1">
+															{point.streetName}, {point.areaName}
+														</p>
+														<p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+															{point.city} {point.building && `- ${point.building}`}
+														</p>
+														{point.additionalDetails && (
+															<p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+																{point.additionalDetails}
+															</p>
+														)}
+														{point.recipientName && (
+															<div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800">
+																<p className="text-sm text-gray-700 dark:text-gray-300">
+																	{isArabic ? "المستلم:" : "Recipient:"} <span className="font-semibold">{point.recipientName}</span>
+																</p>
+																{point.recipientPhone && (
+																	<p className="text-sm text-gray-700 dark:text-gray-300">
+																		{isArabic ? "الهاتف:" : "Phone:"} <span className="font-semibold">{point.recipientPhone}</span>
+																	</p>
+																)}
+															</div>
+														)}
+														{point.buildingPhoto && (
+															<div className="mt-2">
+																<Image
+																	src={point.buildingPhoto}
+																	alt="Building"
+																	width={200}
+																	height={150}
+																	className="rounded-lg object-cover"
+																/>
+															</div>
+														)}
+													</div>
+												</div>
+											</div>
+										))}
+									</div>
+								</section>
+							)}
+
+							{/* Dropoff Points */}
+							{dropoffPoints.length > 0 && (
+								<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+									<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+										<MapPin className="w-5 h-5 text-[#FA9D2B]" />
+										{isArabic ? (dropoffPoints.length > 1 ? "عناوين التوصيل" : "عنوان التوصيل") : (dropoffPoints.length > 1 ? "Delivery Addresses" : "Delivery Address")}
+									</h2>
+									<div className="space-y-4">
+										{dropoffPoints.map((point, index) => (
+											<div key={point.id} className={`bg-orange-50 dark:bg-orange-900/10 rounded-xl p-4 border border-orange-200 dark:border-orange-800 ${isArabic ? "text-right" : "text-left"}`}>
+												<div className="flex items-start gap-3 mb-3">
+													<div className="w-8 h-8 bg-[#FA9D2B] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+														{index + 1}
+													</div>
+													<div className="flex-1">
+														<p className="text-sm font-semibold text-[#FA9D2B] mb-1">{point.label}</p>
+														<p className="text-base text-gray-900 dark:text-gray-100 font-medium mb-1">
+															{point.streetName}, {point.areaName}
+														</p>
+														<p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+															{point.city} {point.building && `- ${point.building}`}
+														</p>
+														{point.additionalDetails && (
+															<p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+																{point.additionalDetails}
+															</p>
+														)}
+														{point.recipientName && (
+															<div className="mt-2 pt-2 border-t border-orange-200 dark:border-orange-800">
+																<p className="text-sm text-gray-700 dark:text-gray-300">
+																	{isArabic ? "المستلم:" : "Recipient:"} <span className="font-semibold">{point.recipientName}</span>
+																</p>
+																{point.recipientPhone && (
+																	<p className="text-sm text-gray-700 dark:text-gray-300">
+																		{isArabic ? "الهاتف:" : "Phone:"} <span className="font-semibold">{point.recipientPhone}</span>
+																	</p>
+																)}
+															</div>
+														)}
+														{point.buildingPhoto && (
+															<div className="mt-2">
+																<Image
+																	src={point.buildingPhoto}
+																	alt="Building"
+																	width={200}
+																	height={150}
+																	className="rounded-lg object-cover"
+																/>
+															</div>
+														)}
+													</div>
+												</div>
+											</div>
+										))}
+									</div>
+								</section>
+							)}
+
+						{/* Package Details */}
+						{(orderData.packageDescription || orderData.packageWeight || orderData.packageDimensions || orderData.specialInstructions) && (
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<Package className="w-5 h-5 text-green-600 dark:text-green-400" />
+									{isArabic ? "تفاصيل الطرد" : "Package Details"}
+								</h2>
+								<div className="space-y-3">
+									{orderData.packageDescription && (
+										<div className={`${isArabic ? "text-right" : "text-left"}`}>
+											<p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{isArabic ? "الوصف:" : "Description:"}</p>
+											<p className="text-base text-gray-900 dark:text-gray-100">{orderData.packageDescription}</p>
+										</div>
+									)}
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+										{orderData.packageWeight && (
+											<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+												<div className="flex items-center gap-2 mb-1">
+													<Weight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+													<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "الوزن:" : "Weight:"}</span>
+												</div>
+												<p className="text-base font-semibold text-gray-900 dark:text-gray-100">{orderData.packageWeight}</p>
+											</div>
 										)}
-									</span>
+										{orderData.packageDimensions && (
+											<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+												<div className="flex items-center gap-2 mb-1">
+													<Ruler className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+													<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "الأبعاد:" : "Dimensions:"}</span>
+												</div>
+												<p className="text-base font-semibold text-gray-900 dark:text-gray-100">{orderData.packageDimensions}</p>
+											</div>
+										)}
+									</div>
+									{orderData.specialInstructions && (
+										<div className={`bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 ${isArabic ? "text-right" : "text-left"}`}>
+											<p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">{isArabic ? "تعليمات خاصة:" : "Special Instructions:"}</p>
+											<p className="text-sm text-blue-800 dark:text-blue-200">{orderData.specialInstructions}</p>
+										</div>
+									)}
 								</div>
-								<div className="flex justify-between items-center">
-									<span className={`text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2`}>
-										<Calendar className="w-4 h-4" />
-										{isArabic ? "التاريخ:" : "Date:"}
-									</span>
-									<span className="font-semibold text-gray-900 dark:text-gray-100">
-										{formattedDate}
-									</span>
-								</div>
-							</div>
-						</section>
+							</section>
+						)}
 
-						{/* Pickup Address */}
-						<section className="space-y-3 pb-6 border-b border-gray-100 dark:border-gray-700">
-							<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
-								<MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
-								{isArabic ? "عنوان الالتقاط" : "Pickup Address"}
-							</h2>
-							<div className={`space-y-2 ${isArabic ? "text-right" : "text-left"}`}>
-								<p className="text-base text-gray-900 dark:text-gray-100 font-medium">
-									{isArabic ? "الرياض، حي النرجس" : "Riyadh, Al-Narjis District"}
-								</p>
-								<p className="text-sm text-gray-600 dark:text-gray-400">
-									{isArabic ? "شارع الملك فهد، مبنى رقم 123" : "King Fahd Street, Building #123"}
-								</p>
-							</div>
-						</section>
-
-						{/* Delivery Address */}
-						<section className="space-y-3 pb-6 border-b border-gray-100 dark:border-gray-700">
-							<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
-								<MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
-								{isArabic ? "عنوان التوصيل" : "Delivery Address"}
-							</h2>
-							<div className={`space-y-2 ${isArabic ? "text-right" : "text-left"}`}>
-								<p className="text-base text-gray-900 dark:text-gray-100 font-medium">
-									{isArabic ? "الرياض، حي العليا" : "Riyadh, Al-Olaya District"}
-								</p>
-								<p className="text-sm text-gray-600 dark:text-gray-400">
-									{isArabic ? "طريق الملك عبدالعزيز، مبنى رقم 456" : "King Abdulaziz Road, Building #456"}
-								</p>
-							</div>
-						</section>
-
-						{/* Sender Info */}
-						<section className="space-y-3 pb-6 border-b border-gray-100 dark:border-gray-700">
-							<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
-								<UserCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-								{isArabic ? "معلومات المرسل" : "Sender Information"}
-							</h2>
-							<div className={`space-y-2 ${isArabic ? "text-right" : "text-left"}`}>
-								<div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-									<Phone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-									<span>
-										{isArabic ? "الاسم:" : "Name:"} <span className="font-semibold text-gray-900 dark:text-gray-100">{isArabic ? "أحمد محمد" : "Ahmed Mohammed"}</span>
-									</span>
+						{/* Package Images */}
+						{orderData.packageImages && orderData.packageImages.length > 0 && (
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<ImageIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+									{isArabic ? "صور الطرد" : "Package Images"}
+								</h2>
+								<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+									{orderData.packageImages.map((image, index) => (
+										<div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+											<Image
+												src={image}
+												alt={`Package image ${index + 1}`}
+												fill
+												className="object-cover"
+											/>
+										</div>
+									))}
 								</div>
-								<div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-									<Phone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-									<span>
-										{isArabic ? "الهاتف:" : "Phone:"} <span className="font-semibold text-gray-900 dark:text-gray-100">+966 50 123 4567</span>
-									</span>
+							</section>
+						)}
+
+						{/* Package Video */}
+						{orderData.packageVideo && (
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<Video className="w-5 h-5 text-green-600 dark:text-green-400" />
+									{isArabic ? "فيديو الطرد" : "Package Video"}
+								</h2>
+								<div className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+									<video src={orderData.packageVideo} controls className="w-full h-full object-cover" />
 								</div>
-							</div>
-						</section>
+							</section>
+						)}
+
+						{/* Vehicle-Specific Details */}
+						{isTruck && (orderData.truckType || orderData.cargoType || orderData.isFragile || orderData.requiresRefrigeration || orderData.loadingEquipmentNeeded) && (
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<Truck className="w-5 h-5 text-[#31A342]" />
+									{isArabic ? "تفاصيل الشاحنة" : "Truck Details"}
+								</h2>
+								<div className="space-y-3">
+									{orderData.truckType && (
+										<div className="flex justify-between items-center">
+											<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "نوع الشاحنة:" : "Truck Type:"}</span>
+											<span className="font-semibold text-gray-900 dark:text-gray-100">{getTruckTypeName(orderData.truckType)}</span>
+										</div>
+									)}
+									{orderData.cargoType && (
+										<div className="flex justify-between items-center">
+											<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "نوع البضاعة:" : "Cargo Type:"}</span>
+											<span className="font-semibold text-gray-900 dark:text-gray-100">{orderData.cargoType}</span>
+										</div>
+									)}
+									<div className="flex flex-wrap gap-2">
+										{orderData.isFragile && (
+											<span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-lg text-sm font-semibold">
+												<AlertTriangle className="w-4 h-4" />
+												{isArabic ? "قابل للكسر" : "Fragile"}
+											</span>
+										)}
+										{orderData.requiresRefrigeration && (
+											<span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-semibold">
+												<Box className="w-4 h-4" />
+												{isArabic ? "يحتاج تبريد" : "Requires Refrigeration"}
+											</span>
+										)}
+										{orderData.loadingEquipmentNeeded && (
+											<span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-sm font-semibold">
+												<Truck className="w-4 h-4" />
+												{isArabic ? "يحتاج معدات تحميل" : "Loading Equipment Needed"}
+											</span>
+										)}
+									</div>
+								</div>
+							</section>
+						)}
+
+						{isMotorbike && (orderData.packageType || orderData.isDocuments || orderData.isExpress) && (
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<Bike className="w-5 h-5 text-[#FA9D2B]" />
+									{isArabic ? "تفاصيل الدراجة النارية" : "Motorbike Details"}
+								</h2>
+								<div className="space-y-3">
+									{orderData.packageType && (
+										<div className="flex justify-between items-center">
+											<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "نوع الطرد:" : "Package Type:"}</span>
+											<span className="font-semibold text-gray-900 dark:text-gray-100">{orderData.packageType}</span>
+										</div>
+									)}
+									<div className="flex flex-wrap gap-2">
+										{orderData.isDocuments && (
+											<span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-semibold">
+												<FileText className="w-4 h-4" />
+												{isArabic ? "مستندات" : "Documents"}
+											</span>
+										)}
+										{orderData.isExpress && (
+											<span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-sm font-semibold">
+												<Package className="w-4 h-4" />
+												{isArabic ? "سريع" : "Express"}
+											</span>
+										)}
+									</div>
+								</div>
+							</section>
+						)}
 
 						{/* Pricing Breakdown Section */}
 						<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
@@ -301,7 +606,12 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 								<span>{isArabic ? "تتبع الطلب" : "Track Order"}</span>
 							</button>
 						</section>
-					</div>
+						</div>
+					) : (
+						<div className="p-6 sm:p-8 text-center py-12">
+							<p className="text-gray-600 dark:text-gray-400">{isArabic ? "لا توجد بيانات طلب" : "No order data found"}</p>
+						</div>
+					)}
 
 					{/* Footer Action */}
 					<div className="bg-gray-50 dark:bg-gray-800 px-6 sm:px-8 py-4 border-t border-gray-200 dark:border-gray-700">
