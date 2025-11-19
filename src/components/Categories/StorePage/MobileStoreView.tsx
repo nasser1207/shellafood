@@ -85,15 +85,36 @@ function MobileStoreView({
 		return cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 	}, [cartItems]);
 
-	// Handle scroll to top visibility
+	// Handle scroll to top visibility and scroll spy for departments
 	useEffect(() => {
+		const updateActiveDepartment = () => {
+			// Scroll spy: Update active department based on scroll position
+			const scrollPosition = window.scrollY + headerHeight + 100; // 100px offset for better detection
+			
+			for (let i = departments.length - 1; i >= 0; i--) {
+				const dept = departments[i];
+				const element = document.getElementById(dept.slug || dept.name || "");
+				if (element) {
+					const elementTop = element.offsetTop;
+					if (scrollPosition >= elementTop) {
+						setActiveDepartment(dept.slug || undefined);
+						break;
+					}
+				}
+			}
+		};
+
 		const handleScroll = () => {
 			setShowScrollToTop(window.scrollY > 400);
+			updateActiveDepartment();
 		};
+
+		// Initial check on mount
+		updateActiveDepartment();
 
 		window.addEventListener('scroll', handleScroll);
 		return () => window.removeEventListener('scroll', handleScroll);
-	}, []);
+	}, [departments, headerHeight]);
 
 	const scrollToTop = useCallback(() => {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -144,9 +165,16 @@ function MobileStoreView({
 		setActiveDepartment(deptSlug);
 		const element = document.getElementById(deptSlug);
 		if (element) {
-			element.scrollIntoView({ behavior: "smooth", block: "start" });
+			// Calculate the position accounting for fixed header
+			const elementPosition = element.getBoundingClientRect().top;
+			const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 16; // 16px for extra padding
+			
+			window.scrollTo({
+				top: offsetPosition,
+				behavior: "smooth"
+			});
 		}
-	}, []);
+	}, [headerHeight]);
 
 	const handleProductClick = useCallback(
 		(productId: string) => {
@@ -357,7 +385,11 @@ function MobileStoreView({
 					if (products.length === 0) return null;
 
 					return (
-						<section key={dept.slug || dept.name} id={dept.slug || dept.name}>
+						<section 
+							key={dept.slug || dept.name} 
+							id={dept.slug || dept.name}
+							style={{ scrollMarginTop: `${headerHeight + 16}px` }}
+						>
 							{/* Department header */}
 							<div
 								className={`flex items-center justify-between mb-4 `}
