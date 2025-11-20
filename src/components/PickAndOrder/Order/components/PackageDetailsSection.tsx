@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -15,6 +15,7 @@ import {
 	AlertCircle,
 	CheckCircle2,
 	Trash2,
+	HelpCircle,
 } from "lucide-react";
 
 interface PackageDetailsSectionProps {
@@ -56,10 +57,34 @@ export default function PackageDetailsSection({
 }: PackageDetailsSectionProps) {
 	const imageInputRef = useRef<HTMLInputElement>(null);
 	const videoInputRef = useRef<HTMLInputElement>(null);
+	const [showDescriptionHelp, setShowDescriptionHelp] = useState(false);
+	const [showWeightHelp, setShowWeightHelp] = useState(false);
+	const [showImagesHelp, setShowImagesHelp] = useState(false);
+	const descriptionHelpRef = useRef<HTMLDivElement>(null);
+	const weightHelpRef = useRef<HTMLDivElement>(null);
+	const imagesHelpRef = useRef<HTMLDivElement>(null);
 
 	const MAX_IMAGES = 5;
 	const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 	const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+
+	// Close tooltips when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (descriptionHelpRef.current && !descriptionHelpRef.current.contains(event.target as Node)) {
+				setShowDescriptionHelp(false);
+			}
+			if (weightHelpRef.current && !weightHelpRef.current.contains(event.target as Node)) {
+				setShowWeightHelp(false);
+			}
+			if (imagesHelpRef.current && !imagesHelpRef.current.contains(event.target as Node)) {
+				setShowImagesHelp(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	// Handle image upload
 	const handleImageUpload = useCallback(
@@ -194,10 +219,44 @@ export default function PackageDetailsSection({
 			<div className="space-y-3 sm:space-y-4">
 				{/* Description */}
 				<div>
-					<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-						{isArabic ? "وصف الطرد" : "Description"}
-						<span className="text-red-500 ml-1">*</span>
-					</label>
+					<div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+						<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300">
+							{isArabic ? "وصف الطرد" : "Description"}
+							<span className="text-red-500 ml-1">*</span>
+						</label>
+						<div className="relative" ref={descriptionHelpRef}>
+							<button
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowDescriptionHelp(!showDescriptionHelp);
+								}}
+								className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors p-0.5 sm:p-1 touch-manipulation"
+								aria-label={isArabic ? "مساعدة" : "Help"}
+							>
+								<HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+							</button>
+							<AnimatePresence>
+								{showDescriptionHelp && (
+									<motion.div
+										initial={{ opacity: 0, scale: 0.95, y: -5 }}
+										animate={{ opacity: 1, scale: 1, y: 0 }}
+										exit={{ opacity: 0, scale: 0.95, y: -5 }}
+										className={`absolute ${isArabic ? "left-0" : "right-0"} top-6 sm:top-7 z-50 w-40 sm:w-48 md:w-56 p-2 sm:p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
+										dir={isArabic ? "rtl" : "ltr"}
+									>
+										<p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
+											{isArabic ? "نصيحة سريعة:" : "Quick Tip:"}
+										</p>
+										<p>
+											{isArabic
+												? "أضف وصفاً واضحاً للطرد مثل: 'صندوق من الملابس' أو 'جهاز إلكتروني'."
+												: "Add a clear description like: 'Box of clothes' or 'Electronic device'."}
+										</p>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
+					</div>
 					<textarea
 						value={packageDescription}
 						onChange={(e) => setPackageDescription(e.target.value)}
@@ -221,10 +280,44 @@ export default function PackageDetailsSection({
 				{/* Weight & Dimensions */}
 				<div className="grid grid-cols-2 gap-3 sm:gap-4">
 					<div>
-						<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-							{isArabic ? "الوزن (كجم)" : "Weight (kg)"}
-							<span className="text-red-500 ml-1">*</span>
-						</label>
+						<div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+							<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300">
+								{isArabic ? "الوزن (كجم)" : "Weight (kg)"}
+								<span className="text-red-500 ml-1">*</span>
+							</label>
+							<div className="relative" ref={weightHelpRef}>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										setShowWeightHelp(!showWeightHelp);
+									}}
+									className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors p-0.5 sm:p-1 touch-manipulation"
+									aria-label={isArabic ? "مساعدة" : "Help"}
+								>
+									<HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+								</button>
+								<AnimatePresence>
+									{showWeightHelp && (
+										<motion.div
+											initial={{ opacity: 0, scale: 0.95, y: -5 }}
+											animate={{ opacity: 1, scale: 1, y: 0 }}
+											exit={{ opacity: 0, scale: 0.95, y: -5 }}
+											className={`absolute ${isArabic ? "left-0" : "right-0"} top-6 sm:top-7 z-50 w-40 sm:w-48 md:w-56 p-2 sm:p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
+											dir={isArabic ? "rtl" : "ltr"}
+										>
+											<p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
+												{isArabic ? "نصيحة سريعة:" : "Quick Tip:"}
+											</p>
+											<p>
+												{isArabic
+													? "أدخل الوزن بالكيلوجرام. مثال: 5.5 كجم."
+													: "Enter weight in kilograms. Example: 5.5 kg."}
+											</p>
+										</motion.div>
+									)}
+								</AnimatePresence>
+							</div>
+						</div>
 						<div className="relative">
 							<Weight className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
 							<input
@@ -267,12 +360,46 @@ export default function PackageDetailsSection({
 
 				{/* Images Upload Section */}
 				<div>
-					<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-						{isArabic ? "صور الطرد" : "Package Images"}
-						<span className="text-gray-500 text-xs ml-1">
-							({images.length}/{MAX_IMAGES})
-						</span>
-					</label>
+					<div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+						<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300">
+							{isArabic ? "صور الطرد" : "Package Images"}
+							<span className="text-gray-500 text-xs ml-1">
+								({images.length}/{MAX_IMAGES})
+							</span>
+						</label>
+						<div className="relative" ref={imagesHelpRef}>
+							<button
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowImagesHelp(!showImagesHelp);
+								}}
+								className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors p-0.5 sm:p-1 touch-manipulation"
+								aria-label={isArabic ? "مساعدة" : "Help"}
+							>
+								<HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+							</button>
+							<AnimatePresence>
+								{showImagesHelp && (
+									<motion.div
+										initial={{ opacity: 0, scale: 0.95, y: -5 }}
+										animate={{ opacity: 1, scale: 1, y: 0 }}
+										exit={{ opacity: 0, scale: 0.95, y: -5 }}
+										className={`absolute ${isArabic ? "left-0" : "right-0"} top-6 sm:top-7 z-50 w-40 sm:w-48 md:w-56 p-2 sm:p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
+										dir={isArabic ? "rtl" : "ltr"}
+									>
+										<p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
+											{isArabic ? "نصيحة سريعة:" : "Quick Tip:"}
+										</p>
+										<p>
+											{isArabic
+												? "يمكنك رفع حتى 5 صور. الصور تساعد السائق على التعرف على الطرد بسهولة."
+												: "You can upload up to 5 images. Images help the driver identify the package easily."}
+										</p>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
+					</div>
 					
 					<input
 						ref={imageInputRef}

@@ -80,6 +80,7 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 	const isMultiDirection = orderType === "multi-direction";
 
 	const [orderData, setOrderData] = useState<OrderData | null>(null);
+	const [routeSegments, setRouteSegments] = useState<any[] | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [showNotification, setShowNotification] = useState(false);
 	const [showAutoSelectModal, setShowAutoSelectModal] = useState(false);
@@ -281,21 +282,35 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 		return total > 0 ? Math.round((completed / total) * 100) : 0;
 	}, [orderData, transportType]);
 
-	// Load order data from sessionStorage
+	// Load order data from sessionStorage - supports both old and new formats
 	useEffect(() => {
-		const storedData = sessionStorage.getItem("pickAndOrderDetails");
-		if (storedData) {
-			try {
-				const parsed = JSON.parse(storedData);
-				setOrderData(parsed);
-				console.log("Order data loaded:", parsed);
-			} catch (error) {
-				console.error("Error parsing order data:", error);
+		// Dynamic import to avoid circular dependencies
+		import("./utils/dataConverter").then(({ loadAndConvertOrderData, getRouteSegments, isNewFormat }) => {
+			// Check if data is in new format (routeSegments)
+			if (isNewFormat()) {
+				const segments = getRouteSegments();
+				if (segments) {
+					setRouteSegments(segments);
+					// Also load converted data for backward compatibility
+					const data = loadAndConvertOrderData();
+					if (data) {
+						setOrderData(data);
+					}
+					console.log("Route segments loaded:", segments);
+				}
+			} else {
+				// Old format - use converted data
+				const data = loadAndConvertOrderData();
+				if (data) {
+					setOrderData(data);
+					console.log("Order data loaded (old format):", data);
+				}
 			}
-		} else {
-			console.log("No order data found in sessionStorage");
-		}
-		setIsLoading(false);
+			setIsLoading(false);
+		}).catch((error) => {
+			console.error("Error loading order data:", error);
+			setIsLoading(false);
+		});
 	}, []);
 
 	// Debug completion percentage
@@ -842,7 +857,7 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 								</div>
 							</motion.div>
 
-							{/* Package Details - Simplified */}
+							{/* Package Details - Multiple Segments */}
 							<motion.div
 								initial={{ opacity: 0, x: -20 }}
 								animate={{ opacity: 1, x: 0 }}
@@ -856,145 +871,309 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 										</div>
 										<div>
 											<h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
-												{isArabic ? "تفاصيل الطرد" : "Package"}
+												{isArabic ? "تفاصيل الطرود" : routeSegments && routeSegments.length > 1 ? "Packages" : "Package"}
 											</h2>
 											<p className="text-xs text-gray-500 dark:text-gray-400">
-												{isArabic ? "معلومات الشحنة" : "Shipment info"}
-										</p>
-									</div>
-								</div>
-
-									<div className="space-y-3">
-										{/* Description & Weight Grid */}
-										<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-											<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
-												<div className="flex items-center gap-2 mb-1.5">
-													<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
-														<Package className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-													</div>
-													<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-														{isArabic ? "الوصف" : "Description"}
-													</p>
-												</div>
-												<p className="text-sm font-bold text-gray-900 dark:text-white">
-													{orderData.packageDescription}
-												</p>
-											</div>
-
-											<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
-												<div className="flex items-center gap-2 mb-1.5">
-													<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
-														<Weight className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-													</div>
-													<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-														{isArabic ? "الوزن" : "Weight"}
-													</p>
-												</div>
-												<p className="text-sm font-black text-gray-900 dark:text-white">
-													{orderData.packageWeight} <span className="text-xs">{isArabic ? "كجم" : "kg"}</span>
-												</p>
-											</div>
+												{routeSegments && routeSegments.length > 1 
+													? (isArabic ? `${routeSegments.length} طرود` : `${routeSegments.length} packages`)
+													: (isArabic ? "معلومات الشحنة" : "Shipment info")
+												}
+											</p>
 										</div>
-
-										{/* Dimensions */}
-										{orderData.packageDimensions && (
-											<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
-												<div className="flex items-center gap-2 mb-1.5">
-													<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
-														<Ruler className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-													</div>
-													<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-														{isArabic ? "الأبعاد" : "Dimensions"}
-													</p>
-												</div>
-												<p className="text-sm font-bold text-gray-900 dark:text-white">
-													{orderData.packageDimensions} <span className="text-xs">{isArabic ? "سم" : "cm"}</span>
-												</p>
-											</div>
-										)}
-
-										{/* Special Instructions */}
-										{orderData.specialInstructions && (
-											<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
-												<div className="flex items-center gap-2 mb-2">
-													<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
-														<FileText className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-													</div>
-													<p className="text-xs font-bold text-gray-700 dark:text-gray-300">
-														{isArabic ? "ملاحظات خاصة" : "Special Instructions"}
-													</p>
-												</div>
-												<p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-													{orderData.specialInstructions}
-												</p>
-											</div>
-										)}
-
-										{/* Package Images */}
-										{orderData.packageImages && orderData.packageImages.length > 0 && (
-											<div>
-												<div className="flex items-center gap-2 mb-3">
-													<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
-														<ImageIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-													</div>
-													<p className="text-sm font-black text-gray-900 dark:text-white">
-														{isArabic ? "صور الطرد" : "Package Images"}
-													</p>
-													<span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-full">
-														{orderData.packageImages.length}
-													</span>
-												</div>
-												<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-													{orderData.packageImages.map((image, index) => (
-														<motion.div
-															key={index}
-															initial={{ opacity: 0, scale: 0.9 }}
-															animate={{ opacity: 1, scale: 1 }}
-															transition={{ delay: 0.5 + index * 0.05 }}
-															className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 shadow-md hover:shadow-xl transition-all duration-200 group/img"
-														>
-															<Image
-																src={image}
-																alt={`Package image ${index + 1}`}
-																fill
-																className="object-cover transition-transform duration-300 group-hover/img:scale-110"
-															/>
-															<div className="absolute bottom-1.5 left-1.5 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg text-white text-xs font-black shadow-lg flex items-center gap-1">
-																<ImageIcon className="w-3 h-3" />
-																<span>{index + 1}</span>
-															</div>
-															<div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-200" />
-														</motion.div>
-													))}
-												</div>
-											</div>
-										)}
-
-										{/* Package Video */}
-										{orderData.packageVideo && (
-											<div>
-												<div className="flex items-center gap-2 mb-2">
-													<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
-														<Video className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-													</div>
-													<p className="text-sm font-black text-gray-900 dark:text-white">
-														{isArabic ? "فيديو الطرد" : "Package Video"}
-													</p>
-												</div>
-												<div className="relative rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 shadow-md">
-													<video
-														src={orderData.packageVideo}
-														controls
-														className="w-full h-48 sm:h-64 object-cover"
-													/>
-													<div className="absolute top-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg text-white text-xs font-black shadow-lg flex items-center gap-1">
-														<Video className="w-3 h-3" />
-														{isArabic ? "فيديو" : "Video"}
-													</div>
-												</div>
-											</div>
-										)}
 									</div>
+
+									{/* Display segments if available, otherwise fallback to old format */}
+									{routeSegments && routeSegments.length > 0 ? (
+										<div className="space-y-4">
+											{routeSegments.map((segment, segmentIndex) => (
+												<motion.div
+													key={segment.id}
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													transition={{ delay: 0.5 + segmentIndex * 0.1 }}
+													className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700"
+												>
+													{/* Segment Header */}
+													<div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+														<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#31A342] to-[#2a8f38] flex items-center justify-center shadow-md">
+															<span className="text-white font-black text-sm">{segmentIndex + 1}</span>
+														</div>
+														<h3 className="text-sm font-black text-gray-900 dark:text-white">
+															{isArabic ? `الطرد ${segmentIndex + 1}` : `Package ${segmentIndex + 1}`}
+														</h3>
+													</div>
+
+													<div className="space-y-3">
+														{/* Description & Weight Grid */}
+														<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+															{segment.packageDetails.description && (
+																<div className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+																	<div className="flex items-center gap-2 mb-1.5">
+																		<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																			<Package className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+																		</div>
+																		<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+																			{isArabic ? "الوصف" : "Description"}
+																		</p>
+																	</div>
+																	<p className="text-sm font-bold text-gray-900 dark:text-white">
+																		{segment.packageDetails.description}
+																	</p>
+																</div>
+															)}
+
+															{segment.packageDetails.weight && (
+																<div className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+																	<div className="flex items-center gap-2 mb-1.5">
+																		<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																			<Weight className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+																		</div>
+																		<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+																			{isArabic ? "الوزن" : "Weight"}
+																		</p>
+																	</div>
+																	<p className="text-sm font-black text-gray-900 dark:text-white">
+																		{segment.packageDetails.weight} <span className="text-xs">{isArabic ? "كجم" : "kg"}</span>
+																	</p>
+																</div>
+															)}
+														</div>
+
+														{/* Dimensions */}
+														{segment.packageDetails.dimensions && (
+															<div className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+																<div className="flex items-center gap-2 mb-1.5">
+																	<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																		<Ruler className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+																	</div>
+																	<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+																		{isArabic ? "الأبعاد" : "Dimensions"}
+																	</p>
+																</div>
+																<p className="text-sm font-bold text-gray-900 dark:text-white">
+																	{segment.packageDetails.dimensions} <span className="text-xs">{isArabic ? "سم" : "cm"}</span>
+																</p>
+															</div>
+														)}
+
+														{/* Special Instructions */}
+														{segment.packageDetails.specialInstructions && (
+															<div className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+																<div className="flex items-center gap-2 mb-2">
+																	<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																		<FileText className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+																	</div>
+																	<p className="text-xs font-bold text-gray-700 dark:text-gray-300">
+																		{isArabic ? "ملاحظات خاصة" : "Special Instructions"}
+																	</p>
+																</div>
+																<p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+																	{segment.packageDetails.specialInstructions}
+																</p>
+															</div>
+														)}
+
+														{/* Package Images */}
+														{segment.packageDetails.images && segment.packageDetails.images.length > 0 && (
+															<div>
+																<div className="flex items-center gap-2 mb-3">
+																	<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																		<ImageIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+																	</div>
+																	<p className="text-sm font-black text-gray-900 dark:text-white">
+																		{isArabic ? "صور الطرد" : "Package Images"}
+																	</p>
+																	<span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-full">
+																		{segment.packageDetails.images.length}
+																	</span>
+																</div>
+																<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+																	{segment.packageDetails.images.map((image: string, index: number) => (
+																		<motion.div
+																			key={index}
+																			initial={{ opacity: 0, scale: 0.9 }}
+																			animate={{ opacity: 1, scale: 1 }}
+																			transition={{ delay: 0.6 + segmentIndex * 0.1 + index * 0.05 }}
+																			className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 shadow-md hover:shadow-xl transition-all duration-200 group/img"
+																		>
+																			<Image
+																				src={image}
+																				alt={`Package ${segmentIndex + 1} image ${index + 1}`}
+																				fill
+																				className="object-cover transition-transform duration-300 group-hover/img:scale-110"
+																			/>
+																			<div className="absolute bottom-1.5 left-1.5 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg text-white text-xs font-black shadow-lg flex items-center gap-1">
+																				<ImageIcon className="w-3 h-3" />
+																				<span>{index + 1}</span>
+																			</div>
+																			<div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-200" />
+																		</motion.div>
+																	))}
+																</div>
+															</div>
+														)}
+
+														{/* Package Video */}
+														{segment.packageDetails.video && (
+															<div>
+																<div className="flex items-center gap-2 mb-2">
+																	<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																		<Video className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+																	</div>
+																	<p className="text-sm font-black text-gray-900 dark:text-white">
+																		{isArabic ? "فيديو الطرد" : "Package Video"}
+																	</p>
+																</div>
+																<div className="relative rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 shadow-md">
+																	<video
+																		src={segment.packageDetails.video}
+																		controls
+																		className="w-full h-48 sm:h-64 object-cover"
+																	/>
+																	<div className="absolute top-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg text-white text-xs font-black shadow-lg flex items-center gap-1">
+																		<Video className="w-3 h-3" />
+																		{isArabic ? "فيديو" : "Video"}
+																	</div>
+																</div>
+															</div>
+														)}
+													</div>
+												</motion.div>
+											))}
+										</div>
+									) : orderData ? (
+										// Fallback to old format for backward compatibility
+										<div className="space-y-3">
+											<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+												{orderData.packageDescription && (
+													<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
+														<div className="flex items-center gap-2 mb-1.5">
+															<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																<Package className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+															</div>
+															<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+																{isArabic ? "الوصف" : "Description"}
+															</p>
+														</div>
+														<p className="text-sm font-bold text-gray-900 dark:text-white">
+															{orderData.packageDescription}
+														</p>
+													</div>
+												)}
+
+												{orderData.packageWeight && (
+													<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
+														<div className="flex items-center gap-2 mb-1.5">
+															<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+																<Weight className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+															</div>
+															<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+																{isArabic ? "الوزن" : "Weight"}
+															</p>
+														</div>
+														<p className="text-sm font-black text-gray-900 dark:text-white">
+															{orderData.packageWeight} <span className="text-xs">{isArabic ? "كجم" : "kg"}</span>
+														</p>
+													</div>
+												)}
+											</div>
+
+											{orderData.packageDimensions && (
+												<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
+													<div className="flex items-center gap-2 mb-1.5">
+														<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+															<Ruler className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+														</div>
+														<p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+															{isArabic ? "الأبعاد" : "Dimensions"}
+														</p>
+													</div>
+													<p className="text-sm font-bold text-gray-900 dark:text-white">
+														{orderData.packageDimensions} <span className="text-xs">{isArabic ? "سم" : "cm"}</span>
+													</p>
+												</div>
+											)}
+
+											{orderData.specialInstructions && (
+												<div className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
+													<div className="flex items-center gap-2 mb-2">
+														<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+															<FileText className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+														</div>
+														<p className="text-xs font-bold text-gray-700 dark:text-gray-300">
+															{isArabic ? "ملاحظات خاصة" : "Special Instructions"}
+														</p>
+													</div>
+													<p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+														{orderData.specialInstructions}
+													</p>
+												</div>
+											)}
+
+											{orderData.packageImages && orderData.packageImages.length > 0 && (
+												<div>
+													<div className="flex items-center gap-2 mb-3">
+														<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+															<ImageIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+														</div>
+														<p className="text-sm font-black text-gray-900 dark:text-white">
+															{isArabic ? "صور الطرد" : "Package Images"}
+														</p>
+														<span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-full">
+															{orderData.packageImages.length}
+														</span>
+													</div>
+													<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+														{orderData.packageImages.map((image, index) => (
+															<motion.div
+																key={index}
+																initial={{ opacity: 0, scale: 0.9 }}
+																animate={{ opacity: 1, scale: 1 }}
+																transition={{ delay: 0.5 + index * 0.05 }}
+																className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 shadow-md hover:shadow-xl transition-all duration-200 group/img"
+															>
+																<Image
+																	src={image}
+																	alt={`Package image ${index + 1}`}
+																	fill
+																	className="object-cover transition-transform duration-300 group-hover/img:scale-110"
+																/>
+																<div className="absolute bottom-1.5 left-1.5 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg text-white text-xs font-black shadow-lg flex items-center gap-1">
+																	<ImageIcon className="w-3 h-3" />
+																	<span>{index + 1}</span>
+																</div>
+																<div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-200" />
+															</motion.div>
+														))}
+													</div>
+												</div>
+											)}
+
+											{orderData.packageVideo && (
+												<div>
+													<div className="flex items-center gap-2 mb-2">
+														<div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+															<Video className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+														</div>
+														<p className="text-sm font-black text-gray-900 dark:text-white">
+															{isArabic ? "فيديو الطرد" : "Package Video"}
+														</p>
+													</div>
+													<div className="relative rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 shadow-md">
+														<video
+															src={orderData.packageVideo}
+															controls
+															className="w-full h-48 sm:h-64 object-cover"
+														/>
+														<div className="absolute top-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg text-white text-xs font-black shadow-lg flex items-center gap-1">
+															<Video className="w-3 h-3" />
+															{isArabic ? "فيديو" : "Video"}
+														</div>
+													</div>
+												</div>
+											)}
+										</div>
+									) : null}
 								</div>
 							</motion.div>
 							</div>

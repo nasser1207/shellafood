@@ -48,27 +48,27 @@ export default function VehicleSpecificFields({
 }: VehicleSpecificFieldsProps) {
 	if (transportType === "truck") {
 		return (
-			<div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 shadow-md border border-gray-200 dark:border-gray-700">
-				<div className="flex items-center gap-3 mb-4">
-					<div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center">
-						<Truck className="w-5 h-5 text-white" />
+			<div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg border border-gray-200/80 dark:border-gray-700 backdrop-blur-sm">
+				<div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+					<div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-500 dark:bg-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+						<Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
 					</div>
-					<h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
+					<h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-gray-100">
 						{isArabic ? "تفاصيل الشاحنة" : "Truck Details"}
 					</h3>
 				</div>
 
-				<div className="space-y-4">
+				<div className="space-y-3 sm:space-y-4">
 					{/* Truck Type */}
 					<div>
-						<label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+						<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
 							{isArabic ? "نوع الشاحنة" : "Truck Type"}
 							<span className="text-red-500 ml-1">*</span>
 						</label>
 						<select
 							value={truckType}
 							onChange={(e) => setTruckType(e.target.value)}
-							className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-[#31A342] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors"
+							className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-300 dark:border-gray-700 focus:border-[#31A342] dark:focus:border-green-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors text-sm sm:text-base min-h-[44px] touch-manipulation shadow-sm hover:shadow-md"
 						>
 							<option value="">{isArabic ? "اختر نوع الشاحنة" : "Select truck type"}</option>
 							<option value="small">{isArabic ? "شاحنة صغيرة (حتى 1.5 طن)" : "Small Truck (up to 1.5 tons)"}</option>
@@ -83,13 +83,13 @@ export default function VehicleSpecificFields({
 
 					{/* Cargo Type */}
 					<div>
-						<label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+						<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
 							{isArabic ? "نوع البضاعة" : "Cargo Type"}
 						</label>
 						<select
 							value={cargoType}
 							onChange={(e) => setCargoType(e.target.value)}
-							className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-[#31A342] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors"
+							className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-300 dark:border-gray-700 focus:border-[#31A342] dark:focus:border-green-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors text-sm sm:text-base min-h-[44px] touch-manipulation shadow-sm hover:shadow-md"
 						>
 							<option value="">{isArabic ? "اختر نوع البضاعة" : "Select cargo type"}</option>
 							<option value="furniture">{isArabic ? "أثاث" : "Furniture"}</option>
@@ -102,45 +102,45 @@ export default function VehicleSpecificFields({
 					</div>
 
 					{/* Checkboxes */}
-					<div className="space-y-3">
+					<div className="space-y-2 sm:space-y-3">
 						{/* Fragile */}
-						<label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+						<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
 							<input
 								type="checkbox"
 								checked={isFragile}
 								onChange={(e) => setIsFragile(e.target.checked)}
-								className="w-5 h-5 rounded border-gray-300 text-[#31A342] focus:ring-[#31A342]"
+								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
 							/>
-							<AlertTriangle className="w-5 h-5 text-orange-500" />
-							<span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+							<AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400 flex-shrink-0" />
+							<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
 								{isArabic ? "بضاعة قابلة للكسر" : "Fragile Items"}
 							</span>
 						</label>
 
 						{/* Refrigeration */}
-						<label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+						<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
 							<input
 								type="checkbox"
 								checked={requiresRefrigeration}
 								onChange={(e) => setRequiresRefrigeration(e.target.checked)}
-								className="w-5 h-5 rounded border-gray-300 text-[#31A342] focus:ring-[#31A342]"
+								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
 							/>
-							<Box className="w-5 h-5 text-blue-500" />
-							<span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+							<Box className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+							<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
 								{isArabic ? "يتطلب تبريد" : "Requires Refrigeration"}
 							</span>
 						</label>
 
 						{/* Loading Equipment */}
-						<label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+						<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
 							<input
 								type="checkbox"
 								checked={loadingEquipmentNeeded}
 								onChange={(e) => setLoadingEquipmentNeeded(e.target.checked)}
-								className="w-5 h-5 rounded border-gray-300 text-[#31A342] focus:ring-[#31A342]"
+								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
 							/>
-							<Truck className="w-5 h-5 text-purple-500" />
-							<span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+							<Truck className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-400 flex-shrink-0" />
+							<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
 								{isArabic ? "يحتاج معدات تحميل" : "Loading Equipment Needed"}
 							</span>
 						</label>
@@ -151,27 +151,27 @@ export default function VehicleSpecificFields({
 	}
 
 	// Motorbike fields
-	return (
-		<div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 shadow-md border border-gray-200 dark:border-gray-700">
-			<div className="flex items-center gap-3 mb-4">
-				<div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
-					<Package className="w-5 h-5 text-white" />
+		return (
+		<div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-md border border-gray-200 dark:border-gray-700">
+			<div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+				<div className="w-9 h-9 sm:w-10 sm:h-10 bg-cyan-500 dark:bg-cyan-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+					<Package className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
 				</div>
-				<h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
+				<h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-gray-100">
 					{isArabic ? "تفاصيل الدراجة النارية" : "Motorbike Details"}
 				</h3>
 			</div>
 
-			<div className="space-y-4">
+			<div className="space-y-3 sm:space-y-4">
 				{/* Package Type */}
 				<div>
-					<label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+					<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
 						{isArabic ? "نوع الطرد" : "Package Type"}
 					</label>
 					<select
 						value={packageType}
 						onChange={(e) => setPackageType(e.target.value)}
-						className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-[#31A342] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors"
+						className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-300 dark:border-gray-700 focus:border-[#31A342] dark:focus:border-green-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors text-sm sm:text-base min-h-[44px] touch-manipulation shadow-sm hover:shadow-md"
 					>
 						<option value="">{isArabic ? "اختر نوع الطرد" : "Select package type"}</option>
 						<option value="documents">{isArabic ? "مستندات" : "Documents"}</option>
@@ -184,31 +184,31 @@ export default function VehicleSpecificFields({
 				</div>
 
 				{/* Checkboxes */}
-				<div className="space-y-3">
+				<div className="space-y-2 sm:space-y-3">
 					{/* Documents */}
-					<label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+					<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
 						<input
 							type="checkbox"
 							checked={isDocuments}
 							onChange={(e) => setIsDocuments(e.target.checked)}
-							className="w-5 h-5 rounded border-gray-300 text-[#31A342] focus:ring-[#31A342]"
+							className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
 						/>
-						<FileText className="w-5 h-5 text-blue-500" />
-						<span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+						<FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+						<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
 							{isArabic ? "مستندات مهمة" : "Important Documents"}
 						</span>
 					</label>
 
 					{/* Express Delivery */}
-					<label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+					<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
 						<input
 							type="checkbox"
 							checked={isExpress}
 							onChange={(e) => setIsExpress(e.target.checked)}
-							className="w-5 h-5 rounded border-gray-300 text-[#31A342] focus:ring-[#31A342]"
+							className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
 						/>
-						<Package className="w-5 h-5 text-red-500" />
-						<span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+						<Package className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+						<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
 							{isArabic ? "توصيل سريع (خلال ساعة)" : "Express Delivery (Within 1 hour)"}
 						</span>
 					</label>

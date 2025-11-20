@@ -122,6 +122,9 @@ export default function OrderDetailsPage({ transportType, orderType }: OrderDeta
 	const [isDocuments, setIsDocuments] = useState(false);
 	const [isExpress, setIsExpress] = useState(false);
 
+	// Return to pickup option (for one-direction orders only)
+	const [returnToPickup, setReturnToPickup] = useState(false);
+
 	// UI state
 	const [isGeocoding, setIsGeocoding] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -422,6 +425,7 @@ export default function OrderDetailsPage({ transportType, orderType }: OrderDeta
 				specialInstructions,
 				packageImages,
 				packageVideo,
+				returnToPickup: !isMultiDirection ? returnToPickup : false, // Only for one-direction
 				// Vehicle-specific data
 				...(transportType === "truck"
 					? { truckType, cargoType, isFragile, requiresRefrigeration, loadingEquipmentNeeded }
@@ -456,6 +460,8 @@ export default function OrderDetailsPage({ transportType, orderType }: OrderDeta
 		packageType,
 		isDocuments,
 		isExpress,
+		returnToPickup,
+		isMultiDirection,
 	]);
 
 	const VehicleIcon = isMotorbike ? Bike : Truck;
@@ -958,7 +964,40 @@ export default function OrderDetailsPage({ transportType, orderType }: OrderDeta
 							isExpress={isExpress}
 							setIsExpress={setIsExpress}
 						/>
+					</motion.div>
+
+					{/* Return to Pickup Option - Only for one-direction orders */}
+					{!isMultiDirection && (
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.55 }}
+							className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-lg"
+						>
+							<div className="flex items-start gap-3">
+								<input
+									type="checkbox"
+									id="returnToPickup"
+									checked={returnToPickup}
+									onChange={(e) => setReturnToPickup(e.target.checked)}
+									className="mt-1 w-5 h-5 text-[#31A342] bg-gray-100 border-gray-300 rounded focus:ring-[#31A342] focus:ring-2 cursor-pointer"
+								/>
+								<label htmlFor="returnToPickup" className="flex-1 cursor-pointer">
+									<div className="flex items-center gap-2 mb-1">
+										<Navigation className="w-5 h-5 text-[#31A342]" />
+										<span className="text-base font-semibold text-gray-900 dark:text-gray-100">
+											{isArabic ? "العودة إلى نقطة الالتقاط" : "Return to Pickup Location"}
+										</span>
+									</div>
+									<p className="text-sm text-gray-600 dark:text-gray-400">
+										{isArabic
+											? "هل تريد أن يعود السائق إلى نقطة الالتقاط بعد التوصيل؟"
+											: "Do you want the driver to return to the pickup location after delivery?"}
+									</p>
+								</label>
+							</div>
 						</motion.div>
+					)}
 
 					{/* Submit Button - Sticky on Mobile */}
 					<motion.div

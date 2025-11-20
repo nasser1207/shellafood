@@ -36,7 +36,7 @@ export default function MobileMapSection({
 	allPoints = [],
 }: MobileMapSectionProps) {
 	return (
-		<div className="w-full h-[60vh] sm:h-96 rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 shadow-lg relative">
+		<div className="w-full h-full min-h-[300px] rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 shadow-lg relative">
 			{loadError ? (
 				<div className="w-full h-full flex items-center justify-center">
 					<div className="text-center px-4">

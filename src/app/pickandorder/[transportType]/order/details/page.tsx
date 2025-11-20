@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { NavBarCondition } from "@/components/Profile";
 import ShellaFooter from "@/components/ShellaFooter/ShellaFooter";
-import OrderDetailsPage from "@/components/PickAndOrder/Order/OrderDetailsPage";
+import OrderDetailsPageMultiDirection from "@/components/PickAndOrder/Order/OrderDetailsPageMultiDirection";
 
 export async function generateMetadata({
 	params,
@@ -35,7 +35,7 @@ export default async function DetailsPage({
 		<>
 		<NavBarCondition />
 		<main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-			<OrderDetailsPage transportType={transportType} orderType={type || "one-way"} />
+			<OrderDetailsPageMultiDirection transportType={transportType} orderType={type || "one-way"} />
 		</main>
 		<ShellaFooter />
 		</>

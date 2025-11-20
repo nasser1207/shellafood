@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CheckCircle, Calendar, ArrowLeft, Receipt, MapPin, FileText, Phone, UserCircle, Package, Truck, Bike, Info, Weight, Ruler, Image as ImageIcon, Video, AlertTriangle, Box } from "lucide-react";
+import { CheckCircle, Calendar, ArrowLeft, Receipt, MapPin, FileText, Phone, UserCircle, Package, Truck, Bike, Info, Weight, Ruler, Image as ImageIcon, Video, AlertTriangle, Box, Navigation } from "lucide-react";
 import Image from "next/image";
 import { calculatePricing, formatPrice } from "./utils/pricing";
 
@@ -58,6 +58,7 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 	const isMultiDirection = orderType === "multi-direction";
 
 	const [orderData, setOrderData] = useState<OrderData | null>(null);
+	const [routeSegments, setRouteSegments] = useState<any[] | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
 	// Generate order ID (in real app, this would come from API)
@@ -65,13 +66,20 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 		return `ORD-${Date.now().toString().slice(-8)}`;
 	}, []);
 
-	// Load order data from sessionStorage and store for my-orders page
+	// Load order data from sessionStorage and store for my-orders page - supports both old and new formats
 	useEffect(() => {
-		const storedData = sessionStorage.getItem("pickAndOrderDetails");
-		if (storedData) {
-			try {
-				const parsed = JSON.parse(storedData);
-				setOrderData(parsed);
+		// Dynamic import to use data converter
+		import("./utils/dataConverter").then(({ loadAndConvertOrderData, getRouteSegments, isNewFormat }) => {
+			// Check if data is in new format (routeSegments)
+			if (isNewFormat()) {
+				const segments = getRouteSegments();
+				if (segments) {
+					setRouteSegments(segments);
+				}
+			}
+			const data = loadAndConvertOrderData();
+			if (data) {
+				setOrderData(data);
 
 				// Check if driver was selected (from URL or sessionStorage)
 				const urlParams = new URLSearchParams(window.location.search);
@@ -93,7 +101,7 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 				// Store order data with orderId for my-orders page
 				const orderDataForStorage = {
 					orderId,
-					orderData: parsed,
+					orderData: data, // Use converted data
 					transportType,
 					orderType: orderType || "one-way",
 					createdAt: new Date().toISOString(),
@@ -102,11 +110,12 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 				};
 
 				sessionStorage.setItem(`pickAndOrder_${orderId}`, JSON.stringify(orderDataForStorage));
-			} catch (error) {
-				console.error("Error parsing order data:", error);
 			}
-		}
-		setIsLoading(false);
+			setIsLoading(false);
+		}).catch((error) => {
+			console.error("Error loading order data:", error);
+			setIsLoading(false);
+		});
 	}, [orderId, transportType, orderType]);
 
 	// Base price based on transport type
@@ -259,6 +268,17 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 											{isMultiDirection ? (isArabic ? "متعدد الاتجاهات" : "Multi-Direction") : (isArabic ? "ذهاب فقط" : "One-Way")}
 										</span>
 									</div>
+									{!isMultiDirection && orderData && (orderData as any).returnToPickup && (
+										<div className="flex justify-between items-center">
+											<span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+												<Navigation className="w-4 h-4" />
+												{isArabic ? "العودة إلى نقطة الالتقاط:" : "Return to Pickup:"}
+											</span>
+											<span className="font-semibold text-green-600 dark:text-green-400">
+												{isArabic ? "نعم" : "Yes"}
+											</span>
+										</div>
+									)}
 									<div className="flex justify-between items-center">
 										<span className={`text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2`}>
 											<Calendar className="w-4 h-4" />
@@ -387,8 +407,84 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 								</section>
 							)}
 
-						{/* Package Details */}
-						{(orderData.packageDescription || orderData.packageWeight || orderData.packageDimensions || orderData.specialInstructions) && (
+						{/* Package Details - Multiple Segments */}
+						{routeSegments && routeSegments.length > 0 ? (
+							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
+								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
+									<Package className="w-5 h-5 text-green-600 dark:text-green-400" />
+									{isArabic ? (routeSegments.length > 1 ? "تفاصيل الطرود" : "تفاصيل الطرد") : (routeSegments.length > 1 ? "Package Details" : "Package Details")}
+								</h2>
+								<div className="space-y-4">
+									{routeSegments.map((segment, segmentIndex) => (
+										<div key={segment.id} className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-700">
+											{/* Segment Header */}
+											<div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+												<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#31A342] to-[#2a8f38] flex items-center justify-center shadow-md">
+													<span className="text-white font-black text-sm">{segmentIndex + 1}</span>
+												</div>
+												<h3 className="text-sm font-black text-gray-900 dark:text-white">
+													{isArabic ? `الطرد ${segmentIndex + 1}` : `Package ${segmentIndex + 1}`}
+												</h3>
+											</div>
+
+											<div className="space-y-3">
+												{segment.packageDetails.description && (
+													<div className={`${isArabic ? "text-right" : "text-left"}`}>
+														<p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{isArabic ? "الوصف:" : "Description:"}</p>
+														<p className="text-base text-gray-900 dark:text-gray-100">{segment.packageDetails.description}</p>
+													</div>
+												)}
+												<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+													{segment.packageDetails.weight && (
+														<div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+															<div className="flex items-center gap-2 mb-1">
+																<Weight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+																<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "الوزن:" : "Weight:"}</span>
+															</div>
+															<p className="text-base font-semibold text-gray-900 dark:text-gray-100">{segment.packageDetails.weight}</p>
+														</div>
+													)}
+													{segment.packageDetails.dimensions && (
+														<div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+															<div className="flex items-center gap-2 mb-1">
+																<Ruler className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+																<span className="text-sm text-gray-600 dark:text-gray-400">{isArabic ? "الأبعاد:" : "Dimensions:"}</span>
+															</div>
+															<p className="text-base font-semibold text-gray-900 dark:text-gray-100">{segment.packageDetails.dimensions}</p>
+														</div>
+													)}
+												</div>
+												{segment.packageDetails.specialInstructions && (
+													<div className={`bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 ${isArabic ? "text-right" : "text-left"}`}>
+														<p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">{isArabic ? "تعليمات خاصة:" : "Special Instructions:"}</p>
+														<p className="text-sm text-blue-800 dark:text-blue-200">{segment.packageDetails.specialInstructions}</p>
+													</div>
+												)}
+												{segment.packageDetails.images && segment.packageDetails.images.length > 0 && (
+													<div>
+														<p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+															{isArabic ? "صور الطرد:" : "Package Images:"} ({segment.packageDetails.images.length})
+														</p>
+														<div className="grid grid-cols-3 gap-2">
+															{segment.packageDetails.images.map((image: string, imgIndex: number) => (
+																<Image
+																	key={imgIndex}
+																	src={image}
+																	alt={`Package ${segmentIndex + 1} image ${imgIndex + 1}`}
+																	width={100}
+																	height={100}
+																	className="rounded-lg object-cover"
+																/>
+															))}
+														</div>
+													</div>
+												)}
+											</div>
+										</div>
+									))}
+								</div>
+							</section>
+						) : (orderData.packageDescription || orderData.packageWeight || orderData.packageDimensions || orderData.specialInstructions) ? (
 							<section className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-700">
 								<h2 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2`}>
 									<Package className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -429,7 +525,7 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 									)}
 								</div>
 							</section>
-						)}
+						) : null}
 
 						{/* Package Images */}
 						{orderData.packageImages && orderData.packageImages.length > 0 && (
