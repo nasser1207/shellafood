@@ -39,6 +39,9 @@ export interface RouteSegment {
 
 export interface VehicleOptions {
   truckType: string;
+  cargoType?: string;
+  isFragile?: boolean;
+  requiresRefrigeration?: boolean;
   loadingEquipmentNeeded: boolean;
   deliveryPreference: "standard" | "express" | "scheduled";
   scheduledTime?: Date;

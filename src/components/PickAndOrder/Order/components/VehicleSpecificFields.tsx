@@ -104,43 +104,79 @@ export default function VehicleSpecificFields({
 					{/* Checkboxes */}
 					<div className="space-y-2 sm:space-y-3">
 						{/* Fragile */}
-						<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
+						<label className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md cursor-pointer ${
+							isFragile 
+								? "bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900/30" 
+								: "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600"
+						}`}>
 							<input
 								type="checkbox"
 								checked={isFragile}
 								onChange={(e) => setIsFragile(e.target.checked)}
-								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
+								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm checked:bg-[#31A342] checked:border-[#31A342] dark:checked:bg-green-500 dark:checked:border-green-500"
 							/>
-							<AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400 flex-shrink-0" />
-							<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
+							<AlertTriangle className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-colors ${
+								isFragile 
+									? "text-orange-600 dark:text-orange-400" 
+									: "text-orange-500 dark:text-orange-400"
+							}`} />
+							<span className={`flex-1 text-xs sm:text-sm font-medium transition-colors ${
+								isFragile 
+									? "text-orange-900 dark:text-orange-100 font-semibold" 
+									: "text-gray-900 dark:text-gray-100"
+							}`}>
 								{isArabic ? "بضاعة قابلة للكسر" : "Fragile Items"}
 							</span>
 						</label>
 
 						{/* Refrigeration */}
-						<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
+						<label className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md cursor-pointer ${
+							requiresRefrigeration 
+								? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30" 
+								: "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600"
+						}`}>
 							<input
 								type="checkbox"
 								checked={requiresRefrigeration}
 								onChange={(e) => setRequiresRefrigeration(e.target.checked)}
-								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
+								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm checked:bg-[#31A342] checked:border-[#31A342] dark:checked:bg-green-500 dark:checked:border-green-500"
 							/>
-							<Box className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
-							<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
+							<Box className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-colors ${
+								requiresRefrigeration 
+									? "text-blue-600 dark:text-blue-400" 
+									: "text-blue-500 dark:text-blue-400"
+							}`} />
+							<span className={`flex-1 text-xs sm:text-sm font-medium transition-colors ${
+								requiresRefrigeration 
+									? "text-blue-900 dark:text-blue-100 font-semibold" 
+									: "text-gray-900 dark:text-gray-100"
+							}`}>
 								{isArabic ? "يتطلب تبريد" : "Requires Refrigeration"}
 							</span>
 						</label>
 
 						{/* Loading Equipment */}
-						<label className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md">
+						<label className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all touch-manipulation min-h-[44px] shadow-sm hover:shadow-md cursor-pointer ${
+							loadingEquipmentNeeded 
+								? "bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30" 
+								: "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600"
+						}`}>
 							<input
 								type="checkbox"
 								checked={loadingEquipmentNeeded}
 								onChange={(e) => setLoadingEquipmentNeeded(e.target.checked)}
-								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm"
+								className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-400 dark:border-gray-600 text-[#31A342] dark:text-green-500 focus:ring-2 focus:ring-[#31A342] dark:focus:ring-green-500 bg-white dark:bg-gray-900 cursor-pointer flex-shrink-0 shadow-sm checked:bg-[#31A342] checked:border-[#31A342] dark:checked:bg-green-500 dark:checked:border-green-500"
 							/>
-							<Truck className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-400 flex-shrink-0" />
-							<span className="flex-1 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
+							<Truck className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-colors ${
+								loadingEquipmentNeeded 
+									? "text-purple-600 dark:text-purple-400" 
+									: "text-purple-500 dark:text-purple-400"
+							}`} />
+							<span className={`flex-1 text-xs sm:text-sm font-medium transition-colors ${
+								loadingEquipmentNeeded 
+									? "text-purple-900 dark:text-purple-100 font-semibold" 
+									: "text-gray-900 dark:text-gray-100"
+							}`}>
 								{isArabic ? "يحتاج معدات تحميل" : "Loading Equipment Needed"}
 							</span>
 						</label>

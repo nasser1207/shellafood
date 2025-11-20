@@ -68,6 +68,9 @@ export default function OrderDetailsPageMultiDirection({
 	// Vehicle options
 	const [vehicleOptions, setVehicleOptions] = useState<VehicleOptions>({
 		truckType: "",
+		cargoType: "",
+		isFragile: false,
+		requiresRefrigeration: false,
 		loadingEquipmentNeeded: false,
 		deliveryPreference: "standard",
 		additionalEquipment: {
@@ -457,12 +460,12 @@ export default function OrderDetailsPageMultiDirection({
 								isArabic={isArabic}
 								truckType={vehicleOptions.truckType}
 								setTruckType={(value) => setVehicleOptions({ ...vehicleOptions, truckType: value })}
-								cargoType=""
-								setCargoType={() => {}}
-								isFragile={false}
-								setIsFragile={() => {}}
-								requiresRefrigeration={false}
-								setRequiresRefrigeration={() => {}}
+								cargoType={vehicleOptions.cargoType || ""}
+								setCargoType={(value) => setVehicleOptions({ ...vehicleOptions, cargoType: value })}
+								isFragile={vehicleOptions.isFragile || false}
+								setIsFragile={(value) => setVehicleOptions({ ...vehicleOptions, isFragile: value })}
+								requiresRefrigeration={vehicleOptions.requiresRefrigeration || false}
+								setRequiresRefrigeration={(value) => setVehicleOptions({ ...vehicleOptions, requiresRefrigeration: value })}
 								loadingEquipmentNeeded={vehicleOptions.loadingEquipmentNeeded}
 								setLoadingEquipmentNeeded={(value) =>
 									setVehicleOptions({ ...vehicleOptions, loadingEquipmentNeeded: value })

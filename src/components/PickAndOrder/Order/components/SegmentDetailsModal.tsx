@@ -179,7 +179,7 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 	const locationSelected =
 		activePointType === "pickup" ? hasPickup : hasDropoff;
 
-	// Handle complete and continue
+	// Handle complete button click
 	const handleComplete = useCallback(() => {
 		if (validateSegment) {
 			const segmentErrors = validateSegment(segment);
@@ -198,15 +198,10 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 			}
 		}
 
-		// If validation passes, just close the modal
+		// If validation passes, close the modal
 		onClose();
 	}, [segment, validateSegment, onClose, setTouched]);
 
-	// Handle confirm (when all details are complete)
-	const handleConfirm = useCallback(() => {
-		// Just close the modal - no navigation
-		onClose();
-	}, [onClose]);
 
 	return (
 		<AnimatePresence>
@@ -372,33 +367,19 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 								/>
 							</div>
 
-							{/* Footer */}
-							<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-								<button
-									onClick={onClose}
-									className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 active:bg-gray-400 dark:active:bg-gray-500 text-gray-900 dark:text-gray-100 font-semibold rounded-xl transition-all touch-manipulation min-h-[48px] text-sm sm:text-base"
-								>
-									{isArabic ? "إلغاء" : "Cancel"}
-								</button>
-								<div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-									{isCompleted ? (
-										<button
-											onClick={handleConfirm}
-											className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
-										>
-											<Check className="w-4 h-4 sm:w-5 sm:h-5" />
-											<span>{isArabic ? "تأكيد" : "Confirm"}</span>
-										</button>
-									) : (
-										<button
-											onClick={handleComplete}
-											className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl min-h-[48px] text-sm sm:text-base"
-										>
-											{isArabic ? "إكمال" : "Complete"}
-										</button>
-									)}
+							{/* Footer - Complete Button (only when all required fields are filled) */}
+							{isCompleted && (
+								<div className="flex items-center justify-end p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+									<button
+										onClick={handleComplete}
+										className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
+									>
+										<Check className="w-4 h-4 sm:w-5 sm:h-5" />
+										<span>{isArabic ? "إكمال" : "Complete"}</span>
+									</button>
 								</div>
-							</div>
+							)}
+
 						</motion.div>
 					</div>
 				</>
