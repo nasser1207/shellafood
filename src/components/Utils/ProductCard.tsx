@@ -1,12 +1,16 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useProductFavorites } from "@/hooks/useFavorites";
-import { navigateToProductFromContext } from "@/lib/utils/categories/navigation";
+import { navigateToProduct } from "@/lib/utils/categories/navigation";
+import { useCart } from "@/hooks/useCart";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
+import { TEST_STORES, TEST_CATEGORIES, TEST_DEPARTMENTS } from "@/lib/data/categories/testData";
+import { Check } from "lucide-react";
 
 export interface Product {
 	id: string;
@@ -59,6 +63,11 @@ function ProductCard({
 	const isArabic = language === 'ar';
 	const direction = isArabic ? 'rtl' : 'ltr';
 	const router = useRouter();
+	const { addToCart } = useCart();
+	const { toasts, showToast, removeToast } = useToast();
+	const [isAdded, setIsAdded] = useState(false);
+	const [isAdding, setIsAdding] = useState(false);
+	
 	const { isFavorite, isLoading: favoriteLoading, toggleFavorite } = useProductFavorites(product.id, {
 		name: product.name,
 		nameAr: product.nameAr,
@@ -77,16 +86,121 @@ function ProductCard({
 	const handleClick = useCallback(() => {
 		if (onClick) {
 			onClick(product.id);
-		} else {
-			// Default navigation - use navigation utility
-			navigateToProductFromContext(router, product);
+			return;
 		}
+
+		// Navigate to product details page
+		if (!product.slug || !product.storeId) {
+			return;
+		}
+
+		// Find the store to get categoryId and slug
+		const store = TEST_STORES.find(s => s.id === product.storeId);
+		if (!store || !store.categoryId || !store.slug) {
+			return;
+		}
+
+		// Find the category to get slug
+		const category = TEST_CATEGORIES.find(c => c.id === store.categoryId);
+		if (!category) {
+			return;
+		}
+
+		// Find the department to get slug
+		let departmentSlug = 'food'; // default
+		if (product.department) {
+			const department = TEST_DEPARTMENTS.find(
+				d => d.name === product.department || d.nameAr === product.department
+			);
+			if (department && department.slug) {
+				departmentSlug = department.slug;
+			} else {
+				// Fallback: convert department name to slug format
+				departmentSlug = product.department.toLowerCase().replace(/\s+/g, '-');
+			}
+		}
+
+		// Navigate to product details
+		navigateToProduct(router, category.slug, store.slug, departmentSlug, product);
 	}, [router, product, onClick]);
 
-	const handleAddToCartClick = (e: React.MouseEvent) => {
+	const handleAddToCartClick = useCallback(async (e: React.MouseEvent) => {
 		e.stopPropagation();
-		onAddToCart?.(product.id);
-	};
+		
+		// If onAddToCart callback is provided, use it (backward compatibility)
+		if (onAddToCart) {
+			onAddToCart(product.id);
+			return;
+		}
+
+		if (!product.storeId) {
+			showToast(
+				isArabic ? "خطأ: معلومات المتجر غير متوفرة" : "Error: Store information not available",
+				"error"
+			);
+			return;
+		}
+
+		// Find store details
+		const store = TEST_STORES.find(s => s.id === product.storeId);
+		if (!store) {
+			showToast(
+				isArabic ? "خطأ: المتجر غير موجود" : "Error: Store not found",
+				"error"
+			);
+			return;
+		}
+
+		const price = typeof product.price === 'number' ? product.price : parseFloat(String(product.price || '0').replace(/[^0-9.]/g, ''));
+
+		setIsAdding(true);
+		
+		try {
+			const result = await addToCart({
+				productId: product.id,
+				storeId: product.storeId,
+				quantity: 1,
+				productName: product.name,
+				productNameAr: product.nameAr,
+				productImage: product.image,
+				priceAtAdd: price,
+				storeName: store.name,
+				storeNameAr: store.nameAr,
+				storeLogo: store.logo || undefined,
+				stock: product.stockQuantity,
+			});
+
+			if (result.success) {
+				setIsAdded(true);
+				showToast(
+					isArabic ? "تم إضافة المنتج للسلة" : "Product added to cart",
+					"success"
+				);
+				// Reset added state after 2 seconds
+				setTimeout(() => setIsAdded(false), 2000);
+			} else if (result.requiresClearCart) {
+				showToast(
+					isArabic
+						? "لديك منتجات من متجر آخر في السلة. يرجى إفراغ السلة أولاً"
+						: "You have items from a different store in your cart. Please clear cart first",
+					"warning"
+				);
+			} else {
+				showToast(
+					result.error || (isArabic ? "حدث خطأ أثناء إضافة المنتج" : "Error adding product"),
+					"error"
+				);
+			}
+		} catch (error) {
+			console.error("Error adding to cart:", error);
+			showToast(
+				isArabic ? "حدث خطأ في الاتصال" : "Connection error",
+				"error"
+			);
+		} finally {
+			setIsAdding(false);
+		}
+	}, [product, addToCart, showToast, isArabic, onAddToCart]);
 
 	const isLowStock = product.inStock && product.stockQuantity !== undefined && product.stockQuantity < 10;
 
@@ -148,13 +262,22 @@ function ProductCard({
 				{showAddButton && product.inStock !== false && (
 					<button
 						onClick={handleAddToCartClick}
-						className={`absolute ${isArabic ? 'left-2' : 'right-2'} bottom-2 rounded-full bg-green-600 p-2.5 text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:scale-110 active:scale-95 z-10`}
-						title={isArabic ? "إضافة للسلة" : "Add to cart"}
-						aria-label={isArabic ? "إضافة للسلة" : "Add to cart"}
+						disabled={isAdding}
+						className={`absolute ${isArabic ? 'left-2' : 'right-2'} bottom-2 rounded-full p-2.5 text-white shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 z-10 disabled:opacity-50 disabled:cursor-not-allowed ${
+							isAdded ? "bg-green-500" : "bg-green-600 hover:bg-green-700"
+						}`}
+						title={isArabic ? (isAdded ? "تمت الإضافة" : "إضافة للسلة") : (isAdded ? "Added" : "Add to cart")}
+						aria-label={isArabic ? (isAdded ? "تمت الإضافة" : "إضافة للسلة") : (isAdded ? "Added" : "Add to cart")}
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-						</svg>
+						{isAdding ? (
+							<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+						) : isAdded ? (
+							<Check className="w-4 h-4" />
+						) : (
+							<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+							</svg>
+						)}
 					</button>
 				)}
 			</div>
@@ -217,6 +340,9 @@ function ProductCard({
 					)}
 				</div>
 			</div>
+
+			{/* Toast Container */}
+			<ToastContainer toasts={toasts} onRemoveToast={removeToast} isArabic={isArabic} />
 		</div>
 	);
 }

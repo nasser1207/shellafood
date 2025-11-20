@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Package, ArrowLeft, Sparkles, Store as StoreIcon } from "lucide-react";
+import { ShoppingCart, Package, ArrowLeft, Sparkles, Store as StoreIcon, Trash2, AlertTriangle } from "lucide-react";
 import CartItemCard from "./CartItemCard";
 import CouponSection from "./CouponSection";
 import AddressSelector from "./AddressSelector";
@@ -14,7 +14,7 @@ import EmptyCartState from "./EmptyCartState";
 import ConfirmCheckoutModal from "./ConfirmCheckoutModal";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { CartItemSkeleton, OrderSummarySkeleton } from "./SkeletonLoader";
-import { getCartItems, updateCartItemQuantity as updateCartItemQuantityStorage, removeCartItem as removeCartItemStorage, type CartProductItem } from "@/lib/utils/cartStorage";
+import { getCartItems, updateCartItemQuantity as updateCartItemQuantityStorage, removeCartItem as removeCartItemStorage, clearCartStorage, type CartProductItem } from "@/lib/utils/cartStorage";
 
 interface Coupon {
 	id: string;
@@ -50,6 +50,7 @@ export default function CartPage() {
 	const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
 	const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [showClearAllModal, setShowClearAllModal] = useState(false);
 
 	// Initial cart load - only runs once
 	useEffect(() => {
@@ -173,6 +174,31 @@ export default function CartPage() {
 				isArabicRef.current ? "حدث خطأ في إزالة المنتج" : "Error removing product",
 				"error",
 				isArabicRef.current ? "حدث خطأ في إزالة المنتج" : undefined
+			);
+		} finally {
+			setIsUpdating(false);
+		}
+	}, []); // No dependencies - uses refs
+
+	// Clear all products from cart
+	const clearAllProducts = useCallback(() => {
+		setIsUpdating(true);
+		try {
+			clearCartStorage();
+			setProductItems([]);
+			setAppliedCoupon(null); // Clear coupon when clearing cart
+			setShowClearAllModal(false);
+			showToastRef.current(
+				isArabicRef.current ? "تم مسح جميع المنتجات من السلة" : "All products cleared from cart",
+				"success",
+				isArabicRef.current ? "تم مسح جميع المنتجات من السلة" : undefined
+			);
+		} catch (error) {
+			console.error("Error clearing cart:", error);
+			showToastRef.current(
+				isArabicRef.current ? "حدث خطأ في مسح السلة" : "Error clearing cart",
+				"error",
+				isArabicRef.current ? "حدث خطأ في مسح السلة" : undefined
 			);
 		} finally {
 			setIsUpdating(false);
@@ -385,6 +411,25 @@ export default function CartPage() {
 					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 						{/* Left Column - Items */}
 						<div className="lg:col-span-2 space-y-6">
+							{/* Clear All Button */}
+							{productItems.length > 0 && (
+								<motion.div
+									initial={{ opacity: 0, y: -10 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.3 }}
+									className="flex justify-end"
+								>
+									<button
+										onClick={() => setShowClearAllModal(true)}
+										disabled={isUpdating}
+										className={`flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${isArabic ? "flex-row-reverse" : ""}`}
+									>
+										<Trash2 className="w-4 h-4" />
+										<span className="text-sm">{isArabic ? "مسح الكل" : "Clear All"}</span>
+									</button>
+								</motion.div>
+							)}
+
 							{/* Products Section with Store Grouping */}
 							{productItems.length > 0 && (
 								<motion.div
@@ -494,6 +539,72 @@ export default function CartPage() {
 					</div>
 				)}
 			</div>
+
+			{/* Clear All Confirmation Modal */}
+			<AnimatePresence>
+				{showClearAllModal && (
+					<>
+						{/* Backdrop */}
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							onClick={() => setShowClearAllModal(false)}
+							className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+						/>
+						
+						{/* Modal */}
+						<div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={isArabic ? "rtl" : "ltr"}>
+							<motion.div
+								initial={{ opacity: 0, scale: 0.95, y: 20 }}
+								animate={{ opacity: 1, scale: 1, y: 0 }}
+								exit={{ opacity: 0, scale: 0.95, y: 20 }}
+								transition={{ duration: 0.2 }}
+								className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6"
+								onClick={(e) => e.stopPropagation()}
+							>
+								{/* Icon */}
+								<div className="flex justify-center mb-4">
+									<div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+										<AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+									</div>
+								</div>
+
+								{/* Title */}
+								<h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center mb-2">
+									{isArabic ? "مسح جميع المنتجات؟" : "Clear All Products?"}
+								</h3>
+
+								{/* Message */}
+								<p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">
+									{isArabic
+										? "هل أنت متأكد من أنك تريد مسح جميع المنتجات من السلة؟ لا يمكن التراجع عن هذا الإجراء."
+										: "Are you sure you want to clear all products from your cart? This action cannot be undone."}
+								</p>
+
+								{/* Actions */}
+								<div className={`flex gap-3 ${isArabic ? "flex-row-reverse" : ""}`}>
+									<button
+										onClick={() => setShowClearAllModal(false)}
+										disabled={isUpdating}
+										className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										{isArabic ? "إلغاء" : "Cancel"}
+									</button>
+									<button
+										onClick={clearAllProducts}
+										disabled={isUpdating}
+										className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+									>
+										<Trash2 className="w-4 h-4" />
+										<span>{isArabic ? "مسح الكل" : "Clear All"}</span>
+									</button>
+								</div>
+							</motion.div>
+						</div>
+					</>
+				)}
+			</AnimatePresence>
 
 			{/* Checkout Confirmation Modal */}
 			<ConfirmCheckoutModal

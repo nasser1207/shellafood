@@ -82,6 +82,7 @@ export default function AutoSelectConfirmModal({
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
+						transition={{ duration: 0.15 }}
 						onClick={onClose}
 						className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
 					/>
@@ -89,10 +90,10 @@ export default function AutoSelectConfirmModal({
 					{/* Modal */}
 					<div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" dir={isArabic ? "rtl" : "ltr"}>
 						<motion.div
-							initial={{ opacity: 0, scale: 0.95, y: 20 }}
+							initial={{ opacity: 0, scale: 0.96, y: 10 }}
 							animate={{ opacity: 1, scale: 1, y: 0 }}
-							exit={{ opacity: 0, scale: 0.95, y: 20 }}
-							transition={{ duration: 0.2 }}
+							exit={{ opacity: 0, scale: 0.96, y: 10 }}
+							transition={{ duration: 0.15, ease: "easeOut" }}
 							className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl"
 						>
 							{/* Close Button */}

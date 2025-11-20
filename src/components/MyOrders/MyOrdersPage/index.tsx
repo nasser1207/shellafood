@@ -218,62 +218,65 @@ const mockServiceRequests: ServiceRequest[] = [
 const mockDeliveryOrders: DeliveryOrder[] = [
 	{
 		id: "1",
-		orderNumber: "DEL-2025-001",
+		orderNumber: "ORD-98765432",
 		transportType: "motorbike",
 		status: "completed",
 		createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-		senderName: "Ahmed Mohammed",
+		senderName: "أحمد محمد",
 		senderPhone: "+966 50 123 4567",
-		senderAddress: "King Fahd Street, Al-Nakheel District, Riyadh",
-		receiverName: "Fatima Ali",
+		senderAddress: "شارع الملك فهد، حي النخيل، الرياض - مبنى 15، شقة 302",
+		receiverName: "فاطمة علي",
 		receiverPhone: "+966 50 987 6543",
-		receiverAddress: "Prince Sultan Street, Al-Worood District, Riyadh",
+		receiverAddress: "شارع الأمير سلطان، حي الورود، الرياض - مبنى 8، شقة 105",
 		distance: 10.75,
-		deliveryFee: 9,
-		totalAmount: 9,
+		deliveryFee: 26.88,
+		totalAmount: 26.88,
 		paymentMethod: "Card",
 		paymentStatus: "paid",
-		driverName: "Khalid Al-Rashid",
-		driverPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+		driverName: "خالد الراشد",
+		driverPhoto: "/driver1.jpg",
 		orderType: "one-way",
 	},
 	{
 		id: "2",
-		orderNumber: "DEL-2025-002",
+		orderNumber: "ORD-87654321",
 		transportType: "truck",
 		status: "in_transit",
 		createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-		senderName: "Mohammed Hassan",
+		senderName: "محمد حسن",
 		senderPhone: "+966 50 111 2222",
-		senderAddress: "Olaya Street, Al-Olaya District, Riyadh",
-		receiverName: "Sara Ahmed",
+		senderAddress: "شارع العليا، حي العليا، الرياض - مبنى 22، شقة 401",
+		receiverName: "سارة أحمد",
 		receiverPhone: "+966 50 333 4444",
-		receiverAddress: "King Abdullah Road, Al-Malaz District, Riyadh",
+		receiverAddress: "طريق الملك عبدالله، حي الملز، الرياض - مبنى 10، شقة 205",
 		distance: 25.5,
-		deliveryFee: 25,
-		totalAmount: 25,
+		deliveryFee: 127.5,
+		totalAmount: 127.5,
 		paymentMethod: "Mada",
 		paymentStatus: "paid",
-		driverName: "Omar Al-Saud",
+		driverName: "عمر السعود",
+		driverPhoto: "/driver2.jpg",
 		orderType: "multi-direction",
 	},
 	{
 		id: "3",
-		orderNumber: "DEL-2025-003",
+		orderNumber: "ORD-76543210",
 		transportType: "motorbike",
 		status: "assigned",
 		createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-		senderName: "Ali Ibrahim",
+		senderName: "علي إبراهيم",
 		senderPhone: "+966 50 555 6666",
-		senderAddress: "Tahlia Street, Al-Wurud District, Riyadh",
-		receiverName: "Noura Al-Mansouri",
+		senderAddress: "شارع التحلية، حي الورود، الرياض - مبنى 5، شقة 101",
+		receiverName: "نورة المنصوري",
 		receiverPhone: "+966 50 777 8888",
-		receiverAddress: "Airport Road, Al-Khaleej District, Riyadh",
+		receiverAddress: "طريق المطار، حي الخليج، الرياض - مبنى 12، شقة 303",
 		distance: 15.2,
-		deliveryFee: 12,
-		totalAmount: 12,
-		paymentMethod: "Cash",
-		paymentStatus: "pending",
+		deliveryFee: 38.0,
+		totalAmount: 38.0,
+		paymentMethod: "Card",
+		paymentStatus: "paid",
+		driverName: "فهد المطيري",
+		driverPhoto: "/driver1.jpg",
 		orderType: "one-way",
 	},
 ];
@@ -287,22 +290,133 @@ export default function MyOrdersPage() {
 	const [sortBy, setSortBy] = useState<"newest" | "oldest" | "status">("newest");
 	const [filterStatus, setFilterStatus] = useState<string>("all");
 
+	// Check URL parameters for tab selection
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			const urlParams = new URLSearchParams(window.location.search);
+			const tabParam = urlParams.get("tab");
+			if (tabParam === "delivery" || tabParam === "services" || tabParam === "products") {
+				setActiveTab(tabParam as "products" | "services" | "delivery");
+			}
+		}
+	}, []);
+
 	// Mock API calls - Replace with real API calls
 	const [productOrders, setProductOrders] = useState<ProductOrder[]>([]);
 	const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
 	const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrder[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 
+	// Convert Pick and Order data to DeliveryOrder format
+	const convertPickAndOrderToDeliveryOrder = useCallback((orderId: string, storedOrderData: any): DeliveryOrder | null => {
+		const orderData = storedOrderData.orderData;
+		if (!orderData || !orderData.locationPoints) return null;
+
+		const pickupPoints = orderData.locationPoints.filter((p: any) => p.type === "pickup");
+		const dropoffPoints = orderData.locationPoints.filter((p: any) => p.type === "dropoff");
+		
+		if (pickupPoints.length === 0 || dropoffPoints.length === 0) return null;
+
+		const firstPickup = pickupPoints[0];
+		const firstDropoff = dropoffPoints[0];
+		
+		// Calculate distance (mock calculation - in real app would use actual distance)
+		const distance = 12.5; // Mock distance in km
+		
+		// Get creation date from stored data
+		const createdAt = new Date(storedOrderData.createdAt || Date.now());
+		const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+		
+		// Determine status based on order age and driver assignment
+		let status: DeliveryOrder["status"] = "pending";
+		if (hoursSinceCreation > 24) {
+			status = "completed";
+		} else if (hoursSinceCreation > 2) {
+			status = "in_transit";
+		} else if (hoursSinceCreation > 0.5) {
+			status = "picked_up";
+		} else if (storedOrderData.driverId || storedOrderData.driverData) {
+			status = "assigned";
+		}
+
+		// Calculate delivery fee based on transport type and distance
+		const transportType = storedOrderData.transportType || orderData.transportType;
+		const isMotorbike = transportType === "motorbike";
+		const baseFee = isMotorbike ? 2.5 : 5.0;
+		const deliveryFee = Math.round((baseFee * distance) * 100) / 100;
+		const totalAmount = deliveryFee;
+
+		// Get driver data from stored order
+		const driverData = storedOrderData.driverData;
+
+		return {
+			id: orderId,
+			orderNumber: orderId,
+			transportType: (transportType === "motorbike" ? "motorbike" : "truck") as "motorbike" | "truck",
+			status,
+			createdAt: createdAt.toISOString(),
+			senderName: firstPickup.recipientName || "Sender",
+			senderPhone: firstPickup.recipientPhone || "+966500000000",
+			senderAddress: `${firstPickup.streetName}, ${firstPickup.areaName}, ${firstPickup.city}${firstPickup.building ? ` - ${firstPickup.building}` : ""}`,
+			receiverName: firstDropoff.recipientName || "Receiver",
+			receiverPhone: firstDropoff.recipientPhone || "+966500000000",
+			receiverAddress: `${firstDropoff.streetName}, ${firstDropoff.areaName}, ${firstDropoff.city}${firstDropoff.building ? ` - ${firstDropoff.building}` : ""}`,
+			distance,
+			deliveryFee,
+			totalAmount,
+			paymentMethod: "Card",
+			paymentStatus: "paid" as const,
+			driverName: driverData?.name || driverData?.nameAr,
+			driverPhoto: driverData?.avatar,
+			orderType: (storedOrderData.orderType === "multi-direction" ? "multi-direction" : "one-way") as "one-way" | "multi-direction",
+		};
+	}, []);
+
 	// Fetch orders function
 	const fetchOrders = useCallback(async () => {
 		setIsLoading(true);
 		// Simulate API call - Replace with actual API
-		await new Promise((resolve) => setTimeout(resolve, 1000));
+		await new Promise((resolve) => setTimeout(resolve, 800));
+		
+		// Load Pick and Order data from sessionStorage
+		const pickAndOrderDeliveryOrders: DeliveryOrder[] = [];
+		if (typeof window !== "undefined") {
+			// Get all keys from sessionStorage that start with "pickAndOrder_"
+			for (let i = 0; i < sessionStorage.length; i++) {
+				const key = sessionStorage.key(i);
+				if (key && key.startsWith("pickAndOrder_")) {
+					try {
+						const storedData = sessionStorage.getItem(key);
+						if (storedData) {
+							const parsed = JSON.parse(storedData);
+							const orderId = parsed.orderId;
+							
+							// Convert to DeliveryOrder format
+							const deliveryOrder = convertPickAndOrderToDeliveryOrder(orderId, parsed);
+							if (deliveryOrder) {
+								pickAndOrderDeliveryOrders.push(deliveryOrder);
+							}
+						}
+					} catch (error) {
+						console.error("Error parsing Pick and Order data:", error);
+					}
+				}
+			}
+		}
+
+		// Merge Pick and Order data with mock data
+		const allDeliveryOrders = [...pickAndOrderDeliveryOrders, ...mockDeliveryOrders];
+		
+		// Sort by creation date (newest first)
+		allDeliveryOrders.sort((a, b) => 
+			new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+		);
+
 		setProductOrders(mockProductOrders);
 		setServiceRequests(mockServiceRequests);
-		setDeliveryOrders(mockDeliveryOrders);
+		setDeliveryOrders(allDeliveryOrders);
 		setIsLoading(false);
-	}, []);
+	}, [convertPickAndOrderToDeliveryOrder]);
 
 	useEffect(() => {
 		fetchOrders();

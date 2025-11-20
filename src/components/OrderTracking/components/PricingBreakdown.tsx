@@ -66,7 +66,7 @@ export default React.memo(function PricingBreakdown({
 							</span>
 						</div>
 						<span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap ml-2">
-							{basePrice.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+							{(basePrice ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 						</span>
 					</div>
 
@@ -89,7 +89,7 @@ export default React.memo(function PricingBreakdown({
 							</div>
 						</div>
 						<span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap ml-2">
-							{platformFee.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+							{(platformFee ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 						</span>
 					</div>
 
@@ -111,7 +111,7 @@ export default React.memo(function PricingBreakdown({
 							</div>
 						</div>
 						<span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap ml-2">
-							{vat.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+							{(vat ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 						</span>
 					</div>
 
@@ -124,7 +124,7 @@ export default React.memo(function PricingBreakdown({
 							{isArabic ? "المبلغ الإجمالي" : "Total Amount"}
 						</span>
 						<span className="text-lg sm:text-xl font-extrabold text-green-600 dark:text-green-400 whitespace-nowrap">
-							{totalAmount.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+							{(totalAmount ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 						</span>
 					</div>
 				</div>

@@ -68,11 +68,55 @@ export default function DriverProfilePage({
 		const fetchDriverData = async () => {
 			setIsLoading(true);
 			try {
+				// First, try to get driver data from sessionStorage (from ChooseDriverPage)
+				const storedDriverData = sessionStorage.getItem(`driver_${driverId}`);
+				
+				if (storedDriverData) {
+					try {
+						const parsedDriver = JSON.parse(storedDriverData);
+						
+						// Map the stored driver data to the Driver interface
+						const driverData: Driver = {
+							id: parsedDriver.id || driverId,
+							name: parsedDriver.name || "Driver",
+							nameAr: parsedDriver.nameAr || "سائق",
+							avatar: parsedDriver.avatar || "/driver1.jpg",
+							rating: parsedDriver.rating || 4.5,
+							reviewsCount: parsedDriver.reviewsCount || 0,
+							pricePerKm: parsedDriver.pricePerKm || (transportType === "motorbike" ? 2.5 : 5.0),
+							experience: parsedDriver.experience || (isArabic ? "5 سنوات" : "5 years"),
+							vehicleType: parsedDriver.vehicleType || (transportType === "motorbike" ? "motorbike" : "truck"),
+							vehicleModel: parsedDriver.vehicleModel || (transportType === "motorbike" ? "Honda CB500X 2023" : "Isuzu D-Max 2022"),
+							licensePlate: parsedDriver.licensePlate || "ABC 1234",
+							phone: parsedDriver.phone || "+966500000000",
+							completedOrders: parsedDriver.reviewsCount || 0, // Use reviewsCount as completedOrders
+							joinDate: "2016-03-15", // Default join date
+							specialties: [
+								isArabic ? "توصيل سريع" : "Fast Delivery",
+								isArabic ? "خدمة ممتازة" : "Excellent Service",
+								isArabic ? "تعامل احترافي" : "Professional",
+								isArabic ? "متاح على مدار الساعة" : "24/7 Available",
+							],
+							bio: `Experienced delivery driver with ${parsedDriver.experience || "5 years"} of professional service. Specialized in fast and safe deliveries.`,
+							bioAr: `سائق توصيل محترف مع ${parsedDriver.experience || "5 سنوات"} من الخبرة. متخصص في التوصيل السريع والآمن.`,
+							verified: true,
+							responseTime: isArabic ? "أقل من دقيقة" : "< 1 min",
+							acceptanceRate: 98,
+						};
+						
+						setDriver(driverData);
+						setIsLoading(false);
+						return;
+					} catch (parseError) {
+						console.error("Error parsing stored driver data:", parseError);
+					}
+				}
+
+				// Fallback to mock data if not found in sessionStorage
 				// TODO: Replace with actual API call
 				// const response = await fetch(`/api/drivers/${driverId}`);
 				// const data = await response.json();
 
-				// Mock data for now
 				await new Promise((resolve) => setTimeout(resolve, 800));
 
 				const mockDriver: Driver = {

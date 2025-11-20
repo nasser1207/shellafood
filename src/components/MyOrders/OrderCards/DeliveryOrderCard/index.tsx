@@ -232,7 +232,7 @@ export function DeliveryOrderCard({
 									{isArabic ? "رسوم التوصيل" : "Delivery Fee"}
 								</p>
 								<p className="text-lg sm:text-xl font-black text-purple-600 dark:text-purple-400">
-									{order.deliveryFee.toFixed(2)} <span className="text-xs sm:text-sm">{isArabic ? "ريال" : "SAR"}</span>
+									{(order.deliveryFee ?? 0).toFixed(2)} <span className="text-xs sm:text-sm">{isArabic ? "ريال" : "SAR"}</span>
 								</p>
 							</div>
 						</div>
@@ -259,7 +259,7 @@ export function DeliveryOrderCard({
 							<div className={cn("text-left sm:text-right", isArabic ? "sm:text-left" : "sm:text-right")}>
 								<div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">{isArabic ? "المجموع" : "Total"}</div>
 								<div className="text-xl sm:text-2xl md:text-3xl font-black text-green-600 dark:text-green-400 tracking-tight">
-									{order.totalAmount.toFixed(2)} <span className="text-base sm:text-lg">{isArabic ? "ريال" : "SAR"}</span>
+									{(order.totalAmount ?? 0).toFixed(2)} <span className="text-base sm:text-lg">{isArabic ? "ريال" : "SAR"}</span>
 								</div>
 							</div>
 						</div>

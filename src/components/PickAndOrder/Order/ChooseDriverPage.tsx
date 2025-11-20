@@ -30,6 +30,7 @@ interface Driver {
 	vehicleType: "truck" | "motorbike";
 	vehicleModel: string;
 	licensePlate: string;
+	phone?: string;
 }
 
 // Cache for Distance Matrix API results
@@ -129,8 +130,8 @@ const DriverCard = memo<{
 				</div>
 
 				{/* Rating + Experience */}
-				<div className={`flex items-center justify-between ${isArabic ? "flex-row-reverse" : ""}`}>
-					<div className={`flex items-center gap-1 ${isArabic ? "flex-row-reverse" : ""}`}>
+				<div className={`flex items-center justify-between `}>
+					<div className={`flex items-center gap-1 `}>
 						<div className="flex items-center gap-0.5">
 							{[...Array(5)].map((_, i) => (
 								<Star
@@ -249,7 +250,7 @@ const DriverCard = memo<{
 
 				{/* Driver Info */}
 				<div className="flex-1 min-w-0">
-					<div className={`flex items-start justify-between mb-3 ${isArabic ? "flex-row-reverse" : ""}`}>
+					<div className={`flex items-start justify-between mb-3 `}>
 						<div className={`${isArabic ? "text-right" : "text-left"}`}>
 							<h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg lg:text-xl mb-1">
 								{isArabic ? driver.nameAr : driver.name}
@@ -266,7 +267,7 @@ const DriverCard = memo<{
 					</div>
 
 					{/* Rating */}
-					<div className={`flex items-center gap-1 mb-3 ${isArabic ? "flex-row-reverse" : ""}`}>
+					<div className={`flex items-center gap-1 mb-3 `}>
 						<div className="flex items-center gap-0.5">
 							{[...Array(5)].map((_, i) => (
 								<Star
@@ -437,6 +438,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 				vehicleType: isMotorbike ? "motorbike" : "truck",
 				vehicleModel: isMotorbike ? "Honda CB500X 2023" : "Isuzu D-Max 2022",
 				licensePlate: "ABC 1234",
+				phone: "+966 55 123 4567",
 				...generateDriverPosition(1.5, 0),
 			},
 			{
@@ -452,6 +454,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 				vehicleType: isMotorbike ? "motorbike" : "truck",
 				vehicleModel: isMotorbike ? "Yamaha MT-07 2022" : "Toyota Hilux 2021",
 				licensePlate: "XYZ 5678",
+				phone: "+966 50 234 5678",
 				...generateDriverPosition(2.8, 45),
 			},
 			{
@@ -467,6 +470,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 				vehicleType: isMotorbike ? "motorbike" : "truck",
 				vehicleModel: isMotorbike ? "Kawasaki Ninja 400" : "Ford Ranger 2023",
 				licensePlate: "DEF 9012",
+				phone: "+966 55 345 6789",
 				...generateDriverPosition(1.2, 90),
 			},
 			{
@@ -482,6 +486,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 				vehicleType: isMotorbike ? "motorbike" : "truck",
 				vehicleModel: isMotorbike ? "Suzuki V-Strom 650" : "Mitsubishi L200",
 				licensePlate: "GHI 3456",
+				phone: "+966 50 456 7890",
 				...generateDriverPosition(3.5, 135),
 			},
 			{
@@ -497,6 +502,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 				vehicleType: isMotorbike ? "motorbike" : "truck",
 				vehicleModel: isMotorbike ? "BMW F 750 GS" : "Nissan Navara 2022",
 				licensePlate: "JKL 7890",
+				phone: "+966 55 567 8901",
 				...generateDriverPosition(4.8, 180),
 			},
 		];
@@ -560,6 +566,27 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 	}, [selectedDriver, router, transportType, orderType]);
 
 	const handleViewDriverDetails = useCallback((driver: Driver) => {
+		// Store driver data in sessionStorage for the profile page
+		sessionStorage.setItem(`driver_${driver.id}`, JSON.stringify({
+			id: driver.id,
+			name: driver.name,
+			nameAr: driver.nameAr,
+			avatar: driver.avatar,
+			rating: driver.rating,
+			reviewsCount: driver.reviewsCount,
+			pricePerKm: driver.pricePerKm,
+			experience: driver.experience,
+			vehicleType: driver.vehicleType,
+			vehicleModel: driver.vehicleModel,
+			licensePlate: driver.licensePlate,
+			phone: driver.phone || "+966500000000",
+			location: driver.location,
+			lat: driver.lat,
+			lng: driver.lng,
+			distance: driver.distance,
+			estimatedTime: driver.estimatedTime,
+		}));
+		
 		// Navigate to driver profile page instead of modal
 		const returnUrl = encodeURIComponent(`/pickandorder/${transportType}/order/choose-driver?type=${orderType}`);
 		router.push(`/driver/${driver.id}?returnUrl=${returnUrl}&transportType=${transportType}&orderType=${orderType}`);

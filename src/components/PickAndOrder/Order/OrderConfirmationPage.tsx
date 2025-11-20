@@ -60,24 +60,54 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 	const [orderData, setOrderData] = useState<OrderData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
-	// Load order data from sessionStorage
+	// Generate order ID (in real app, this would come from API)
+	const orderId = useMemo(() => {
+		return `ORD-${Date.now().toString().slice(-8)}`;
+	}, []);
+
+	// Load order data from sessionStorage and store for my-orders page
 	useEffect(() => {
 		const storedData = sessionStorage.getItem("pickAndOrderDetails");
 		if (storedData) {
 			try {
 				const parsed = JSON.parse(storedData);
 				setOrderData(parsed);
+
+				// Check if driver was selected (from URL or sessionStorage)
+				const urlParams = new URLSearchParams(window.location.search);
+				const driverId = urlParams.get("driverId");
+
+				// Get driver data if available
+				let driverData = null;
+				if (driverId) {
+					const storedDriverData = sessionStorage.getItem(`driver_${driverId}`);
+					if (storedDriverData) {
+						try {
+							driverData = JSON.parse(storedDriverData);
+						} catch (error) {
+							console.error("Error parsing driver data:", error);
+						}
+					}
+				}
+
+				// Store order data with orderId for my-orders page
+				const orderDataForStorage = {
+					orderId,
+					orderData: parsed,
+					transportType,
+					orderType: orderType || "one-way",
+					createdAt: new Date().toISOString(),
+					driverId: driverId || null,
+					driverData: driverData, // Include full driver data for my-orders display
+				};
+
+				sessionStorage.setItem(`pickAndOrder_${orderId}`, JSON.stringify(orderDataForStorage));
 			} catch (error) {
 				console.error("Error parsing order data:", error);
 			}
 		}
 		setIsLoading(false);
-	}, []);
-
-	// Generate order ID (in real app, this would come from API)
-	const orderId = useMemo(() => {
-		return `ORD-${Date.now().toString().slice(-8)}`;
-	}, []);
+	}, [orderId, transportType, orderType]);
 
 	// Base price based on transport type
 	const basePrice = useMemo(() => {
@@ -126,6 +156,11 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 	const handleTrackOrder = () => {
 		// Navigate to track order page for this specific order
 		router.push(`/my-orders/${orderId}/track`);
+	};
+
+	const handleViewMyOrders = () => {
+		// Navigate to my-orders page with delivery tab active
+		router.push("/my-orders?tab=delivery");
 	};
 
 	const containerVariants = {
@@ -598,9 +633,7 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 						<section className="space-y-4">
 							<button
 								onClick={handleTrackOrder}
-								className={`w-full bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600 active:bg-green-700 text-white py-3.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 ${
-									isArabic ? "flex-row-reverse" : ""
-								}`}
+								className={`w-full bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600 active:bg-green-700 text-white py-3.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2`}
 							>
 								<Package className="w-5 h-5" />
 								<span>{isArabic ? "تتبع الطلب" : "Track Order"}</span>
@@ -613,14 +646,24 @@ export default function OrderConfirmationPage({ transportType, orderType }: Orde
 						</div>
 					)}
 
-					{/* Footer Action */}
-					<div className="bg-gray-50 dark:bg-gray-800 px-6 sm:px-8 py-4 border-t border-gray-200 dark:border-gray-700">
+					{/* Footer Actions */}
+					<div className="bg-gray-50 dark:bg-gray-800 px-6 sm:px-8 py-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+						{/* View My Orders Button */}
+						<button
+							onClick={handleViewMyOrders}
+							className={`w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 ${isArabic ? "flex-row-reverse" : ""}`}
+						>
+							<Package className="w-5 h-5" />
+							<span>{isArabic ? "عرض طلباتي" : "View My Orders"}</span>
+						</button>
+
+						{/* Back Button */}
 						<button
 							onClick={handleBackToHome}
-							className={`w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:ring-offset-2`}
+							className={`w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 focus:ring-offset-2 ${isArabic ? "flex-row-reverse" : ""}`}
 						>
 							<ArrowLeft className={`w-5 h-5 ${isArabic ? "rotate-180" : ""}`} />
-							<span>{isArabic ? "العودة للرئيسية" : "Back to Home"}</span>
+							<span>{isArabic ? "العودة لجلب وتوصيل" : "Back to Pick & Order"}</span>
 						</button>
 					</div>
 				</motion.div>

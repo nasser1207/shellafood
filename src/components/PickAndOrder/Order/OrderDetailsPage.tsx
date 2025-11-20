@@ -26,6 +26,7 @@ import { getGeocoder } from "@/lib/maps/utils";
 import { parseAddressComponents } from "./utils/addressParser";
 import Image from "next/image";
 import { LocationPointCard, VehicleSpecificFields, MobileMapSection, PackageDetailsSection } from "./components";
+import { PhoneInputField } from "@/components/Utils/PhoneInput";
 
 interface OrderDetailsPageProps {
 	transportType: string;
@@ -811,28 +812,19 @@ export default function OrderDetailsPage({ transportType, orderType }: OrderDeta
 											)}
 										</div>
 										<div>
-											<label className="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-												{isArabic ? "رقم الهاتف" : "Phone"}
-												<span className="text-red-500 ml-1">*</span>
-											</label>
-											<input
-												type="tel"
+											<PhoneInputField
+												label={isArabic ? "رقم الهاتف" : "Phone"}
 												value={activePoint?.recipientPhone || ""}
-												onChange={(e) => updatePointField(activePointId!, "recipientPhone", e.target.value)}
-												onBlur={() => setTouched((prev) => ({ ...prev, [`${activePointId}-phone`]: true }))}
-												placeholder="+966 50 123 4567"
-												className={`w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 ${
-													touched[`${activePointId}-phone`] && errors[`${activePointId}-phone`]
-														? "border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400"
-														: "border-gray-200 dark:border-gray-700 focus:border-[#31A342] dark:focus:border-[#4ade80]"
-												} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none transition-colors font-mono`}
+												onChange={(phone) => {
+													updatePointField(activePointId!, "recipientPhone", phone);
+													setTouched((prev) => ({ ...prev, [`${activePointId}-phone`]: true }));
+												}}
+												isArabic={isArabic}
+												required={true}
+												name={`${activePointId}-phone`}
+												error={touched[`${activePointId}-phone`] && errors[`${activePointId}-phone`] ? errors[`${activePointId}-phone`] : undefined}
+												disabled={false}
 											/>
-											{touched[`${activePointId}-phone`] && errors[`${activePointId}-phone`] && (
-												<p className="text-red-500 dark:text-red-400 text-xs mt-1 flex items-center gap-1">
-													<AlertCircle className="w-3 h-3" />
-													{errors[`${activePointId}-phone`]}
-												</p>
-											)}
 										</div>
 									</div>
 								</div>

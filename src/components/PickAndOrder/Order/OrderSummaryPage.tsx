@@ -26,6 +26,7 @@ import {
 	Image as ImageIcon,
 	Video,
 	X,
+	Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import { AutoSelectConfirmModal } from "./components";
@@ -82,6 +83,7 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 	const [isLoading, setIsLoading] = useState(true);
 	const [showNotification, setShowNotification] = useState(false);
 	const [showAutoSelectModal, setShowAutoSelectModal] = useState(false);
+	const [isAutoSelectLoading, setIsAutoSelectLoading] = useState(false);
 
 	// User info (from auth in production)
 	const currentUser = useMemo(
@@ -92,29 +94,156 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 		[isArabic]
 	);
 
-	// Mock driver data (would come from backend in production)
-	const selectedDriver = useMemo(
-		() => ({
-			id: "DRV-001",
-			name: isArabic ? "محمد أحمد" : "Mohammed Ahmed",
-			rating: 4.9,
-			completedTrips: 1250,
-			vehicleType: isMotorbike ? "Motorbike" : "Truck",
-			vehicleModel: isMotorbike
-				? isArabic
-					? "هوندا 2023"
-					: "Honda 2023"
-				: isArabic
-				? "إيسوزو 5 طن"
-				: "Isuzu 5 Ton",
-			licensePlate: "ABC 1234",
-			phone: "+966 55 987 6543",
-			distance: isArabic ? "3.5 كم" : "3.5 km",
-			estimatedArrival: isArabic ? "15-20 دقيقة" : "15-20 mins",
-			avatar: "/driver1.jpg",
-		}),
-		[isArabic, isMotorbike]
-	);
+	// Calculate distance using Haversine formula
+	const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+		const R = 6371; // Earth's radius in km
+		const dLat = ((lat2 - lat1) * Math.PI) / 180;
+		const dLon = ((lon2 - lon1) * Math.PI) / 180;
+		const a =
+			Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+			Math.cos((lat1 * Math.PI) / 180) *
+			Math.cos((lat2 * Math.PI) / 180) *
+			Math.sin(dLon / 2) *
+			Math.sin(dLon / 2);
+		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		return R * c;
+	}, []);
+
+	const calculateEstimatedTime = useCallback((distance: number): number => {
+		// Average speed: 40 km/h for city driving
+		return Math.round((distance / 40) * 60);
+	}, []);
+
+	// Mock available drivers (would come from API in production)
+	const availableDrivers = useMemo(() => {
+		if (!orderData || !orderData.locationPoints.length) return [];
+		
+		const pickupPoint = orderData.locationPoints.find(p => p.type === "pickup");
+		if (!pickupPoint || !pickupPoint.location) return [];
+
+		const referenceLocation = pickupPoint.location;
+		
+		const allDriversRaw = [
+			{
+				id: "1",
+				name: "Mohammed Ahmed",
+				nameAr: "محمد أحمد",
+				avatar: "/driver1.jpg",
+				rating: 4.9,
+				reviewsCount: 1250,
+				pricePerKm: isMotorbike ? 2.5 : 5.0,
+				experience: isArabic ? "8 سنوات" : "8 years",
+				location: isArabic ? "الرياض" : "Riyadh",
+				vehicleType: isMotorbike ? "motorbike" : "truck",
+				vehicleModel: isMotorbike 
+					? (isArabic ? "هوندا 2023" : "Honda 2023")
+					: (isArabic ? "إيسوزو 5 طن" : "Isuzu 5 Ton"),
+				licensePlate: "ABC 1234",
+				phone: "+966 55 987 6543",
+				lat: referenceLocation.lat + (Math.random() - 0.5) * 0.1,
+				lng: referenceLocation.lng + (Math.random() - 0.5) * 0.1,
+			},
+			{
+				id: "2",
+				name: "Ahmed Al-Saud",
+				nameAr: "أحمد السعود",
+				avatar: "/driver2.jpg",
+				rating: 4.8,
+				reviewsCount: 980,
+				pricePerKm: isMotorbike ? 2.6 : 5.2,
+				experience: isArabic ? "6 سنوات" : "6 years",
+				location: isArabic ? "الرياض" : "Riyadh",
+				vehicleType: isMotorbike ? "motorbike" : "truck",
+				vehicleModel: isMotorbike 
+					? (isArabic ? "سوزوكي 2022" : "Suzuki 2022")
+					: (isArabic ? "ميتسوبيشي 5 طن" : "Mitsubishi 5 Ton"),
+				licensePlate: "DEF 5678",
+				phone: "+966 50 123 4567",
+				lat: referenceLocation.lat + (Math.random() - 0.5) * 0.1,
+				lng: referenceLocation.lng + (Math.random() - 0.5) * 0.1,
+			},
+			{
+				id: "3",
+				name: "Khalid Al-Mutairi",
+				nameAr: "خالد المطيري",
+				avatar: "/driver1.jpg",
+				rating: 4.7,
+				reviewsCount: 750,
+				pricePerKm: isMotorbike ? 2.4 : 4.9,
+				experience: isArabic ? "5 سنوات" : "5 years",
+				location: isArabic ? "الرياض" : "Riyadh",
+				vehicleType: isMotorbike ? "motorbike" : "truck",
+				vehicleModel: isMotorbike 
+					? (isArabic ? "بي إم دبليو 2023" : "BMW 2023")
+					: (isArabic ? "نيسان 5 طن" : "Nissan 5 Ton"),
+				licensePlate: "GHI 9012",
+				phone: "+966 55 555 5555",
+				lat: referenceLocation.lat + (Math.random() - 0.5) * 0.1,
+				lng: referenceLocation.lng + (Math.random() - 0.5) * 0.1,
+			},
+		];
+
+		return allDriversRaw.map((driver) => {
+			const distance = calculateDistance(
+				referenceLocation.lat,
+				referenceLocation.lng,
+				driver.lat,
+				driver.lng
+			);
+			return {
+				...driver,
+				distance: Math.round(distance * 10) / 10,
+				estimatedTime: calculateEstimatedTime(distance),
+			};
+		}).sort((a, b) => {
+			// Sort by rating first, then by distance
+			if (b.rating !== a.rating) return b.rating - a.rating;
+			return (a.distance || 0) - (b.distance || 0);
+		});
+	}, [orderData, isMotorbike, isArabic, calculateDistance, calculateEstimatedTime]);
+
+	// Select best driver (highest rating, closest distance)
+	const selectedDriver = useMemo(() => {
+		if (!availableDrivers.length) {
+			// Fallback mock data
+			return {
+				id: "DRV-001",
+				name: isArabic ? "محمد أحمد" : "Mohammed Ahmed",
+				rating: 4.9,
+				completedTrips: 1250,
+				vehicleType: isMotorbike ? "Motorbike" : "Truck",
+				vehicleModel: isMotorbike
+					? isArabic
+						? "هوندا 2023"
+						: "Honda 2023"
+					: isArabic
+					? "إيسوزو 5 طن"
+					: "Isuzu 5 Ton",
+				licensePlate: "ABC 1234",
+				phone: "+966 55 987 6543",
+				distance: isArabic ? "3.5 كم" : "3.5 km",
+				estimatedArrival: isArabic ? "15-20 دقيقة" : "15-20 mins",
+				avatar: "/driver1.jpg",
+			};
+		}
+
+		const bestDriver = availableDrivers[0];
+		return {
+			id: bestDriver.id,
+			name: isArabic ? bestDriver.nameAr : bestDriver.name,
+			rating: bestDriver.rating,
+			completedTrips: bestDriver.reviewsCount,
+			vehicleType: bestDriver.vehicleType === "motorbike" ? "Motorbike" : "Truck",
+			vehicleModel: bestDriver.vehicleModel,
+			licensePlate: bestDriver.licensePlate,
+			phone: bestDriver.phone,
+			distance: isArabic ? `${bestDriver.distance} كم` : `${bestDriver.distance} km`,
+			estimatedArrival: isArabic 
+				? `${bestDriver.estimatedTime} دقيقة` 
+				: `${bestDriver.estimatedTime} mins`,
+			avatar: bestDriver.avatar,
+		};
+	}, [availableDrivers, isArabic, isMotorbike]);
 
 	// Calculate completion percentage
 	const completionPercentage = useMemo(() => {
@@ -245,12 +374,13 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 		return (fee + extraFee).toFixed(2);
 	}, [orderData, isMotorbike, totalDistance]);
 
-	// Mock price breakdown for modal
+	// Calculate price breakdown using selected driver's pricing
 	const priceBreakdown = useMemo(() => {
-		if (!orderData) return null;
+		if (!orderData || !availableDrivers.length) return null;
 
+		const bestDriver = availableDrivers[0];
 		const basePrice = isMotorbike ? 15 : 30;
-		const distanceCharge = parseFloat(totalDistance) * (isMotorbike ? 2.5 : 5);
+		const distanceCharge = parseFloat(totalDistance) * bestDriver.pricePerKm;
 
 		const extraCharges: { label: string; amount: number }[] = [];
 		if (orderData.isExpress) {
@@ -281,7 +411,7 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 			extraCharges,
 			total,
 		};
-	}, [orderData, totalDistance, isMotorbike, isArabic]);
+	}, [orderData, totalDistance, availableDrivers, isMotorbike, isArabic]);
 
 	const handleEdit = useCallback(() => {
 		router.push(`/pickandorder/${transportType}/order/details?type=${orderType}`);
@@ -314,8 +444,14 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 			showIncompleteNotification();
 			return;
 		}
-		console.log("Form complete, showing modal...");
-		setShowAutoSelectModal(true);
+		console.log("Form complete, loading driver...");
+		// Show loading state first
+		setIsAutoSelectLoading(true);
+		// Simulate API call to select best driver (in production, this would be a real API call)
+		setTimeout(() => {
+			setIsAutoSelectLoading(false);
+			setShowAutoSelectModal(true);
+		}, 500); // Short delay to show loading, then show modal
 	}, [completionPercentage, showIncompleteNotification]);
 
 	const handleConfirmAutoSelect = useCallback(() => {
@@ -571,7 +707,7 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 											</div>
 											<div>
 												<p className="text-xs text-gray-500 dark:text-gray-400">{isArabic ? "الهاتف" : "Phone"}</p>
-												<p className="text-sm font-bold text-gray-900 dark:text-white font-mono">{currentUser.phone}</p>
+												<p className="text-sm font-bold text-gray-900 dark:text-white font-mono text-left" dir="ltr">{currentUser.phone}</p>
 											</div>
 										</div>
 									</div>
@@ -686,7 +822,7 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 																	</div>
 																	<div className="flex items-center gap-1.5">
 																		<Phone className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
-																		<span className="font-mono text-gray-700 dark:text-gray-300">
+																		<span className="font-mono text-gray-700 dark:text-gray-300 text-left" dir="ltr">
 																			{point.recipientPhone}
 																		</span>
 																	</div>
@@ -1049,11 +1185,23 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 							{/* Platform Auto */}
 							<button
 								onClick={handlePlatformRecommendation}
-								className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:px-4 sm:py-4 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl text-xs sm:text-sm md:text-base"
+								disabled={isAutoSelectLoading}
+								className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:px-4 sm:py-4 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl text-xs sm:text-sm md:text-base disabled:opacity-70 disabled:cursor-not-allowed"
 							>
-								<Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
-								<span className="truncate">{isArabic ? "المنصة تختار" : "Auto Select"}</span>
-								<ArrowRight className={`w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0 ${isArabic ? "rotate-180" : ""}`} />
+								{isAutoSelectLoading ? (
+									<Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0 animate-spin" />
+								) : (
+									<Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
+								)}
+								<span className="truncate">
+									{isAutoSelectLoading 
+										? (isArabic ? "جاري الاختيار..." : "Selecting...")
+										: (isArabic ? "المنصة تختار" : "Auto Select")
+									}
+								</span>
+								{!isAutoSelectLoading && (
+									<ArrowRight className={`w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0 ${isArabic ? "rotate-180" : ""}`} />
+								)}
 							</button>
 
 							{/* Manual Selection */}
@@ -1080,6 +1228,32 @@ export default function OrderSummaryPage({ transportType, orderType }: OrderSumm
 					</div>
 				</motion.div>
 			</div>
+
+			{/* Loading Overlay for Auto Select */}
+			<AnimatePresence>
+				{isAutoSelectLoading && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.15 }}
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+					>
+						<motion.div
+							initial={{ scale: 0.9, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0.9, opacity: 0 }}
+							transition={{ duration: 0.15 }}
+							className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4"
+						>
+							<Loader2 className="w-12 h-12 text-[#31A342] dark:text-[#4ade80] animate-spin" />
+							<p className="text-lg font-bold text-gray-900 dark:text-white">
+								{isArabic ? "جاري اختيار أفضل سائق..." : "Selecting best driver..."}
+							</p>
+						</motion.div>
+					</motion.div>
+				)}
+			</AnimatePresence>
 
 			{/* Auto Select Confirmation Modal */}
 			{priceBreakdown && (

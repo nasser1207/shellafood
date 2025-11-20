@@ -1,14 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Tag, Eye, Heart, ShoppingCart } from "lucide-react";
+import { Tag, Eye, Heart, ShoppingCart, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { Product } from "@/components/Utils/ProductCard";
 import Image from "next/image";
 import { navigateToProduct } from "@/lib/utils/categories/navigation";
 import { TEST_STORES, TEST_CATEGORIES, TEST_DEPARTMENTS } from "@/lib/data/categories/testData";
+import { useCart } from "@/hooks/useCart";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
 
 interface DiscountsProps {
 	products: Product[];
@@ -18,6 +20,10 @@ export default function Discounts({ products }: DiscountsProps) {
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
 	const router = useRouter();
+	const { addToCart } = useCart();
+	const { toasts, showToast, removeToast } = useToast();
+	const [addedProducts, setAddedProducts] = useState<Set<string>>(new Set());
+	const [addingProducts, setAddingProducts] = useState<Set<string>>(new Set());
 
 	if (products.length === 0) return null;
 
@@ -53,6 +59,80 @@ export default function Discounts({ products }: DiscountsProps) {
 		// Navigate to product details
 		navigateToProduct(router, category.slug, store.slug, departmentSlug, product);
 	};
+
+	const handleAddToCart = useCallback(async (e: React.MouseEvent, product: Product) => {
+		e.stopPropagation();
+		
+		if (!product.storeId) {
+			showToast(
+				isArabic ? "خطأ: معلومات المتجر غير متوفرة" : "Error: Store information not available",
+				"error"
+			);
+			return;
+		}
+
+		// Find store details
+		const store = TEST_STORES.find(s => s.id === product.storeId);
+		if (!store) {
+			showToast(
+				isArabic ? "خطأ: المتجر غير موجود" : "Error: Store not found",
+				"error"
+			);
+			return;
+		}
+
+		const price = typeof product.price === 'number' ? product.price : parseFloat(String(product.price || '0').replace(/[^0-9.]/g, ''));
+
+		setAddingProducts(prev => new Set(prev).add(product.id));
+		
+		try {
+			const result = await addToCart({
+				productId: product.id,
+				storeId: product.storeId,
+				quantity: 1,
+				productName: product.name,
+				productNameAr: product.nameAr,
+				productImage: product.image,
+				priceAtAdd: price,
+				storeName: store.name,
+				storeNameAr: store.nameAr,
+				storeLogo: store.logo || undefined,
+				stock: product.stockQuantity,
+			});
+
+			if (result.success) {
+				setAddedProducts(prev => new Set(prev).add(product.id));
+				showToast(
+					isArabic ? "تم إضافة المنتج للسلة" : "Product added to cart",
+					"success"
+				);
+			} else if (result.requiresClearCart) {
+				showToast(
+					isArabic
+						? "لديك منتجات من متجر آخر في السلة. يرجى إفراغ السلة أولاً"
+						: "You have items from a different store in your cart. Please clear cart first",
+					"warning"
+				);
+			} else {
+				showToast(
+					result.error || (isArabic ? "حدث خطأ أثناء إضافة المنتج" : "Error adding product"),
+					"error"
+				);
+			}
+		} catch (error) {
+			console.error("Error adding to cart:", error);
+			showToast(
+				isArabic ? "حدث خطأ في الاتصال" : "Connection error",
+				"error"
+			);
+		} finally {
+			setAddingProducts(prev => {
+				const newSet = new Set(prev);
+				newSet.delete(product.id);
+				return newSet;
+			});
+		}
+	}, [addToCart, showToast, isArabic]);
 
 	return (
 		<motion.section
@@ -159,14 +239,30 @@ export default function Discounts({ products }: DiscountsProps) {
 									<motion.button
 										whileHover={{ scale: 1.02 }}
 										whileTap={{ scale: 0.98 }}
-										onClick={(e) => {
-											e.stopPropagation();
-											handleProductClick(product);
-										}}
-										className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm hover:shadow-lg transition-all flex items-center justify-center gap-1 sm:gap-2 touch-manipulation"
+										onClick={(e) => handleAddToCart(e, product)}
+										disabled={addingProducts.has(product.id)}
+										className={`w-full py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm hover:shadow-lg transition-all flex items-center justify-center gap-1 sm:gap-2 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${
+											addedProducts.has(product.id)
+												? "bg-green-500 text-white"
+												: "bg-gradient-to-r from-green-600 to-emerald-600 text-white"
+										}`}
 									>
-										<ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-										<span className="whitespace-nowrap">{isArabic ? "أضف للسلة" : "Add to Cart"}</span>
+										{addingProducts.has(product.id) ? (
+											<>
+												<div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+												<span className="whitespace-nowrap">{isArabic ? "جاري الإضافة..." : "Adding..."}</span>
+											</>
+										) : addedProducts.has(product.id) ? (
+											<>
+												<Check className="w-3 h-3 sm:w-4 sm:h-4" />
+												<span className="whitespace-nowrap">{isArabic ? "تمت الإضافة" : "Added"}</span>
+											</>
+										) : (
+											<>
+												<ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+												<span className="whitespace-nowrap">{isArabic ? "أضف للسلة" : "Add to Cart"}</span>
+											</>
+										)}
 									</motion.button>
 								</div>
 							</div>
@@ -174,6 +270,9 @@ export default function Discounts({ products }: DiscountsProps) {
 					);
 				})}
 			</div>
+
+			{/* Toast Container */}
+			<ToastContainer toasts={toasts} onRemoveToast={removeToast} isArabic={isArabic} />
 		</motion.section>
 	);
 }

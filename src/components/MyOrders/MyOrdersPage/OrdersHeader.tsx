@@ -69,7 +69,7 @@ export function OrdersHeader({ stats, activeTab }: OrdersHeaderProps) {
 								transition={{ delay: 0.4 }}
 								className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4 text-center"
 							>
-								<div className="text-lg sm:text-xl font-bold">{stats.totalAmount.toFixed(0)}</div>
+								<div className="text-lg sm:text-xl font-bold">{(stats.totalAmount ?? 0).toFixed(0)}</div>
 								<div className="text-xs opacity-90">{isArabic ? "ر.س" : "SAR"}</div>
 							</motion.div>
 						</div>

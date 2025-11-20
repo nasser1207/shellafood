@@ -22,7 +22,7 @@ import { Store } from "@/components/Utils/StoreCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProductFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
-import { useToast } from "@/components/ui/Toast";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import ExpandableSection from "../shared/ExpandableSection";
 import MobileProductCard from "../shared/MobileProductCard";
@@ -44,7 +44,7 @@ function MobileProductView({
 	const direction = isArabic ? "rtl" : "ltr";
 	const router = useRouter();
 	const { addToCart, isLoading: cartLoading } = useCart();
-	const { showToast } = useToast();
+	const { showToast, toasts, removeToast } = useToast();
 	const [quantity, setQuantity] = useState(1);
 	const [isAddingToCart, setIsAddingToCart] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -98,6 +98,13 @@ function MobileProductView({
 
 		setIsAddingToCart(true);
 		try {
+			// Ensure price is a number
+			const price = typeof product.price === 'number' 
+				? product.price 
+				: typeof product.price === 'string' 
+					? parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0
+					: 0;
+
 			const result = await addToCart({
 				productId: product.id,
 				storeId: storeId,
@@ -105,7 +112,7 @@ function MobileProductView({
 				productName: product.name,
 				productNameAr: product.nameAr,
 				productImage: product.image,
-				priceAtAdd: product.price || 0,
+				priceAtAdd: price,
 				storeName: store?.name || "",
 				storeNameAr: store?.nameAr,
 				storeLogo: store?.logo || undefined,
@@ -130,8 +137,13 @@ function MobileProductView({
 					"error"
 				);
 			}
+
 		} catch (error) {
-			showToast(isArabic ? "حدث خطأ في الاتصال" : "Connection error", "error");
+			console.error("Error adding to cart:", error);
+			showToast(
+				isArabic ? "حدث خطأ في الاتصال" : "Connection error",
+				"error"
+			);
 		} finally {
 			setIsAddingToCart(false);
 		}
@@ -248,8 +260,8 @@ function MobileProductView({
 			</div>
 
 			{/* Product Info - Scrollable */}
-			<div className="bg-white dark:bg-gray-900 rounded-t-3xl -mt-6 relative z-10">
-				<div className="px-4 py-6 space-y-6">
+			<div className="bg-white dark:bg-gray-900 rounded-t-3xl -mt-6 relative z-10" dir={direction}>
+				<div className={`px-4 py-6 space-y-6 ${isArabic ? 'text-right' : 'text-left'}`}>
 					{/* Name & Brand */}
 					<div>
 						{product.brand && (
@@ -260,8 +272,8 @@ function MobileProductView({
 
 					{/* Rating & Reviews */}
 					{product.rating && (
-						<div className={`flex items-center gap-4 `}>
-							<div className="flex items-center gap-1 px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+						<div className={`flex items-center gap-4 ${isArabic ? 'flex-row-reverse' : ''}`}>
+							<div className={`flex items-center gap-1 px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg ${isArabic ? 'flex-row-reverse' : ''}`}>
 								<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
 								<span className="text-sm font-bold">{product.rating}</span>
 							</div>
@@ -277,33 +289,33 @@ function MobileProductView({
 					{/* Price */}
 					<div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl border-2 border-green-200 dark:border-green-800">
 						<div
-							className={`flex items-baseline gap-2 mb-1 `}
+							className={`flex items-baseline gap-2 mb-1 ${isArabic ? 'flex-row-reverse' : ''}`}
 						>
 							<span className="text-3xl font-black text-green-600 dark:text-green-400">
-								{product.price}
+								{typeof product.price === 'number' ? product.price : product.price}
 							</span>
 							<span className="text-lg text-gray-600 dark:text-gray-400">SAR</span>
-							{product.originalPrice && product.originalPrice > (product.price || 0) && (
+							{product.originalPrice && product.originalPrice > (typeof product.price === 'number' ? product.price : parseFloat(String(product.price || 0).replace(/[^0-9.]/g, '')) || 0) && (
 								<>
 									<span className="text-lg text-gray-400 dark:text-gray-500 line-through">
-										{product.originalPrice}
+										{typeof product.originalPrice === 'number' ? product.originalPrice : product.originalPrice}
 									</span>
 									<span className="px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
-										{calculateDiscount()}% OFF
+										{calculateDiscount()}% {isArabic ? 'خصم' : 'OFF'}
 									</span>
 								</>
 							)}
 						</div>
-						<p className="text-sm text-gray-600 dark:text-gray-400">
+						<p className={`text-sm text-gray-600 dark:text-gray-400 ${isArabic ? 'text-right' : 'text-left'}`}>
 							{isArabic ? "لكل " : "Per "}
 							{isArabic && product.unitAr ? product.unitAr : product.unit}
 						</p>
 					</div>
 
 					{/* Stock Status */}
-					<div>
+					<div className={isArabic ? 'text-right' : 'text-left'}>
 						{product.inStock ? (
-							<div className={`flex items-center gap-2 text-green-600 `}>
+							<div className={`flex items-center gap-2 text-green-600 ${isArabic ? 'flex-row-reverse' : ''}`}>
 								<CheckCircle className="w-5 h-5" />
 								<span className="font-semibold">{isArabic ? "متوفر" : "In Stock"}</span>
 								{product.stockQuantity && product.stockQuantity < 10 && (
@@ -314,7 +326,7 @@ function MobileProductView({
 								)}
 							</div>
 						) : (
-							<div className={`flex items-center gap-2 text-red-600 `}>
+							<div className={`flex items-center gap-2 text-red-600 ${isArabic ? 'flex-row-reverse' : ''}`}>
 								<XCircle className="w-5 h-5" />
 								<span className="font-semibold">{isArabic ? "غير متوفر" : "Out of Stock"}</span>
 							</div>
@@ -348,7 +360,90 @@ function MobileProductView({
 							title={isArabic ? "الوصف" : "Description"}
 							defaultExpanded={true}
 						>
-							<p className="text-gray-700 dark:text-gray-300 leading-relaxed">{displayDescription}</p>
+							<p className={`text-gray-700 dark:text-gray-300 leading-relaxed ${isArabic ? 'text-right' : 'text-left'}`}>
+								{displayDescription}
+							</p>
+						</ExpandableSection>
+					)}
+
+					{/* Additional Product Details */}
+					{/* Ingredients */}
+					{(product as any).ingredients && (
+						<ExpandableSection
+							title={isArabic ? "المكونات" : "Ingredients"}
+							defaultExpanded={false}
+						>
+							<p className={`text-gray-700 dark:text-gray-300 leading-relaxed text-sm ${isArabic ? 'text-right' : 'text-left'}`}>
+								{(product as any).ingredients}
+							</p>
+						</ExpandableSection>
+					)}
+
+					{/* Nutrition Information */}
+					{(product as any).nutrition && (
+						<ExpandableSection
+							title={isArabic ? "المعلومات الغذائية" : "Nutrition Information"}
+							defaultExpanded={false}
+						>
+							<div className={`space-y-2 ${isArabic ? 'text-right' : 'text-left'}`}>
+								{typeof (product as any).nutrition === 'object' ? (
+									Object.entries((product as any).nutrition).map(([key, value]: [string, any]) => (
+										<div key={key} className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+											<span className="text-sm text-gray-600 dark:text-gray-400">{key}</span>
+											<span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{String(value)}</span>
+										</div>
+									))
+								) : (
+									<p className="text-sm text-gray-700 dark:text-gray-300">{(product as any).nutrition}</p>
+								)}
+							</div>
+						</ExpandableSection>
+					)}
+
+					{/* Allergens */}
+					{(product as any).allergens && (
+						<ExpandableSection
+							title={isArabic ? "مسببات الحساسية" : "Allergens"}
+							defaultExpanded={false}
+						>
+							<div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
+								<p className={`text-sm text-orange-800 dark:text-orange-200 ${isArabic ? 'text-right' : 'text-left'}`}>
+									{(product as any).allergens}
+								</p>
+							</div>
+						</ExpandableSection>
+					)}
+
+					{/* Storage Instructions */}
+					{(product as any).storage && (
+						<ExpandableSection
+							title={isArabic ? "تعليمات التخزين" : "Storage Instructions"}
+							defaultExpanded={false}
+						>
+							<p className={`text-sm text-gray-700 dark:text-gray-300 ${isArabic ? 'text-right' : 'text-left'}`}>
+								{(product as any).storage}
+							</p>
+						</ExpandableSection>
+					)}
+
+					{/* Product Specifications */}
+					{(product as any).specifications && (
+						<ExpandableSection
+							title={isArabic ? "المواصفات" : "Specifications"}
+							defaultExpanded={false}
+						>
+							<div className={`space-y-2 ${isArabic ? 'text-right' : 'text-left'}`}>
+								{typeof (product as any).specifications === 'object' ? (
+									Object.entries((product as any).specifications).map(([key, value]: [string, any]) => (
+										<div key={key} className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+											<span className="text-sm text-gray-600 dark:text-gray-400">{key}</span>
+											<span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{String(value)}</span>
+										</div>
+									))
+								) : (
+									<p className="text-sm text-gray-700 dark:text-gray-300">{(product as any).specifications}</p>
+								)}
+							</div>
 						</ExpandableSection>
 					)}
 
@@ -378,9 +473,12 @@ function MobileProductView({
 				</div>
 			</div>
 
+			{/* Toast Container */}
+			<ToastContainer toasts={toasts} onRemoveToast={removeToast} isArabic={isArabic} />
+
 			{/* Sticky Bottom Bar - Add to Cart */}
-			<div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 pb-safe shadow-2xl">
-				<div className={`flex items-center gap-3 `}>
+			<div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 pb-safe shadow-2xl" dir={direction}>
+				<div className={`flex items-center gap-3 ${isArabic ? 'flex-row-reverse' : ''}`}>
 					{/* Quantity selector */}
 					<div className="flex items-center border-2 border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden">
 						<button
@@ -405,23 +503,39 @@ function MobileProductView({
 					{/* Add to cart button */}
 					<button
 						onClick={handleAddToCart}
-						disabled={!product.inStock || isAddingToCart || cartLoading}
-						className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl active:scale-98 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+						disabled={isOutOfStock || isAddingToCart || cartLoading}
+						className="relative flex-1 h-12 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white font-extrabold rounded-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 overflow-hidden group"
 					>
-						{isAddingToCart || cartLoading ? (
-							<>
-								<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-								<span>{isArabic ? "جاري الإضافة..." : "Adding..."}</span>
-							</>
-						) : (
-							<>
-								<ShoppingCart className="w-5 h-5" />
-								<span>
-									{isArabic ? "أضف للسلة" : "Add to Cart"} •{" "}
-									{((product.price || 0) * quantity).toFixed(2)} SAR
-								</span>
-							</>
+						{/* Animated background effect */}
+						{!isAddingToCart && !cartLoading && !isOutOfStock && (
+							<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-active:translate-x-full transition-transform duration-700" />
 						)}
+						
+						<div className="relative flex items-center gap-2">
+							{isAddingToCart || cartLoading ? (
+								<>
+									<div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+									<span className="text-sm">{isArabic ? "جاري الإضافة..." : "Adding..."}</span>
+								</>
+							) : isOutOfStock ? (
+								<span className="text-sm">{isArabic ? "غير متوفر" : "Out of Stock"}</span>
+							) : (
+								<>
+									<ShoppingCart className="w-5 h-5" />
+									<span className="text-sm">
+										{isArabic ? "أضف للسلة" : "Add to Cart"} •{" "}
+										{(() => {
+											const price = typeof product.price === 'number' 
+												? product.price 
+												: typeof product.price === 'string' 
+													? parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0
+													: 0;
+											return (price * quantity).toFixed(2);
+										})()} SAR
+									</span>
+								</>
+							)}
+						</div>
 					</button>
 				</div>
                         </div>

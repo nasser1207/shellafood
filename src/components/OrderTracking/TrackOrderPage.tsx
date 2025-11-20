@@ -67,11 +67,135 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 		const fetchOrderData = async () => {
 			try {
 				setIsLoading(true);
-				// TODO: Replace with actual API call
-				// const response = await fetch(`/api/orders/${orderId}`);
-				// const data = await response.json();
 				
-				// Mock data for now
+				// Check sessionStorage for Pick and Order data
+				if (typeof window !== "undefined") {
+					const storedData = sessionStorage.getItem(`pickAndOrder_${orderId}`);
+					if (storedData) {
+						try {
+							const parsed = JSON.parse(storedData);
+							const { orderData: pickAndOrderData, transportType, orderType, createdAt, driverData } = parsed;
+							
+							// Convert Pick and Order data to OrderData format
+							const pickupPoints = pickAndOrderData.locationPoints.filter((p: any) => p.type === "pickup");
+							const dropoffPoints = pickAndOrderData.locationPoints.filter((p: any) => p.type === "dropoff");
+							
+							const firstPickup = pickupPoints[0] || {};
+							const firstDropoff = dropoffPoints[0] || {};
+							
+							// Determine status based on order age
+							const orderCreatedAt = new Date(createdAt);
+							const hoursSinceCreation = (Date.now() - orderCreatedAt.getTime()) / (1000 * 60 * 60);
+							let status = "pending";
+							if (hoursSinceCreation > 24) {
+								status = "completed";
+							} else if (hoursSinceCreation > 2) {
+								status = "in_transit";
+							} else if (hoursSinceCreation > 0.5) {
+								status = "picked_up";
+							} else if (driverData) {
+								status = "assigned";
+							}
+							
+							// Calculate pricing
+							const distance = 12.5; // Mock distance in km
+							const isMotorbike = transportType === "motorbike";
+							const baseFee = isMotorbike ? 2.5 : 5.0;
+							const deliveryFee = Math.round((baseFee * distance) * 100) / 100;
+							const basePrice = deliveryFee;
+							const platformFee = Math.round(basePrice * 0.1 * 100) / 100;
+							const subtotal = basePrice + platformFee;
+							const vat = Math.round(subtotal * 0.15 * 100) / 100;
+							const totalAmount = Math.round((subtotal + vat) * 100) / 100;
+
+							const trackingData: any = {
+								id: orderId,
+								order_number: orderId,
+								type: ORDER_TYPE.PRODUCT,
+								status,
+								created_at: createdAt,
+								estimated_time: orderType === "one-way" ? "30-45 min" : "1-2 hours",
+								totalAmount,
+								basePrice,
+								platformFee,
+								vat,
+								paymentMethod: "Card",
+								address: `${firstDropoff.streetName}, ${firstDropoff.areaName}, ${firstDropoff.city}`,
+								timeline: [
+									{
+										status: "pending",
+										label: isArabic ? "قيد الانتظار" : "Pending",
+										timestamp: createdAt,
+										completed: true,
+									},
+									{
+										status: "assigned",
+										label: isArabic ? "تم التعيين" : "Assigned",
+										timestamp: driverData ? new Date(Date.parse(createdAt) + 5 * 60 * 1000).toISOString() : null,
+										completed: driverData ? true : false,
+									},
+									{
+										status: "picked_up",
+										label: isArabic ? "تم الاستلام" : "Picked Up",
+										timestamp: hoursSinceCreation > 0.5 ? new Date(Date.parse(createdAt) + 30 * 60 * 1000).toISOString() : null,
+										completed: hoursSinceCreation > 0.5,
+									},
+									{
+										status: "in_transit",
+										label: isArabic ? "في الطريق" : "In Transit",
+										timestamp: hoursSinceCreation > 2 ? new Date(Date.parse(createdAt) + 2 * 60 * 60 * 1000).toISOString() : null,
+										completed: hoursSinceCreation > 2,
+									},
+									{
+										status: "completed",
+										label: isArabic ? "تم التوصيل" : "Delivered",
+										timestamp: hoursSinceCreation > 24 ? new Date(Date.parse(createdAt) + 24 * 60 * 60 * 1000).toISOString() : null,
+										completed: hoursSinceCreation > 24,
+									},
+								],
+								order_details: {
+									transportType,
+									orderType,
+									pickupLocation: `${firstPickup.streetName}, ${firstPickup.areaName}, ${firstPickup.city}`,
+									dropoffLocation: `${firstDropoff.streetName}, ${firstDropoff.areaName}, ${firstDropoff.city}`,
+									packageDescription: pickAndOrderData.packageDescription,
+									packageWeight: pickAndOrderData.packageWeight,
+									packageDimensions: pickAndOrderData.packageDimensions,
+									specialInstructions: pickAndOrderData.specialInstructions,
+									senderName: firstPickup.recipientName,
+									senderPhone: firstPickup.recipientPhone,
+									receiverName: firstDropoff.recipientName,
+									receiverPhone: firstDropoff.recipientPhone,
+								},
+								driver_or_worker: driverData ? {
+									id: driverData.id || parsed.driverId,
+									name: driverData.name || driverData.nameAr,
+									nameAr: driverData.nameAr || driverData.name,
+									photo: driverData.avatar,
+									phone: driverData.phone,
+									rating: driverData.rating,
+									completed_trips: driverData.completedTrips || driverData.experience,
+									vehicle: driverData.vehicleModel || (transportType === "motorbike" ? "Motorbike" : "Truck"),
+								} : undefined,
+								map: {
+									user_lat: firstDropoff.lat || 24.7136,
+									user_lng: firstDropoff.lng || 46.6753,
+									driver_lat: driverData ? 24.7236 : undefined,
+									driver_lng: driverData ? 46.6853 : undefined,
+								},
+								eta: hoursSinceCreation < 24 ? new Date(Date.parse(createdAt) + 3 * 60 * 60 * 1000).toISOString() : null,
+							};
+							
+							setOrderData(trackingData);
+							setIsLoading(false);
+							return;
+						} catch (error) {
+							console.error("Error parsing Pick and Order data:", error);
+						}
+					}
+				}
+				
+				// Fallback to mock data
 				const mockData = generateMockOrderData(orderId);
 				setOrderData(mockData);
 				setIsLoading(false);
@@ -82,7 +206,7 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 		};
 
 		fetchOrderData();
-	}, [orderId, initialData, orderData, setOrderData, setIsLoading]);
+	}, [orderId, initialData, orderData, setOrderData, setIsLoading, isArabic]);
 
 	const {
 		showRating,
@@ -123,18 +247,39 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 
 	// Memoized callbacks for route navigation
 	const handleViewDetails = useCallback(() => {
-		if (!serviceInfo || !orderData) return;
+		if (!orderData) return;
 
-		const { workerId } = serviceInfo;
-		if (workerId) {
-			const detailsPath = buildWorkerDetailsRoute(workerId, orderData.type);
-			router.push(detailsPath);
+		const driverId = orderData.driver_or_worker?.id;
+		if (driverId) {
+			// Check if driver data exists in sessionStorage (Pick and Order driver)
+			const storedDriverData = typeof window !== "undefined" 
+				? sessionStorage.getItem(`driver_${driverId}`)
+				: null;
+			
+			if (storedDriverData) {
+				// Route: /driver/[driverId] for Pick and Order drivers
+				const detailsPath = `/driver/${driverId}`;
+				router.push(detailsPath);
+			} else if (serviceInfo?.workerId) {
+				// Route: /worker/[workerId] for Serve Me workers
+				const detailsPath = buildWorkerDetailsRoute(serviceInfo.workerId, orderData.type);
+				router.push(detailsPath);
+			} else {
+				showNotification({
+					message: isArabic
+						? "تفاصيل السائق غير متوفرة"
+						: "Driver details not available",
+					messageAr: "تفاصيل السائق غير متوفرة",
+					type: "info",
+					duration: 3000,
+				});
+			}
 		} else {
 			showNotification({
 				message: isArabic
-					? "تفاصيل الفني غير متوفرة لطلب المنتجات"
-					: "Worker details not available for product orders",
-				messageAr: "تفاصيل الفني غير متوفرة لطلب المنتجات",
+					? "تفاصيل السائق غير متوفرة"
+					: "Driver details not available",
+				messageAr: "تفاصيل السائق غير متوفرة",
 				type: "info",
 				duration: 3000,
 			});
@@ -142,10 +287,28 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 	}, [serviceInfo, orderData, router, showNotification, isArabic]);
 
 	const handleChatClick = useCallback(() => {
-		if (!serviceInfo) return;
-		const { service, serviceType, workerId } = serviceInfo;
-		handleChat(service, serviceType, workerId);
-	}, [serviceInfo, handleChat]);
+		if (!orderData) return;
+		
+		const driverId = orderData.driver_or_worker?.id;
+		if (driverId) {
+			// Check if driver data exists in sessionStorage (Pick and Order driver)
+			const storedDriverData = typeof window !== "undefined" 
+				? sessionStorage.getItem(`driver_${driverId}`)
+				: null;
+			
+			if (storedDriverData) {
+				// Route: /driver/[driverId]/chat for Pick and Order drivers
+				router.push(`/driver/${driverId}/chat`);
+				return;
+			}
+		}
+		
+		// Fallback to Serve Me worker chat
+		if (serviceInfo) {
+			const { service, serviceType, workerId } = serviceInfo;
+			handleChat(service, serviceType, workerId);
+		}
+	}, [serviceInfo, orderData, handleChat, router]);
 
 	// Memoized callbacks for action buttons
 	const handleCallDriverClick = useCallback(

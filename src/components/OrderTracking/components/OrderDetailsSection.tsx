@@ -31,10 +31,12 @@ export default React.memo(function OrderDetailsSection({
 }: OrderDetailsSectionProps) {
 	const isArabic = language === "ar";
 	const isService = orderData.type === ORDER_TYPE.SERVICE;
+	const isPickAndOrder = orderData.type === ORDER_TYPE.PRODUCT && (orderData as any).order_details?.transportType;
 	const [openDetails, setOpenDetails] = useState({
 		pricing: false,
 		items: false,
 		serviceDetails: false,
+		deliveryDetails: false,
 		payment: false,
 		address: false,
 		support: false,
@@ -56,7 +58,7 @@ export default React.memo(function OrderDetailsSection({
 		// Formula: totalAmount = (basePrice + platformFee) * 1.15
 		// Assuming platformFee = 10% of basePrice
 		// So: totalAmount = (basePrice + basePrice * 0.1) * 1.15 = basePrice * 1.1 * 1.15
-		const estimatedBase = Math.round((orderData.totalAmount / 1.15 / 1.1) * 100) / 100;
+		const estimatedBase = Math.round(((orderData.totalAmount ?? 0) / 1.15 / 1.1) * 100) / 100;
 		const estimatedFee = Math.round(estimatedBase * 0.1 * 100) / 100;
 		const estimatedVAT = Math.round((estimatedBase + estimatedFee) * 0.15 * 100) / 100;
 
@@ -75,7 +77,7 @@ export default React.memo(function OrderDetailsSection({
 
 	const copyAddress = async () => {
 		try {
-			await navigator.clipboard.writeText(orderData.address);
+			await navigator.clipboard.writeText(orderData.address || "");
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
 		} catch (error) {
@@ -176,14 +178,14 @@ export default React.memo(function OrderDetailsSection({
 												{isArabic ? item.nameAr || item.name : item.name} × {item.quantity}
 											</span>
 											<span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
-												{(item.price * item.quantity).toFixed(2)} {isArabic ? "ريال" : "SAR"}
+												{((item.price ?? 0) * (item.quantity ?? 1)).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 											</span>
 										</div>
 									))}
 									<div className={`pt-2 sm:pt-3 border-t-2 border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2 `}>
 										<span className="font-bold text-sm sm:text-base text-gray-900 dark:text-gray-100">{isArabic ? "المجموع:" : "Total:"}</span>
 										<span className="text-base sm:text-lg font-extrabold text-green-600 dark:text-green-400 whitespace-nowrap">
-											{orderData.totalAmount.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+											{(orderData.totalAmount ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 										</span>
 									</div>
 								</div>
@@ -220,10 +222,10 @@ export default React.memo(function OrderDetailsSection({
 						>
 							<div className={`p-3 sm:p-4 space-y-2 ${isArabic ? "text-right" : "text-left"}`}>
 								<p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{isArabic ? "طريقة الدفع:" : "Payment Method:"}</p>
-								<p className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100">{orderData.paymentMethod}</p>
+								<p className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100">{orderData.paymentMethod || (isArabic ? "غير محدد" : "Not specified")}</p>
 								<p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-2 sm:mt-3">{isArabic ? "المبلغ المدفوع:" : "Amount Paid:"}</p>
 								<p className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">
-									{orderData.totalAmount.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+									{(orderData.totalAmount ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 								</p>
 							</div>
 						</motion.div>
@@ -303,6 +305,158 @@ export default React.memo(function OrderDetailsSection({
 				</div>
 			)}
 
+			{/* Pick and Order Delivery Details Section */}
+			{isPickAndOrder && (orderData as any).order_details && (
+				<div className="border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl overflow-hidden">
+					<button
+						onClick={() => toggleDetail("deliveryDetails")}
+						className={`w-full p-3 sm:p-4 flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-h-[44px] ${isArabic ? "flex-row-reverse" : ""}`}
+					>
+						<div className={`flex items-center gap-2 sm:gap-3 ${isArabic ? "flex-row-reverse" : ""}`}>
+							<Package className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+							<span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100">
+								{isArabic ? "تفاصيل التوصيل" : "Delivery Details"}
+							</span>
+						</div>
+						{openDetails.deliveryDetails ? (
+							<ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+						) : (
+							<ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+						)}
+					</button>
+					<AnimatePresence>
+						{openDetails.deliveryDetails && (
+							<motion.div
+								initial={{ height: 0, opacity: 0 }}
+								animate={{ height: "auto", opacity: 1 }}
+								exit={{ height: 0, opacity: 0 }}
+								transition={{ duration: 0.2 }}
+								className="overflow-hidden"
+							>
+								<div className={`p-3 sm:p-4 space-y-4 ${isArabic ? "text-right" : "text-left"}`}>
+									{/* Transport and Order Type */}
+									<div className="grid grid-cols-2 gap-3">
+										<div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+											<p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+												{isArabic ? "نوع النقل" : "Transport Type"}
+											</p>
+											<p className="text-sm font-bold text-green-600 dark:text-green-400">
+												{(orderData as any).order_details.transportType === "motorbike" 
+													? (isArabic ? "دراجة نارية" : "Motorbike")
+													: (isArabic ? "شاحنة" : "Truck")}
+											</p>
+										</div>
+										<div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
+											<p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+												{isArabic ? "نوع التوصيل" : "Order Type"}
+											</p>
+											<p className="text-sm font-bold text-orange-600 dark:text-orange-400">
+												{(orderData as any).order_details.orderType === "one-way"
+													? (isArabic ? "باتجاه واحد" : "One-Way")
+													: (isArabic ? "متعدد الاتجاهات" : "Multi-Direction")}
+											</p>
+										</div>
+									</div>
+
+									{/* Pickup and Dropoff */}
+									<div className="space-y-3">
+										<div className="border-l-4 border-green-500 pl-3">
+											<p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+												{isArabic ? "موقع الاستلام" : "Pickup Location"}
+											</p>
+											<p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+												{(orderData as any).order_details.pickupLocation}
+											</p>
+											{(orderData as any).order_details.senderName && (
+												<div className="mt-2 flex items-center gap-2">
+													<Phone className="w-3 h-3 text-gray-400" />
+													<p className="text-xs text-gray-600 dark:text-gray-400">
+														{(orderData as any).order_details.senderName} - {(orderData as any).order_details.senderPhone}
+													</p>
+												</div>
+											)}
+										</div>
+										<div className="border-l-4 border-orange-500 pl-3">
+											<p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+												{isArabic ? "موقع التسليم" : "Dropoff Location"}
+											</p>
+											<p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+												{(orderData as any).order_details.dropoffLocation}
+											</p>
+											{(orderData as any).order_details.receiverName && (
+												<div className="mt-2 flex items-center gap-2">
+													<Phone className="w-3 h-3 text-gray-400" />
+													<p className="text-xs text-gray-600 dark:text-gray-400">
+														{(orderData as any).order_details.receiverName} - {(orderData as any).order_details.receiverPhone}
+													</p>
+												</div>
+											)}
+										</div>
+									</div>
+
+									{/* Package Details */}
+									{((orderData as any).order_details.packageDescription || 
+									  (orderData as any).order_details.packageWeight ||
+									  (orderData as any).order_details.packageDimensions) && (
+										<div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-2">
+											<p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
+												{isArabic ? "تفاصيل الطرد" : "Package Details"}
+											</p>
+											{(orderData as any).order_details.packageDescription && (
+												<div>
+													<p className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">
+														{isArabic ? "الوصف:" : "Description:"}
+													</p>
+													<p className="text-sm text-gray-900 dark:text-gray-100">
+														{(orderData as any).order_details.packageDescription}
+													</p>
+												</div>
+											)}
+											{((orderData as any).order_details.packageWeight || (orderData as any).order_details.packageDimensions) && (
+												<div className="grid grid-cols-2 gap-2 mt-2">
+													{(orderData as any).order_details.packageWeight && (
+														<div>
+															<p className="text-xs text-gray-600 dark:text-gray-400">
+																{isArabic ? "الوزن:" : "Weight:"}
+															</p>
+															<p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+																{(orderData as any).order_details.packageWeight}
+															</p>
+														</div>
+													)}
+													{(orderData as any).order_details.packageDimensions && (
+														<div>
+															<p className="text-xs text-gray-600 dark:text-gray-400">
+																{isArabic ? "الأبعاد:" : "Dimensions:"}
+															</p>
+															<p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+																{(orderData as any).order_details.packageDimensions}
+															</p>
+														</div>
+													)}
+												</div>
+											)}
+										</div>
+									)}
+
+									{/* Special Instructions */}
+									{(orderData as any).order_details.specialInstructions && (
+										<div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+											<p className="text-xs font-bold text-blue-900 dark:text-blue-100 mb-1">
+												{isArabic ? "تعليمات خاصة:" : "Special Instructions:"}
+											</p>
+											<p className="text-sm text-blue-800 dark:text-blue-200">
+												{(orderData as any).order_details.specialInstructions}
+											</p>
+										</div>
+									)}
+								</div>
+							</motion.div>
+						)}
+					</AnimatePresence>
+				</div>
+			)}
+
 			{/* Address Section */}
 			<div className="border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl overflow-hidden">
 				<button
@@ -333,7 +487,7 @@ export default React.memo(function OrderDetailsSection({
 							<div className={`p-3 sm:p-4 ${isArabic ? "text-right" : "text-left"}`}>
 								<div className={`flex items-start gap-2 mb-2 sm:mb-3 ${isArabic ? "flex-row-reverse" : ""}`}>
 									<MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" />
-									<p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed flex-1">{orderData.address}</p>
+									<p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed flex-1">{orderData.address || (isArabic ? "لا يوجد عنوان" : "No address provided")}</p>
 								</div>
 								<button
 									onClick={copyAddress}

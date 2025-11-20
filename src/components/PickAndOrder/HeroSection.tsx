@@ -35,6 +35,22 @@ export const HeroSection: React.FC = () => {
 		setImageError(true);
 	};
 
+	const handleStartNow = () => {
+		const transportSection = document.getElementById('transport-section');
+		if (transportSection) {
+			// Calculate offset for fixed header if exists
+			const header = document.querySelector('header, nav');
+			const headerHeight = header ? header.getBoundingClientRect().height : 0;
+			const sectionPosition = transportSection.getBoundingClientRect().top + window.pageYOffset;
+			const offsetPosition = sectionPosition - headerHeight - 20; // 20px extra padding
+
+			window.scrollTo({
+				top: offsetPosition,
+				behavior: 'smooth'
+			});
+		}
+	};
+
 	return (
 		<section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 sm:py-12 md:py-16 lg:py-20 xl:py-24">
 			{/* Decorative background elements */}
@@ -66,9 +82,11 @@ export const HeroSection: React.FC = () => {
 						{/* CTA Button */}
 						<div className={`${isArabic ? "text-right" : "text-left"}`}>
 							<motion.button
+								onClick={handleStartNow}
 								whileHover={{ scale: 1.02 }}
 								whileTap={{ scale: 0.98 }}
 								className={`inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-green-500/50 text-base sm:text-lg ${isArabic ? "flex-row-reverse" : ""}`}
+								aria-label={isArabic ? "الانتقال إلى قسم أنواع النقل" : "Scroll to transport types section"}
 							>
 								<span>{buttonText}</span>
 								<ArrowRight

@@ -37,14 +37,44 @@ export default function DriverChatPage({ driverId }: DriverChatPageProps) {
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 
-	const [driver, setDriver] = useState({
+	const [driver, setDriver] = useState<{
+		id: string;
+		name: string;
+		avatar: string;
+		online: boolean;
+		vehicleType: "truck" | "motorbike";
+		lastSeen: Date;
+		phone?: string;
+	}>({
 		id: driverId,
 		name: isArabic ? "أحمد محمد" : "Ahmed Mohammed",
 		avatar: "/driver1.jpg",
 		online: true,
-		vehicleType: "truck" as "truck" | "motorbike",
+		vehicleType: "truck",
 		lastSeen: new Date(),
 	});
+
+	// Load driver data from sessionStorage
+	useEffect(() => {
+		const storedDriverData = sessionStorage.getItem(`driver_${driverId}`);
+		
+		if (storedDriverData) {
+			try {
+				const parsedDriver = JSON.parse(storedDriverData);
+				setDriver({
+					id: parsedDriver.id || driverId,
+					name: isArabic ? (parsedDriver.nameAr || parsedDriver.name) : (parsedDriver.name || parsedDriver.nameAr),
+					avatar: parsedDriver.avatar || "/driver1.jpg",
+					online: true,
+					vehicleType: parsedDriver.vehicleType === "motorbike" ? "motorbike" : "truck",
+					lastSeen: new Date(),
+					phone: parsedDriver.phone,
+				});
+			} catch (error) {
+				console.error("Error parsing stored driver data:", error);
+			}
+		}
+	}, [driverId, isArabic]);
 
 	const [messages, setMessages] = useState<Message[]>([
 		{
@@ -139,6 +169,7 @@ export default function DriverChatPage({ driverId }: DriverChatPageProps) {
 	);
 
 	const VehicleIcon = driver.vehicleType === "truck" ? Truck : Bike;
+	const vehicleColor = driver.vehicleType === "truck" ? "#31A342" : "#FA9D2B";
 
 	return (
 		<div className={`min-h-screen flex flex-col ${isArabic ? "rtl" : "ltr"}`} dir={isArabic ? "rtl" : "ltr"}>
@@ -165,7 +196,7 @@ export default function DriverChatPage({ driverId }: DriverChatPageProps) {
 									className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
 								/>
 								<div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center">
-									<VehicleIcon className="w-3 h-3 text-[#31A342]" />
+									<VehicleIcon className="w-3 h-3" style={{ color: vehicleColor }} />
 								</div>
 								{driver.online && (
 									<div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
@@ -190,8 +221,13 @@ export default function DriverChatPage({ driverId }: DriverChatPageProps) {
 						{/* Actions */}
 						<div className="flex items-center gap-2">
 							<button
-								onClick={() => (window.location.href = `tel:${driver.id}`)}
-								className="p-2 sm:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+								onClick={() => {
+									if (driver.phone) {
+										window.location.href = `tel:${driver.phone}`;
+									}
+								}}
+								disabled={!driver.phone}
+								className="p-2 sm:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								<Phone className="w-5 h-5 text-gray-600 dark:text-gray-400" />
 							</button>

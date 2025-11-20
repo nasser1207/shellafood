@@ -11,7 +11,8 @@ import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useProductFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/components/ui/Toast";
-import { navigateToProductFromContext } from "@/lib/utils/categories/navigation";
+import { navigateToProduct, navigateToProductFromContext } from "@/lib/utils/categories/navigation";
+import { TEST_STORES, TEST_CATEGORIES, TEST_DEPARTMENTS } from "@/lib/data/categories/testData";
 import { 
 	formatPrice, 
 	getProductName, 
@@ -68,6 +69,9 @@ function UnifiedProductCard({
 	storeName,
 	storeNameAr,
 	showAddButton = true, // Backward compatibility
+	categorySlug,
+	storeSlug,
+	departmentSlug,
 }: UnifiedProductCardProps) {
 	const { language } = useLanguage();
 	const isArabic = language === 'ar';
@@ -102,10 +106,65 @@ function UnifiedProductCard({
 	const handleClick = useCallback(() => {
 		if (onClick) {
 			onClick(product.id);
-		} else {
-			navigateToProductFromContext(router, product);
+			return;
 		}
-	}, [router, product, onClick]);
+
+		// Navigate to product details page
+		if (!product.slug || !product.storeId) {
+			return;
+		}
+
+		// Use provided slugs if available, otherwise find from product data
+		let finalCategorySlug = categorySlug;
+		let finalStoreSlug = storeSlug;
+		let finalDepartmentSlug = departmentSlug;
+
+		// If slugs not provided, find them from product data
+		if (!finalCategorySlug || !finalStoreSlug) {
+			const store = TEST_STORES.find(s => s.id === product.storeId);
+			if (!store || !store.categoryId || !store.slug) {
+				// Fallback to context-based navigation
+				navigateToProductFromContext(router, product, categorySlug, storeSlug, departmentSlug);
+				return;
+			}
+
+			// Find the category to get slug
+			const category = TEST_CATEGORIES.find(c => c.id === store.categoryId);
+			if (!category) {
+				// Fallback to context-based navigation
+				navigateToProductFromContext(router, product, categorySlug, storeSlug, departmentSlug);
+				return;
+			}
+
+			finalCategorySlug = finalCategorySlug || category.slug;
+			finalStoreSlug = finalStoreSlug || store.slug;
+		}
+
+		// Find the department to get slug
+		if (!finalDepartmentSlug) {
+			if (product.department) {
+				const department = TEST_DEPARTMENTS.find(
+					d => d.name === product.department || d.nameAr === product.department
+				);
+				if (department && department.slug) {
+					finalDepartmentSlug = department.slug;
+				} else {
+					// Fallback: convert department name to slug format
+					finalDepartmentSlug = product.department.toLowerCase().replace(/\s+/g, '-');
+				}
+			} else {
+				finalDepartmentSlug = 'food'; // default
+			}
+		}
+
+		// Navigate to product details
+		if (finalCategorySlug && finalStoreSlug && finalDepartmentSlug) {
+			navigateToProduct(router, finalCategorySlug, finalStoreSlug, finalDepartmentSlug, product);
+		} else {
+			// Fallback to context-based navigation
+			navigateToProductFromContext(router, product, categorySlug, storeSlug, departmentSlug);
+		}
+	}, [router, product, onClick, categorySlug, storeSlug, departmentSlug]);
 
 	const handleQuickAdd = useCallback(
 		async (e: React.MouseEvent) => {

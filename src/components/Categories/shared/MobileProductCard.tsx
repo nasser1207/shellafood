@@ -1,15 +1,18 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import Image from "next/image";
-import { Star, Heart, ShoppingCart } from "lucide-react";
+import { Star, Heart, ShoppingCart, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRouter } from "next/navigation";
 import { Product } from "@/components/Utils/ProductCard";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useProductFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
-import { useToast } from "@/components/ui/Toast";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
+import { navigateToProduct } from "@/lib/utils/categories/navigation";
+import { TEST_STORES, TEST_CATEGORIES, TEST_DEPARTMENTS } from "@/lib/data/categories/testData";
 import { getImageBlurDataURL, getImageSizes, getImageQuality } from "@/lib/utils/imageOptimization";
 
 interface MobileProductCardProps {
@@ -33,8 +36,11 @@ function MobileProductCard({
 }: MobileProductCardProps) {
 	const { language } = useLanguage();
 	const isArabic = language === "ar";
+	const router = useRouter();
 	const { addToCart } = useCart();
-	const { showToast } = useToast();
+	const { toasts, showToast, removeToast } = useToast();
+	const [isAdding, setIsAdding] = useState(false);
+	const [isAdded, setIsAdded] = useState(false);
 
 	const { isFavorite, isLoading: favoriteLoading, toggleFavorite } =
 		useProductFavorites(product.id, {
@@ -53,7 +59,7 @@ function MobileProductCard({
 	const handleQuickAdd = useCallback(
 		async (e: React.MouseEvent) => {
 			e.stopPropagation();
-			if (!product.inStock) return;
+			if (!product.inStock || isAdding) return;
 
 			const finalStoreId = product.storeId || storeId;
 			if (!finalStoreId) {
@@ -63,6 +69,8 @@ function MobileProductCard({
 				);
 				return;
 			}
+
+			setIsAdding(true);
 
 			try {
 				const result = await addToCart({
@@ -79,32 +87,80 @@ function MobileProductCard({
 				});
 
 				if (result.success) {
+					setIsAdded(true);
 					showToast(
-						isArabic ? "تم الإضافة للسلة" : "Added to cart",
+						isArabic ? "تم إضافة المنتج للسلة" : "Product added to cart",
 						"success"
 					);
 					onQuickAdd?.(product);
+					// Reset added state after 2 seconds
+					setTimeout(() => setIsAdded(false), 2000);
 				} else if (result.requiresClearCart) {
 					showToast(
 						isArabic
-							? "لديك منتجات من متجر آخر في السلة"
-							: "You have items from a different store in your cart",
+							? "لديك منتجات من متجر آخر في السلة. يرجى إفراغ السلة أولاً"
+							: "You have items from a different store in your cart. Please clear cart first",
 						"warning"
+					);
+				} else {
+					showToast(
+						result.error || (isArabic ? "حدث خطأ أثناء إضافة المنتج" : "Error adding product"),
+						"error"
 					);
 				}
 			} catch (error) {
+				console.error("Error adding to cart:", error);
 				showToast(
-					isArabic ? "حدث خطأ" : "An error occurred",
+					isArabic ? "حدث خطأ في الاتصال" : "Connection error",
 					"error"
 				);
+			} finally {
+				setIsAdding(false);
 			}
 		},
-		[product, storeId, storeName, storeNameAr, addToCart, showToast, isArabic, onQuickAdd]
+		[product, storeId, storeName, storeNameAr, addToCart, showToast, isArabic, onQuickAdd, isAdding]
 	);
 
 	const handleClick = useCallback(() => {
-		onClick?.(product.id);
-	}, [onClick, product.id]);
+		if (onClick) {
+			onClick(product.id);
+			return;
+		}
+
+		// Navigate to product details page
+		if (!product.slug || !product.storeId) {
+			return;
+		}
+
+		// Find the store to get categoryId and slug
+		const store = TEST_STORES.find(s => s.id === product.storeId);
+		if (!store || !store.categoryId || !store.slug) {
+			return;
+		}
+
+		// Find the category to get slug
+		const category = TEST_CATEGORIES.find(c => c.id === store.categoryId);
+		if (!category) {
+			return;
+		}
+
+		// Find the department to get slug
+		let departmentSlug = 'food'; // default
+		if (product.department) {
+			const department = TEST_DEPARTMENTS.find(
+				d => d.name === product.department || d.nameAr === product.department
+			);
+			if (department && department.slug) {
+				departmentSlug = department.slug;
+			} else {
+				// Fallback: convert department name to slug format
+				departmentSlug = product.department.toLowerCase().replace(/\s+/g, '-');
+			}
+		}
+
+		// Navigate to product details
+		navigateToProduct(router, category.slug, store.slug, departmentSlug, product);
+	}, [router, product, onClick]);
 
 	return (
 		<motion.div
@@ -218,9 +274,26 @@ function MobileProductCard({
 				{product.inStock ? (
 					<button
 						onClick={handleQuickAdd}
-						className="w-full py-2.5 bg-green-600 dark:bg-green-500 text-white text-sm font-bold rounded-lg active:scale-95 transition-transform hover:bg-green-700 dark:hover:bg-green-600"
+						disabled={isAdding}
+						className={`w-full py-2.5 text-white text-sm font-bold rounded-lg active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+							isAdded 
+								? "bg-green-500 dark:bg-green-500" 
+								: "bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600"
+						}`}
 					>
-						{isArabic ? "أضف" : "Add"}
+						{isAdding ? (
+							<>
+								<Loader2 className="w-4 h-4 animate-spin" />
+								<span>{isArabic ? "جاري الإضافة..." : "Adding..."}</span>
+							</>
+						) : isAdded ? (
+							<>
+								<Check className="w-4 h-4" />
+								<span>{isArabic ? "تمت الإضافة" : "Added"}</span>
+							</>
+						) : (
+							<span>{isArabic ? "أضف" : "Add"}</span>
+						)}
 					</button>
 				) : (
 					<button
@@ -231,6 +304,9 @@ function MobileProductCard({
 					</button>
 				)}
 			</div>
+
+			{/* Toast Container */}
+			<ToastContainer toasts={toasts} onRemoveToast={removeToast} isArabic={isArabic} />
 		</motion.div>
 	);
 }

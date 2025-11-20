@@ -39,9 +39,20 @@ export default React.memo(function DriverInfoCard({
 		if (onViewDetails) {
 			onViewDetails();
 		} else if (driverOrWorker.id) {
-			// Route: /worker/[workerId]
-			const detailsPath = `/worker/${driverOrWorker.id}`;
-			router.push(detailsPath);
+			// Check if driver data exists in sessionStorage (Pick and Order driver)
+			const storedDriverData = typeof window !== "undefined" 
+				? sessionStorage.getItem(`driver_${driverOrWorker.id}`)
+				: null;
+			
+			if (storedDriverData) {
+				// Route: /driver/[driverId] for Pick and Order drivers
+				const detailsPath = `/driver/${driverOrWorker.id}`;
+				router.push(detailsPath);
+			} else {
+				// Route: /worker/[workerId] for Serve Me workers
+				const detailsPath = `/worker/${driverOrWorker.id}`;
+				router.push(detailsPath);
+			}
 		} else {
 			// Show helpful message if info is missing
 			console.log("Worker details not available - missing worker ID");
@@ -100,9 +111,20 @@ export default React.memo(function DriverInfoCard({
 								if (onChat) {
 									onChat();
 								} else if (driverOrWorker.id) {
-									// Route: /worker/[workerId]/chat
-									const chatPath = `/worker/${driverOrWorker.id}/chat`;
-									router.push(chatPath);
+									// Check if driver data exists in sessionStorage (Pick and Order driver)
+									const storedDriverData = typeof window !== "undefined" 
+										? sessionStorage.getItem(`driver_${driverOrWorker.id}`)
+										: null;
+									
+									if (storedDriverData) {
+										// Route: /driver/[driverId]/chat for Pick and Order drivers
+										const chatPath = `/driver/${driverOrWorker.id}/chat`;
+										router.push(chatPath);
+									} else {
+										// Route: /worker/[workerId]/chat for Serve Me workers
+										const chatPath = `/worker/${driverOrWorker.id}/chat`;
+										router.push(chatPath);
+									}
 								}
 							}}
 							className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold text-xs sm:text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors min-h-[44px] ${isArabic ? "flex-row-reverse" : ""}`}

@@ -85,7 +85,7 @@ export const TransportTypeSection: React.FC = React.memo(() => {
 	);
 
 	return (
-		<section className="bg-gray-50 dark:bg-gray-900 py-12 sm:py-16 lg:py-20" aria-labelledby="transport-type-heading">
+		<section id="transport-section" className="bg-gray-50 dark:bg-gray-900 py-12 sm:py-16 lg:py-20" aria-labelledby="transport-type-heading">
 			<div className="w-full px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24">
 				{/* Section Header */}
 				<motion.div
@@ -148,7 +148,7 @@ export const TransportTypeSection: React.FC = React.memo(() => {
 										{/* Features List */}
 										<ul className={`space-y-2 ${textAlign}`} role="list">
 											{type.features.map((feature, idx) => (
-												<li key={`${type.slug}-feature-${idx}`} className={`flex items-center gap-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 ${getFlexDirection(isArabic)}`}>
+												<li key={`${type.slug}-feature-${idx}`} className={`flex items-center gap-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 `}>
 													<CheckCircle2 className={`h-4 w-4 ${theme.checkIcon} flex-shrink-0`} aria-hidden="true" />
 													<span>{feature}</span>
 												</li>

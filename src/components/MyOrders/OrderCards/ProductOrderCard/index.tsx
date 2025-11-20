@@ -181,7 +181,7 @@ export function ProductOrderCard({
 												isArabic ? "text-right" : "text-left"
 											)}
 										>
-											{item.quantity}x • {item.price.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+											{item.quantity}x • {(item.price ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 										</p>
 									</div>
 								</div>
@@ -250,7 +250,7 @@ export function ProductOrderCard({
 														isArabic ? "text-right" : "text-left"
 													)}
 												>
-													{item.quantity}x • {item.price.toFixed(2)} {isArabic ? "ريال" : "SAR"}
+													{item.quantity}x • {(item.price ?? 0).toFixed(2)} {isArabic ? "ريال" : "SAR"}
 												</p>
 											</div>
 										</div>
@@ -285,7 +285,7 @@ export function ProductOrderCard({
 									{isArabic ? "المجموع" : "Total"}
 								</div>
 								<div className="text-xl sm:text-2xl md:text-3xl font-black text-green-600 dark:text-green-400 tracking-tight">
-									{order.totalAmount.toFixed(2)} <span className="text-base sm:text-lg">{isArabic ? "ريال" : "SAR"}</span>
+									{(order.totalAmount ?? 0).toFixed(2)} <span className="text-base sm:text-lg">{isArabic ? "ريال" : "SAR"}</span>
 								</div>
 							</div>
 						</div>

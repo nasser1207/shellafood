@@ -72,6 +72,39 @@ export function useOrderTracking(
 		return null;
 	}, [orderData]);
 
+	// Enhance driver data from sessionStorage if available
+	useEffect(() => {
+		if (!orderData?.driver_or_worker?.id) return;
+		
+		const storedDriverData = typeof window !== "undefined" 
+			? sessionStorage.getItem(`driver_${orderData.driver_or_worker.id}`)
+			: null;
+		
+		if (storedDriverData) {
+			try {
+				const parsedDriver = JSON.parse(storedDriverData);
+				// Enhance driver data with stored information
+				setOrderData((prev) => {
+					if (!prev || !prev.driver_or_worker) return prev;
+					
+					return {
+						...prev,
+						driver_or_worker: {
+							...prev.driver_or_worker,
+							name: parsedDriver.name || prev.driver_or_worker.name,
+							nameAr: parsedDriver.nameAr || prev.driver_or_worker.name,
+							photo: parsedDriver.avatar || prev.driver_or_worker.photo,
+							phone: parsedDriver.phone || prev.driver_or_worker.phone,
+							vehicle: parsedDriver.vehicleModel || prev.driver_or_worker.vehicle,
+						},
+					};
+				});
+			} catch (error) {
+				console.error("Error parsing stored driver data:", error);
+			}
+		}
+	}, [orderData?.driver_or_worker?.id]);
+
 	// Update map center when driver location changes
 	useEffect(() => {
 		if (orderData?.map.driver_lat && orderData?.map.driver_lng) {
