@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, MapPin, Loader2, AlertCircle, Check } from "lucide-react";
+import { X, CheckCircle2, MapPin, Loader2, AlertCircle, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { MAP_CONFIG } from "@/lib/maps/utils";
 import { getGeocoder } from "@/lib/maps/utils";
 import { parseAddressComponents } from "../utils/addressParser";
@@ -52,6 +52,7 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 	const mapRef = useRef<google.maps.Map | null>(null);
 	const [localErrors, setLocalErrors] = useState<{ [key: string]: string }>({});
 	const [showNotification, setShowNotification] = useState(false);
+	const [activeFormTab, setActiveFormTab] = useState<"pickup" | "dropoff" | "package">("pickup");
 
 	// Update map center when location changes
 	useEffect(() => {
@@ -201,6 +202,26 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 		// If validation passes, close the modal
 		onClose();
 	}, [segment, validateSegment, onClose, setTouched]);
+
+	// Handle next section navigation
+	const handleNextSection = useCallback(() => {
+		if (activeFormTab === "pickup") {
+			setActiveFormTab("dropoff");
+		} else if (activeFormTab === "dropoff") {
+			setActiveFormTab("package");
+		} else if (activeFormTab === "package" && isCompleted) {
+			handleComplete();
+		}
+	}, [activeFormTab, isCompleted, handleComplete]);
+
+	// Handle previous section navigation
+	const handlePreviousSection = useCallback(() => {
+		if (activeFormTab === "package") {
+			setActiveFormTab("dropoff");
+		} else if (activeFormTab === "dropoff") {
+			setActiveFormTab("pickup");
+		}
+	}, [activeFormTab]);
 
 
 	return (
@@ -364,21 +385,13 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 									setTouched={setTouched}
 									isArabic={isArabic}
 									currentUser={currentUser}
+									activeTab={activeFormTab}
+									setActiveTab={setActiveFormTab}
+									onNext={handleNextSection}
+									onPrevious={handlePreviousSection}
+									isCompleted={isCompleted}
 								/>
 							</div>
-
-							{/* Footer - Complete Button (only when all required fields are filled) */}
-							{isCompleted && (
-								<div className="flex items-center justify-end p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-									<button
-										onClick={handleComplete}
-										className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
-									>
-										<Check className="w-4 h-4 sm:w-5 sm:h-5" />
-										<span>{isArabic ? "إكمال" : "Complete"}</span>
-									</button>
-								</div>
-							)}
 
 						</motion.div>
 					</div>

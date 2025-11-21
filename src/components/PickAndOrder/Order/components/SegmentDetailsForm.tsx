@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Package, User, Phone, Upload, X, AlertCircle, Building2, HelpCircle } from "lucide-react";
+import { MapPin, Navigation, Package, User, Phone, Upload, X, AlertCircle, Building2, HelpCircle, Check } from "lucide-react";
 import Image from "next/image";
 import type { RouteSegment, ValidationErrors } from "../types/routeSegment";
 import { PhoneInputField } from "@/components/Utils/PhoneInput";
@@ -15,6 +15,11 @@ interface SegmentDetailsFormProps {
   setTouched: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
   isArabic: boolean;
   currentUser: { name: string; phone: string };
+  activeTab?: TabType;
+  setActiveTab?: (tab: TabType) => void;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  isCompleted?: boolean;
 }
 
 type TabType = "pickup" | "dropoff" | "package";
@@ -27,8 +32,15 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
   setTouched,
   isArabic,
   currentUser,
+  activeTab: externalActiveTab,
+  setActiveTab: externalSetActiveTab,
+  onNext,
+  onPrevious,
+  isCompleted = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>("pickup");
+  const [internalActiveTab, setInternalActiveTab] = useState<TabType>("pickup");
+  const activeTab = externalActiveTab ?? internalActiveTab;
+  const setActiveTab = externalSetActiveTab ?? setInternalActiveTab;
   const [showHelp, setShowHelp] = useState<{ [key: string]: boolean }>({});
   const helpRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -175,6 +187,22 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
     [segment.packageDetails.images, updatePackageField]
   );
 
+  // Helper function to parse dimensions
+  const parseDimensions = useCallback((dimensions: string) => {
+    const parts = dimensions.split("×");
+    return {
+      length: parts[0]?.trim() || "",
+      width: parts[1]?.trim() || "",
+      height: parts[2]?.trim() || "",
+    };
+  }, []);
+
+  // Helper function to format dimensions
+  const formatDimensions = useCallback((length: string, width: string, height: string) => {
+    const parts = [length, width, height].filter((part) => part.trim() !== "");
+    return parts.join("×");
+  }, []);
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-md border border-gray-200 dark:border-gray-700">
       {/* Tabs */}
@@ -256,7 +284,7 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                   <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="font-semibold">{currentUser.name}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 dir-ltr" dir="ltr">
                   <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="font-mono">{currentUser.phone}</span>
                 </div>
@@ -436,7 +464,7 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                 )}
               </div>
 
-              <div>
+              <div className="dir-ltr" dir="ltr">
                 <PhoneInputField
                   label={isArabic ? "رقم الهاتف" : "Phone"}
                   value={segment.dropoffPoint.contactPhone}
@@ -640,16 +668,25 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="number"
+                  step="0.1"
+                  min="0"
                   value={segment.packageDetails.weight}
-                  onChange={(e) => updatePackageField("weight", e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow numbers and decimal point
+                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                      updatePackageField("weight", value);
+                    }
+                  }}
                   onBlur={() => setTouched((prev) => ({ ...prev, [`${segment.id}-package-weight`]: true }))}
                   placeholder="3"
-                  className={`w-full px-4 py-3 text-sm rounded-xl border-2 ${
+                  className={`w-full px-4 py-3 text-sm rounded-xl border-2 dir-ltr ${
                     touched[`${segment.id}-package-weight`] && errors[`${segment.id}-package-weight`]
                       ? "border-red-500 dark:border-red-400"
                       : "border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
                   } bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors`}
+                  dir="ltr"
                 />
                 {touched[`${segment.id}-package-weight`] && errors[`${segment.id}-package-weight`] && (
                   <p className="text-red-500 dark:text-red-400 text-xs mt-1 flex items-center gap-1">
@@ -661,15 +698,80 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  {isArabic ? "الأبعاد (الطول×العرض×الارتفاع)" : "Dimensions (L×W×H)"}
+                  {isArabic ? "الأبعاد (سم)" : "Dimensions (cm)"}
                 </label>
-                <input
-                  type="text"
-                  value={segment.packageDetails.dimensions}
-                  onChange={(e) => updatePackageField("dimensions", e.target.value)}
-                  placeholder={isArabic ? "40×30×5 سم" : "40×30×5 cm"}
-                  className="w-full px-4 py-3 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors"
-                />
+                <div className="grid grid-cols-3 gap-2">
+                  {(() => {
+                    const dims = parseDimensions(segment.packageDetails.dimensions || "");
+                    return (
+                      <>
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            {isArabic ? "الطول" : "Length"}
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={dims.length}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                const newDims = { ...dims, length: value };
+                                updatePackageField("dimensions", formatDimensions(newDims.length, newDims.width, newDims.height));
+                              }
+                            }}
+                            placeholder={isArabic ? "40" : "40"}
+                            className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors dir-ltr"
+                            dir="ltr"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            {isArabic ? "العرض" : "Width"}
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={dims.width}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                const newDims = { ...dims, width: value };
+                                updatePackageField("dimensions", formatDimensions(newDims.length, newDims.width, newDims.height));
+                              }
+                            }}
+                            placeholder={isArabic ? "30" : "30"}
+                            className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors dir-ltr"
+                            dir="ltr"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            {isArabic ? "الارتفاع" : "Height"}
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={dims.height}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                const newDims = { ...dims, height: value };
+                                updatePackageField("dimensions", formatDimensions(newDims.length, newDims.width, newDims.height));
+                              }
+                            }}
+                            placeholder={isArabic ? "5" : "5"}
+                            className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none transition-colors dir-ltr"
+                            dir="ltr"
+                          />
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
 
@@ -777,6 +879,41 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Navigation Buttons */}
+      <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        {activeTab !== "pickup" && onPrevious && (
+          <button
+            onClick={onPrevious}
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold rounded-xl transition-all touch-manipulation shadow-md hover:shadow-lg flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
+          >
+            <span>{isArabic ? "السابق" : "Previous"}</span>
+          </button>
+        )}
+        <div className="flex-1" />
+        {activeTab !== "package" && onNext && (
+          <button
+            onClick={onNext}
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
+          >
+            <span>{isArabic ? "التالي" : "Next"}</span>
+          </button>
+        )}
+        {activeTab === "package" && onNext && (
+          <button
+            onClick={onNext}
+            disabled={!isCompleted}
+            className={`px-4 sm:px-6 py-2.5 sm:py-3 font-semibold rounded-xl transition-all touch-manipulation shadow-lg flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base ${
+              isCompleted
+                ? "bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white hover:shadow-xl cursor-pointer"
+                : "bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60"
+            }`}
+          >
+            <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>{isArabic ? "إكمال" : "Complete"}</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };

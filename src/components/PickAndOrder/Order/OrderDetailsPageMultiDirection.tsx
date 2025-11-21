@@ -197,6 +197,17 @@ export default function OrderDetailsPageMultiDirection({
 		[isArabic]
 	);
 
+	// Check if vehicle options are complete
+	const isVehicleOptionsComplete = useMemo(() => {
+		if (isMotorbike) {
+			// For motorbike, packageType is required
+			return !!motorbikeOptions.packageType;
+		} else {
+			// For truck, truckType is required
+			return !!vehicleOptions.truckType;
+		}
+	}, [isMotorbike, vehicleOptions.truckType, motorbikeOptions.packageType]);
+
 	const validateAllSegments = useCallback((): boolean => {
 		let allErrors: ValidationErrors = {};
 
@@ -209,10 +220,13 @@ export default function OrderDetailsPageMultiDirection({
 		if (transportType === "truck" && !vehicleOptions.truckType) {
 			allErrors.truckType = isArabic ? "اختر نوع الشاحنة" : "Select truck type";
 		}
+		if (transportType === "motorbike" && !motorbikeOptions.packageType) {
+			allErrors.packageType = isArabic ? "اختر نوع الطرد" : "Select package type";
+		}
 
 		setErrors(allErrors);
 		return Object.keys(allErrors).length === 0;
-	}, [routeSegments, transportType, vehicleOptions.truckType, validateSegment, isArabic]);
+	}, [routeSegments, transportType, vehicleOptions.truckType, motorbikeOptions.packageType, validateSegment, isArabic]);
 
 	// Final submit - defined before goToNextStep to avoid hoisting issues
 	const handleFinalSubmit = useCallback(() => {
@@ -523,8 +537,12 @@ export default function OrderDetailsPageMultiDirection({
 								</button>
 								<button
 									onClick={goToNextStep}
-									disabled={isSubmitting}
-									className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] active:from-[#258533] active:to-[#1f7a2a] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-600 dark:disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 touch-manipulation shadow-lg hover:shadow-xl min-h-[48px] text-sm sm:text-base"
+									disabled={isSubmitting || !isVehicleOptionsComplete}
+									className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 touch-manipulation shadow-lg min-h-[48px] text-sm sm:text-base ${
+										isSubmitting || !isVehicleOptionsComplete
+											? "bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60"
+											: "bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] active:from-[#258533] active:to-[#1f7a2a] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white hover:shadow-xl"
+									}`}
 									aria-label={isArabic ? "تأكيد وإرسال" : "Confirm & Submit"}
 								>
 									{isSubmitting ? (
