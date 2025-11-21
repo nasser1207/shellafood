@@ -284,9 +284,9 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                   <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="font-semibold">{currentUser.name}</span>
                 </div>
-                <div className="flex items-center gap-2 dir-ltr" dir="ltr">
-                  <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center gap-2 justify-end dir-ltr" dir="ltr">
                   <span className="font-mono">{currentUser.phone}</span>
+                  <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
             </div>
