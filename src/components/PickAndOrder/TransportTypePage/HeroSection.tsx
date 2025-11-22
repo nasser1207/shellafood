@@ -60,6 +60,23 @@ export default React.memo(function HeroSection({ transportType }: HeroSectionPro
 	const { scrollY } = useScroll();
 	const imageY = useTransform(scrollY, [0, 500], [0, 150]);
 
+	// Reset order data when starting a new order
+	const handleStartNewOrder = (orderType: string) => {
+		// Clear all order-related sessionStorage data
+		if (typeof window !== "undefined") {
+			// Clear multi-direction order data
+			sessionStorage.removeItem("multiDirectionOrder");
+			// Clear single direction order data
+			sessionStorage.removeItem("pickAndOrderDetails");
+			// Clear pricing data
+			sessionStorage.removeItem("orderPricing");
+			// Clear any stored route segments
+			sessionStorage.removeItem("routeSegments");
+		}
+		// Navigate to order details page
+		router.push(`/pickandorder/${transportType}/order/details?type=${orderType}`);
+	};
+
 	// Trigger stats animation on mount
 	useEffect(() => {
 		setStatsVisible(true);
@@ -176,7 +193,7 @@ export default React.memo(function HeroSection({ transportType }: HeroSectionPro
 						{/* Buttons with Enhanced Effects */}
 						<div className={`flex flex-col sm:flex-row gap-4 pt-4`}>
 							<motion.button
-								onClick={() => router.push(`/pickandorder/${transportType}/order/details?type=multi-direction`)}
+								onClick={() => handleStartNewOrder("multi-direction")}
 								whileHover={{ scale: 1.05, y: -2 }}
 								whileTap={{ scale: 0.98 }}
 								className="group relative overflow-hidden px-8 py-4 bg-[#31A342] hover:bg-[#2a8f38] text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#31A342]/50 text-base sm:text-lg"
@@ -188,7 +205,7 @@ export default React.memo(function HeroSection({ transportType }: HeroSectionPro
 								</span>
 							</motion.button>
 							<motion.button
-								onClick={() => router.push(`/pickandorder/${transportType}/order/details?type=one-way`)}
+								onClick={() => handleStartNewOrder("one-way")}
 								whileHover={{ scale: 1.05, y: -2 }}
 								whileTap={{ scale: 0.98 }}
 								className="group relative overflow-hidden px-8 py-4 bg-[#FA9D2B] hover:bg-[#E88D26] text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#FA9D2B]/50 text-base sm:text-lg"

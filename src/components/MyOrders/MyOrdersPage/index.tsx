@@ -14,6 +14,7 @@ import { SwipeableOrderCard } from "../shared/SwipeableOrderCard";
 import { VirtualizedOrderList } from "../shared/VirtualizedOrderList";
 import { OrdersHeader } from "./OrdersHeader";
 import { OrdersFilters } from "./OrdersFilters";
+import { Pagination } from "../shared/Pagination";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRouter } from "next/navigation";
 
@@ -83,6 +84,34 @@ interface DeliveryOrder {
 	driverName?: string;
 	driverPhoto?: string;
 	orderType: "one-way" | "multi-direction";
+	// Additional fields for full order details
+	allPickupPoints?: Array<{
+		name: string;
+		phone: string;
+		address: string;
+		additionalDetails?: string;
+	}>;
+	allDropoffPoints?: Array<{
+		name: string;
+		phone: string;
+		address: string;
+		additionalDetails?: string;
+	}>;
+	packageDescription?: string;
+	packageWeight?: string;
+	packageDimensions?: string;
+	specialInstructions?: string;
+	isExpress?: boolean;
+	requiresRefrigeration?: boolean;
+	loadingEquipmentNeeded?: boolean;
+	pricing?: {
+		basePrice: number;
+		platformFee: number;
+		subtotal: number;
+		vat: number;
+		total: number;
+		distance: number;
+	};
 }
 
 // Mock data - Replace with API calls
@@ -289,6 +318,10 @@ export default function MyOrdersPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortBy, setSortBy] = useState<"newest" | "oldest" | "status">("newest");
 	const [filterStatus, setFilterStatus] = useState<string>("all");
+	
+	// Pagination state
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 10;
 
 	// Check URL parameters for tab selection
 	useEffect(() => {
@@ -320,9 +353,6 @@ export default function MyOrdersPage() {
 		const firstPickup = pickupPoints[0];
 		const firstDropoff = dropoffPoints[0];
 		
-		// Calculate distance (mock calculation - in real app would use actual distance)
-		const distance = 12.5; // Mock distance in km
-		
 		// Get creation date from stored data
 		const createdAt = new Date(storedOrderData.createdAt || Date.now());
 		const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
@@ -339,15 +369,56 @@ export default function MyOrdersPage() {
 			status = "assigned";
 		}
 
-		// Calculate delivery fee based on transport type and distance
-		const transportType = storedOrderData.transportType || orderData.transportType;
-		const isMotorbike = transportType === "motorbike";
-		const baseFee = isMotorbike ? 2.5 : 5.0;
-		const deliveryFee = Math.round((baseFee * distance) * 100) / 100;
-		const totalAmount = deliveryFee;
+		// Use stored pricing data if available, otherwise calculate
+		let distance = 0;
+		let deliveryFee = 0;
+		let totalAmount = 0;
+
+		if (storedOrderData.pricing) {
+			// Use stored pricing breakdown
+			distance = storedOrderData.pricing.distance || 0;
+			totalAmount = storedOrderData.pricing.total || 0;
+			deliveryFee = totalAmount; // For compatibility
+		} else {
+			// Fallback: Calculate from distance (legacy orders)
+			// This ensures backward compatibility with old orders
+			distance = 12.5; // Mock distance for legacy orders
+			const transportType = storedOrderData.transportType || orderData.transportType;
+			const isMotorbike = transportType === "motorbike";
+			const baseFee = isMotorbike ? 2.5 : 5.0;
+			deliveryFee = Math.round((baseFee * distance) * 100) / 100;
+			totalAmount = deliveryFee;
+		}
 
 		// Get driver data from stored order
 		const driverData = storedOrderData.driverData;
+		const transportType = storedOrderData.transportType || orderData.transportType;
+
+		// Build all pickup and dropoff points for full order display
+		const allPickupPoints = pickupPoints.map((point: any) => ({
+			name: point.recipientName || point.contactName || "Sender",
+			phone: point.recipientPhone || point.contactPhone || "+966500000000",
+			address: `${point.streetName || ""}, ${point.areaName || ""}, ${point.city || ""}${point.building ? ` - ${point.building}` : ""}`.replace(/^,\s*|,\s*$/g, "").trim() || "Address not specified",
+			additionalDetails: point.additionalDetails || "",
+		}));
+
+		const allDropoffPoints = dropoffPoints.map((point: any) => ({
+			name: point.recipientName || point.contactName || "Receiver",
+			phone: point.recipientPhone || point.contactPhone || "+966500000000",
+			address: `${point.streetName || ""}, ${point.areaName || ""}, ${point.city || ""}${point.building ? ` - ${point.building}` : ""}`.replace(/^,\s*|,\s*$/g, "").trim() || "Address not specified",
+			additionalDetails: point.additionalDetails || "",
+		}));
+
+		console.log("📦 Converting Pick and Order to Delivery Order:", {
+			orderId,
+			pickupPointsCount: allPickupPoints.length,
+			dropoffPointsCount: allDropoffPoints.length,
+			packageDescription: orderData.packageDescription,
+			packageWeight: orderData.packageWeight,
+			packageDimensions: orderData.packageDimensions,
+			specialInstructions: orderData.specialInstructions,
+			pricing: storedOrderData.pricing,
+		});
 
 		return {
 			id: orderId,
@@ -357,10 +428,10 @@ export default function MyOrdersPage() {
 			createdAt: createdAt.toISOString(),
 			senderName: firstPickup.recipientName || "Sender",
 			senderPhone: firstPickup.recipientPhone || "+966500000000",
-			senderAddress: `${firstPickup.streetName}, ${firstPickup.areaName}, ${firstPickup.city}${firstPickup.building ? ` - ${firstPickup.building}` : ""}`,
+			senderAddress: `${firstPickup.streetName || ""}, ${firstPickup.areaName || ""}, ${firstPickup.city || ""}${firstPickup.building ? ` - ${firstPickup.building}` : ""}`.replace(/^,\s*|,\s*$/g, ""),
 			receiverName: firstDropoff.recipientName || "Receiver",
 			receiverPhone: firstDropoff.recipientPhone || "+966500000000",
-			receiverAddress: `${firstDropoff.streetName}, ${firstDropoff.areaName}, ${firstDropoff.city}${firstDropoff.building ? ` - ${firstDropoff.building}` : ""}`,
+			receiverAddress: `${firstDropoff.streetName || ""}, ${firstDropoff.areaName || ""}, ${firstDropoff.city || ""}${firstDropoff.building ? ` - ${firstDropoff.building}` : ""}`.replace(/^,\s*|,\s*$/g, ""),
 			distance,
 			deliveryFee,
 			totalAmount,
@@ -369,6 +440,17 @@ export default function MyOrdersPage() {
 			driverName: driverData?.name || driverData?.nameAr,
 			driverPhoto: driverData?.avatar,
 			orderType: (storedOrderData.orderType === "multi-direction" ? "multi-direction" : "one-way") as "one-way" | "multi-direction",
+			// Full order details
+			allPickupPoints: allPickupPoints.length > 0 ? allPickupPoints : undefined,
+			allDropoffPoints: allDropoffPoints.length > 0 ? allDropoffPoints : undefined,
+			packageDescription: orderData.packageDescription,
+			packageWeight: orderData.packageWeight,
+			packageDimensions: orderData.packageDimensions,
+			specialInstructions: orderData.specialInstructions,
+			isExpress: orderData.isExpress,
+			requiresRefrigeration: orderData.requiresRefrigeration,
+			loadingEquipmentNeeded: orderData.loadingEquipmentNeeded,
+			pricing: storedOrderData.pricing,
 		};
 	}, []);
 
@@ -578,21 +660,60 @@ export default function MyOrdersPage() {
 		return filtered;
 	}, [deliveryOrders, searchQuery, sortBy, filterStatus]);
 
+	// Paginated data
+	const paginatedProductOrders = useMemo(() => {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		return filteredProductOrders.slice(startIndex, endIndex);
+	}, [filteredProductOrders, currentPage, itemsPerPage]);
+
+	const paginatedServiceRequests = useMemo(() => {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		return filteredServiceRequests.slice(startIndex, endIndex);
+	}, [filteredServiceRequests, currentPage, itemsPerPage]);
+
+	const paginatedDeliveryOrders = useMemo(() => {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		return filteredDeliveryOrders.slice(startIndex, endIndex);
+	}, [filteredDeliveryOrders, currentPage, itemsPerPage]);
+
+	// Calculate total pages
+	const totalPages = useMemo(() => {
+		const currentOrders = activeTab === "products" 
+			? filteredProductOrders 
+			: activeTab === "services" 
+			? filteredServiceRequests 
+			: filteredDeliveryOrders;
+		return Math.ceil(currentOrders.length / itemsPerPage);
+	}, [activeTab, filteredProductOrders, filteredServiceRequests, filteredDeliveryOrders, itemsPerPage]);
+
 	// Memoized callbacks
 	const handleTabChange = useCallback((tab: "products" | "services" | "delivery") => {
 		setActiveTab(tab);
+		setCurrentPage(1); // Reset to first page when tab changes
 	}, []);
 
 	const handleSearchChange = useCallback((term: string) => {
 		setSearchQuery(term);
+		setCurrentPage(1); // Reset to first page when search changes
 	}, []);
 
 	const handleSortChange = useCallback((sort: "newest" | "oldest" | "status") => {
 		setSortBy(sort);
+		setCurrentPage(1); // Reset to first page when sort changes
 	}, []);
 
 	const handleFilterStatusChange = useCallback((status: string) => {
 		setFilterStatus(status);
+		setCurrentPage(1); // Reset to first page when filter changes
+	}, []);
+
+	const handlePageChange = useCallback((page: number) => {
+		setCurrentPage(page);
+		// Scroll to top when page changes
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	}, []);
 
 	return (
@@ -645,38 +766,36 @@ export default function MyOrdersPage() {
 							>
 								{filteredProductOrders.length === 0 ? (
 									<EmptyOrdersState type="products" />
-								) : filteredProductOrders.length > 50 ? (
-									<VirtualizedOrderList
-										items={filteredProductOrders}
-										renderItem={(order, index) => (
-											<div className="mb-4 sm:mb-6">
+								) : (
+									<>
+										{paginatedProductOrders.map((order, index) => (
+											<motion.div
+												key={order.id}
+												initial={{ opacity: 0, y: 20 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ delay: index * 0.05, duration: 0.3 }}
+												whileHover={{ y: -2 }}
+											>
 												<SwipeableOrderCard
 													onTrack={() => router.push(`/my-orders/${order.orderNumber}/track`)}
 													canTrack={true}
 												>
 													<ProductOrderCard order={order} />
 												</SwipeableOrderCard>
+											</motion.div>
+										))}
+										{filteredProductOrders.length > itemsPerPage && (
+											<div className="mt-8">
+												<Pagination
+													currentPage={currentPage}
+													totalPages={totalPages}
+													onPageChange={handlePageChange}
+													totalItems={filteredProductOrders.length}
+													itemsPerPage={itemsPerPage}
+												/>
 											</div>
 										)}
-										estimateSize={220}
-									/>
-								) : (
-									filteredProductOrders.map((order, index) => (
-										<motion.div
-											key={order.id}
-											initial={{ opacity: 0, y: 20 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ delay: index * 0.05, duration: 0.3 }}
-											whileHover={{ y: -2 }}
-										>
-											<SwipeableOrderCard
-												onTrack={() => router.push(`/my-orders/${order.orderNumber}/track`)}
-												canTrack={true}
-											>
-												<ProductOrderCard order={order} />
-											</SwipeableOrderCard>
-										</motion.div>
-									))
+									</>
 								)}
 							</motion.div>
 						) : activeTab === "services" ? (
@@ -690,38 +809,36 @@ export default function MyOrdersPage() {
 							>
 								{filteredServiceRequests.length === 0 ? (
 									<EmptyOrdersState type="services" />
-								) : filteredServiceRequests.length > 50 ? (
-									<VirtualizedOrderList
-										items={filteredServiceRequests}
-										renderItem={(request, index) => (
-											<div className="mb-4 sm:mb-6">
+								) : (
+									<>
+										{paginatedServiceRequests.map((request, index) => (
+											<motion.div
+												key={request.id}
+												initial={{ opacity: 0, y: 20 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ delay: index * 0.05, duration: 0.3 }}
+												whileHover={{ y: -2 }}
+											>
 												<SwipeableOrderCard
 													onTrack={() => router.push(`/my-orders/${request.requestNumber}/track`)}
 													canTrack={true}
 												>
 													<ServiceOrderCard request={request} />
 												</SwipeableOrderCard>
+											</motion.div>
+										))}
+										{filteredServiceRequests.length > itemsPerPage && (
+											<div className="mt-8">
+												<Pagination
+													currentPage={currentPage}
+													totalPages={totalPages}
+													onPageChange={handlePageChange}
+													totalItems={filteredServiceRequests.length}
+													itemsPerPage={itemsPerPage}
+												/>
 											</div>
 										)}
-										estimateSize={220}
-									/>
-								) : (
-									filteredServiceRequests.map((request, index) => (
-										<motion.div
-											key={request.id}
-											initial={{ opacity: 0, y: 20 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ delay: index * 0.05, duration: 0.3 }}
-											whileHover={{ y: -2 }}
-										>
-											<SwipeableOrderCard
-												onTrack={() => router.push(`/my-orders/${request.requestNumber}/track`)}
-												canTrack={true}
-											>
-												<ServiceOrderCard request={request} />
-											</SwipeableOrderCard>
-										</motion.div>
-									))
+									</>
 								)}
 							</motion.div>
 						) : (
@@ -731,42 +848,41 @@ export default function MyOrdersPage() {
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: isArabic ? -20 : 20 }}
 								transition={{ duration: 0.3 }}
-								className="space-y-4 sm:space-y-6"
+								className="w-full space-y-5 sm:space-y-6"
 							>
 								{filteredDeliveryOrders.length === 0 ? (
 									<EmptyOrdersState type="delivery" />
-								) : filteredDeliveryOrders.length > 50 ? (
-									<VirtualizedOrderList
-										items={filteredDeliveryOrders}
-										renderItem={(order, index) => (
-											<div className="mb-4 sm:mb-6">
+								) : (
+									<>
+										{paginatedDeliveryOrders.map((order, index) => (
+											<motion.div
+												key={order.id}
+												initial={{ opacity: 0, y: 20 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ delay: index * 0.05, duration: 0.3 }}
+												whileHover={{ y: -2 }}
+												className="w-full"
+											>
 												<SwipeableOrderCard
 													onTrack={() => router.push(`/my-orders/${order.orderNumber}/track`)}
 													canTrack={true}
 												>
 													<DeliveryOrderCard order={order} />
 												</SwipeableOrderCard>
+											</motion.div>
+										))}
+										{filteredDeliveryOrders.length > itemsPerPage && (
+											<div className="mt-8">
+												<Pagination
+													currentPage={currentPage}
+													totalPages={totalPages}
+													onPageChange={handlePageChange}
+													totalItems={filteredDeliveryOrders.length}
+													itemsPerPage={itemsPerPage}
+												/>
 											</div>
 										)}
-										estimateSize={220}
-									/>
-								) : (
-									filteredDeliveryOrders.map((order, index) => (
-										<motion.div
-											key={order.id}
-											initial={{ opacity: 0, y: 20 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ delay: index * 0.05, duration: 0.3 }}
-											whileHover={{ y: -2 }}
-										>
-											<SwipeableOrderCard
-												onTrack={() => router.push(`/my-orders/${order.orderNumber}/track`)}
-												canTrack={true}
-											>
-												<DeliveryOrderCard order={order} />
-											</SwipeableOrderCard>
-										</motion.div>
-									))
+									</>
 								)}
 							</motion.div>
 						)}

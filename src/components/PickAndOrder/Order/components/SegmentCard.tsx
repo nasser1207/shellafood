@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Package, AlertCircle, CheckCircle2, X, User, Edit2, Clock, HelpCircle, Sparkles } from "lucide-react";
+import { MapPin, Navigation, Package, AlertCircle, CheckCircle2, X, User, Edit2, Clock, HelpCircle, Sparkles, Phone } from "lucide-react";
 import type { RouteSegment } from "../types/routeSegment";
 
 interface SegmentCardProps {
@@ -16,6 +16,7 @@ interface SegmentCardProps {
 	canRemove?: boolean;
 	isArabic: boolean;
 	completionPercentage?: number;
+	onUpdatePhone?: (pointType: "pickup" | "dropoff", phone: string) => void;
 }
 
 export const SegmentCard: React.FC<SegmentCardProps> = ({
@@ -29,6 +30,7 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 	canRemove = true,
 	isArabic,
 	completionPercentage = 0,
+	onUpdatePhone,
 }) => {
 	const [showPickupHelp, setShowPickupHelp] = useState(false);
 	const [showDropoffHelp, setShowDropoffHelp] = useState(false);
@@ -176,27 +178,33 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 						
 						{/* Progress Ring for In-Progress */}
 						{isInProgress && (
-							<svg className="absolute inset-0 w-full h-full -rotate-90">
+							<svg 
+								className="absolute w-full h-full -rotate-90" 
+								viewBox="0 0 48 48"
+								preserveAspectRatio="xMidYMid meet"
+							>
 								<circle
 									cx="24"
 									cy="24"
 									r="20"
 									stroke="currentColor"
-									strokeWidth="3"
+									strokeWidth="2.5"
 									fill="none"
 									className="text-white/30"
+									vectorEffect="non-scaling-stroke"
 								/>
 								<circle
 									cx="24"
 									cy="24"
 									r="20"
 									stroke="currentColor"
-									strokeWidth="3"
+									strokeWidth="2.5"
 									fill="none"
 									className="text-white"
 									strokeDasharray={`${2 * Math.PI * 20}`}
 									strokeDashoffset={`${2 * Math.PI * 20 * (1 - completionPercentage / 100)}`}
 									strokeLinecap="round"
+									vectorEffect="non-scaling-stroke"
 								/>
 							</svg>
 						)}
@@ -281,9 +289,23 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 						</div>
 						<div className="flex-1 min-w-0">
 							<div className="flex items-center gap-2 mb-1">
-								<p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+								<p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex-1">
 									{isArabic ? "نقطة الالتقاط" : "Pickup Point"}
 								</p>
+								{hasPickup && onEdit && !isReviewMode && (
+									<motion.button
+										whileHover={{ scale: 1.05 }}
+										whileTap={{ scale: 0.95 }}
+										onClick={(e) => {
+											e.stopPropagation();
+											onEdit();
+										}}
+										className="p-1.5 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-md transition-all flex-shrink-0"
+										aria-label={isArabic ? "تعديل" : "Edit"}
+									>
+										<Edit2 className="w-3.5 h-3.5" />
+									</motion.button>
+								)}
 								{!hasPickup && !isReviewMode && (
 									<div className="relative" ref={pickupHelpRef}>
 										<button
@@ -302,13 +324,13 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 													initial={{ opacity: 0, scale: 0.95, y: -5 }}
 													animate={{ opacity: 1, scale: 1, y: 0 }}
 													exit={{ opacity: 0, scale: 0.95, y: -5 }}
-													className={`absolute ${isArabic ? "left-0" : "right-0"} top-6 sm:top-7 z-50 w-40 sm:w-48 md:w-56 p-2 sm:p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
+													className={`absolute ${isArabic ? "left-0 md:left-1/2 md:-translate-x-1/2" : "right-0 md:right-1/2 md:translate-x-1/2"} top-6 sm:top-7 z-[100] w-40 sm:w-48 md:w-64 lg:w-72 p-2 sm:p-2.5 md:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg md:shadow-xl text-[10px] sm:text-xs md:text-sm text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
 													dir={isArabic ? "rtl" : "ltr"}
 												>
-													<p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
+													<p className="font-semibold mb-1 md:mb-2 text-gray-900 dark:text-gray-100 text-xs md:text-sm">
 														{isArabic ? "نصيحة سريعة:" : "Quick Tip:"}
 													</p>
-													<p>
+													<p className="leading-relaxed">
 														{isArabic 
 															? "انقر على الخريطة لتحديد موقع الالتقاط. يمكنك البحث عن عنوان أو استخدام موقعك الحالي."
 															: "Click on the map to select pickup location. You can search for an address or use your current location."
@@ -329,6 +351,18 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 										<div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-600 dark:text-gray-400">
 											<User className="w-3.5 h-3.5" />
 											<span className="font-medium">{segment.pickupPoint.contactName}</span>
+										</div>
+									)}
+									{/* Phone Number Display */}
+									{segment.pickupPoint.contactPhone && (
+										<div className="mt-2">
+											<div className={`flex items-center gap-1.5 `}>
+											<Phone className="w-3.5 h-3.5 flex-shrink-0 text-green-600 dark:text-green-400" />
+										
+												<span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate" dir="ltr">
+													{segment.pickupPoint.contactPhone}
+												</span>
+											</div>
 										</div>
 									)}
 								</>
@@ -376,9 +410,23 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 						</div>
 						<div className="flex-1 min-w-0">
 							<div className="flex items-center gap-2 mb-1">
-								<p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+								<p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex-1">
 									{isArabic ? "نقطة التوصيل" : "Dropoff Point"}
 								</p>
+								{hasDropoff && onEdit && !isReviewMode && (
+									<motion.button
+										whileHover={{ scale: 1.05 }}
+										whileTap={{ scale: 0.95 }}
+										onClick={(e) => {
+											e.stopPropagation();
+											onEdit();
+										}}
+										className="p-1.5 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-md transition-all flex-shrink-0"
+										aria-label={isArabic ? "تعديل" : "Edit"}
+									>
+										<Edit2 className="w-3.5 h-3.5" />
+									</motion.button>
+								)}
 								{!hasDropoff && !isReviewMode && (
 									<div className="relative" ref={dropoffHelpRef}>
 										<button
@@ -397,13 +445,13 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 													initial={{ opacity: 0, scale: 0.95, y: -5 }}
 													animate={{ opacity: 1, scale: 1, y: 0 }}
 													exit={{ opacity: 0, scale: 0.95, y: -5 }}
-													className={`absolute ${isArabic ? "left-0" : "right-0"} top-6 sm:top-7 z-50 w-40 sm:w-48 md:w-56 p-2 sm:p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
+													className={`absolute ${isArabic ? "left-0 md:left-1/2 md:-translate-x-1/2" : "right-0 md:right-1/2 md:translate-x-1/2"} top-6 sm:top-7 z-[100] w-40 sm:w-48 md:w-64 lg:w-72 p-2 sm:p-2.5 md:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg md:shadow-xl text-[10px] sm:text-xs md:text-sm text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
 													dir={isArabic ? "rtl" : "ltr"}
 												>
-													<p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
+													<p className="font-semibold mb-1 md:mb-2 text-gray-900 dark:text-gray-100 text-xs md:text-sm">
 														{isArabic ? "نصيحة سريعة:" : "Quick Tip:"}
 													</p>
-													<p>
+													<p className="leading-relaxed">
 														{isArabic 
 															? "حدد موقع التوصيل النهائي على الخريطة. تأكد من إضافة معلومات الاتصال للمستلم."
 															: "Select the final delivery location on the map. Make sure to add contact information for the recipient."
@@ -424,6 +472,18 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 										<div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-600 dark:text-gray-400">
 											<User className="w-3.5 h-3.5" />
 											<span className="font-medium">{segment.dropoffPoint.contactName}</span>
+										</div>
+									)}
+									{/* Phone Number Display */}
+									{segment.dropoffPoint.contactPhone && (
+										<div className="mt-2">
+											<div className={`flex items-center gap-1.5 `}>
+											<Phone className="w-3.5 h-3.5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+												
+												<span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate" dir="ltr">
+													{segment.dropoffPoint.contactPhone}
+												</span>
+											</div>
 										</div>
 									)}
 								</>
@@ -507,41 +567,7 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 									</div>
 								</div>
 								<div className="flex items-center gap-2 flex-wrap">
-									{!isReviewMode && (
-										<div className="relative" ref={packageHelpRef}>
-											<button
-												onClick={(e) => {
-													e.stopPropagation();
-													setShowPackageHelp(!showPackageHelp);
-												}}
-												className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors p-0.5 sm:p-1 touch-manipulation"
-												aria-label={isArabic ? "مساعدة" : "Help"}
-											>
-												<HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-											</button>
-											<AnimatePresence>
-												{showPackageHelp && (
-													<motion.div
-														initial={{ opacity: 0, scale: 0.95, y: -5 }}
-														animate={{ opacity: 1, scale: 1, y: 0 }}
-														exit={{ opacity: 0, scale: 0.95, y: -5 }}
-														className={`absolute ${isArabic ? "left-0" : "right-0"} top-6 sm:top-7 z-50 w-40 sm:w-48 md:w-56 p-2 sm:p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 ${isArabic ? "text-right" : "text-left"}`}
-														dir={isArabic ? "rtl" : "ltr"}
-													>
-														<p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
-															{isArabic ? "نصيحة سريعة:" : "Quick Tip:"}
-														</p>
-														<p className="mb-2">
-															{isArabic 
-																? "أضف وصفاً للطرد، الوزن، وحدد إذا كان قابلاً للكسر أو يحتاج تبريد."
-																: "Add package description, weight, and specify if it's fragile or requires refrigeration."
-															}
-														</p>
-													</motion.div>
-												)}
-											</AnimatePresence>
-										</div>
-									)}
+									
 									{onClick && (
 										<motion.button
 											whileHover={{ scale: 1.05 }}

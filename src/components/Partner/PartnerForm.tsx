@@ -9,7 +9,7 @@ import {
 	useLoadScript,
 } from "@react-google-maps/api";
 import React, { useRef, useState, useEffect } from "react";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
 import { NotificationDialog } from "@/components/Utils/NotificationDialog";
 import { FormInput } from "@/components/Utils/FormInput";
 import { SectionHeader } from "@/components/Utils/SectionHeader";

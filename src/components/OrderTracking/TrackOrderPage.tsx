@@ -97,16 +97,30 @@ export default function TrackOrderPage({ orderId, initialData }: TrackOrderPageP
 								status = "assigned";
 							}
 							
-							// Calculate pricing
-							const distance = 12.5; // Mock distance in km
-							const isMotorbike = transportType === "motorbike";
-							const baseFee = isMotorbike ? 2.5 : 5.0;
-							const deliveryFee = Math.round((baseFee * distance) * 100) / 100;
-							const basePrice = deliveryFee;
-							const platformFee = Math.round(basePrice * 0.1 * 100) / 100;
-							const subtotal = basePrice + platformFee;
-							const vat = Math.round(subtotal * 0.15 * 100) / 100;
-							const totalAmount = Math.round((subtotal + vat) * 100) / 100;
+							// Use stored pricing data or calculate as fallback
+							let basePrice = 0;
+							let platformFee = 0;
+							let vat = 0;
+							let totalAmount = 0;
+							
+							if (parsed.pricing) {
+								// Use stored pricing breakdown
+								basePrice = parsed.pricing.basePrice || 0;
+								platformFee = parsed.pricing.platformFee || 0;
+								vat = parsed.pricing.vat || 0;
+								totalAmount = parsed.pricing.total || 0;
+							} else {
+								// Fallback: Calculate pricing (legacy orders)
+								const distance = 12.5; // Mock distance in km
+								const isMotorbike = transportType === "motorbike";
+								const baseFee = isMotorbike ? 2.5 : 5.0;
+								const deliveryFee = Math.round((baseFee * distance) * 100) / 100;
+								basePrice = deliveryFee;
+								platformFee = Math.round(basePrice * 0.1 * 100) / 100;
+								const subtotal = basePrice + platformFee;
+								vat = Math.round(subtotal * 0.15 * 100) / 100;
+								totalAmount = Math.round((subtotal + vat) * 100) / 100;
+							}
 
 							const trackingData: any = {
 								id: orderId,

@@ -18,7 +18,7 @@ function TopSupermarketSection() {
     nameAr: "هايبر شلة",
     description: "Your one-stop shop for everything you need",
     descriptionAr: "متجرك الشامل لكل ما تحتاجه",
-    image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1200&h=600&fit=crop",
+    image: "/supermarketpic.jpg",
     rating: 4.9,
     reviewsCount: 890,
     deliveryTime: "45-60 min",

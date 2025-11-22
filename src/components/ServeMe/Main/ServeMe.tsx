@@ -30,14 +30,14 @@ export default function ServeMe() {
 			path: "/serve-me/teachers-training",
 			title: t("serveMe.delivery"),
 			icon: <Truck className="w-8 h-8" />,
-			image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop",
+			image: "/helpsupport.jpg",
 		},
 		{
 			slug: "home-maintenance",
 			path: "/serve-me/home-maintenance",
 			title: t("serveMe.repair"),
 			icon: <Wrench className="w-8 h-8" />,
-			image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=600&fit=crop",
+			image: "/serveme-hero.png",
 		},
 		{
 			slug: "travel-yemen",
@@ -65,7 +65,7 @@ export default function ServeMe() {
 			path: "/serve-me/women-salons",
 			title: t("serveMe.womenSalons"),
 			icon: <Scissors className="w-8 h-8" />,
-			image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=800&h=600&fit=crop",
+			image: "/serveme-hero.png",
 		},
 		{
 			slug: "men-salons",

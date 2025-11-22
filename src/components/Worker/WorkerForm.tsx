@@ -6,7 +6,7 @@ import { NotificationDialog } from "@/components/Utils/NotificationDialog";
 import { FormInput } from "@/components/Utils/FormInput";
 import { SectionHeader } from "@/components/Utils/SectionHeader";
 import { UploadFileInput } from "@/components/Utils/UploadFileInput";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
 import { registerWorker, WorkerRegistrationData } from "@/lib/api/worker";
 import { getZonesList, getModulesByZone, Zone, Module } from "@/lib/api/partner";
 

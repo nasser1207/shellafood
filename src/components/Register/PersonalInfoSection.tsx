@@ -1,7 +1,7 @@
 'use client';
 import React from "react";
 import { FormInput } from "../Utils/FormInput";
-import { PhoneInputField } from "../Utils/PhoneInput";
+import PhoneInputField from "../Utils/PhoneInput";
 import { SectionHeader } from "../Utils/SectionHeader";
 
 interface PersonalInfoSectionProps {

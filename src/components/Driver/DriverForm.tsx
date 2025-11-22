@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import React, { useState, useEffect } from "react";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
 import { UploadFileInput } from "@/components/Utils/UploadFileInput";
 import { NotificationDialog } from "@/components/Utils/NotificationDialog";
 import { FormInput } from "@/components/Utils/FormInput";

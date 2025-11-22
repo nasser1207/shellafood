@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { SectionHeader } from "@/components/Utils/SectionHeader";
 import { FormInput } from "@/components/Utils/FormInput";
 import { FormSelect } from "@/components/Utils/FormSelect";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
 import { NotificationDialog } from "@/components/Utils/NotificationDialog";
 import { MapSection } from "@/components/Utils/MapSection";
 import { DynamicListSection } from "./DynamicListSection";

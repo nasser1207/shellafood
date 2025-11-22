@@ -26,7 +26,7 @@ import { getGeocoder } from "@/lib/maps/utils";
 import { parseAddressComponents } from "./utils/addressParser";
 import Image from "next/image";
 import { LocationPointCard, VehicleSpecificFields, MobileMapSection, PackageDetailsSection } from "./components";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
 
 interface OrderDetailsPageProps {
 	transportType: string;
@@ -59,14 +59,31 @@ export default function OrderDetailsPage({ transportType, orderType }: OrderDeta
 	const isMultiDirection = orderType === "multi-direction";
 	const isMotorbike = transportType === "motorbike";
 
-	// User info
-	const currentUser = useMemo(
-		() => ({
+	// User info - try to get from localStorage or use default
+	const currentUser = useMemo(() => {
+		if (typeof window !== "undefined") {
+			try {
+				const userDataStr = localStorage.getItem("userData");
+				if (userDataStr) {
+					const userData = JSON.parse(userDataStr);
+					if (userData.name && userData.phone) {
+						return {
+							name: userData.name,
+							phone: userData.phone,
+						};
+					}
+				}
+			} catch (error) {
+				console.error("Error loading user data:", error);
+			}
+		}
+		
+		// Fallback
+		return {
 			name: isArabic ? "أحمد محمد" : "Ahmed Mohammed",
 			phone: "+966 50 123 4567",
-		}),
-		[isArabic]
-	);
+		};
+	}, [isArabic]);
 
 	// Location points for multi-direction
 	const [locationPoints, setLocationPoints] = useState<LocationPoint[]>([

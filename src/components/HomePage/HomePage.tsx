@@ -84,14 +84,14 @@ export default function HomePage() {
 			id: "pickandorder",
 			name: "استلام وتوصيل",
 			description: "استلام وتوصيل",
-			image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+			image: "/pickandorder.jpg",
 			path: "/pickandorder",
 		},
 		{
 			id: "serve-me",
 			name: "اخدمني",
 			description: "اخدمني",
-			image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+			image: "/serveme-hero.png",
 			path: "/serve-me",
 		},
 	]);

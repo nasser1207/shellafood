@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Package, User, Phone, Upload, X, AlertCircle, Building2, HelpCircle, Check } from "lucide-react";
+import { MapPin, Navigation, Package, User, Phone, Upload, X, AlertCircle, Building2, HelpCircle, Check, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { RouteSegment, ValidationErrors } from "../types/routeSegment";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
+import MobileMapSection from "./MobileMapSection";
+import { getGeocoder } from "@/lib/maps/utils";
+import { parseAddressComponents } from "../utils/addressParser";
 
 interface SegmentDetailsFormProps {
   segment: RouteSegment;
@@ -20,6 +23,10 @@ interface SegmentDetailsFormProps {
   onNext?: () => void;
   onPrevious?: () => void;
   isCompleted?: boolean;
+  // Map props
+  isLoaded?: boolean;
+  loadError?: any;
+  defaultCenter?: { lat: number; lng: number };
 }
 
 type TabType = "pickup" | "dropoff" | "package";
@@ -37,12 +44,18 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
   onNext,
   onPrevious,
   isCompleted = false,
+  isLoaded = false,
+  loadError = null,
+  defaultCenter = { lat: 24.7136, lng: 46.6753 }, // Default to Riyadh
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState<TabType>("pickup");
   const activeTab = externalActiveTab ?? internalActiveTab;
   const setActiveTab = externalSetActiveTab ?? setInternalActiveTab;
   const [showHelp, setShowHelp] = useState<{ [key: string]: boolean }>({});
   const helpRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const pickupMapRef = useRef<google.maps.Map | null>(null);
+  const dropoffMapRef = useRef<google.maps.Map | null>(null);
 
   // Close tooltips when clicking outside
   useEffect(() => {
@@ -91,8 +104,12 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
           [field]: value,
         },
       });
+      // Clear error for this field when it's filled
+      if (value && (typeof value === 'string' ? value.trim() : value)) {
+        setTouched((prev) => ({ ...prev, [`${segment.id}-pickup-${field}`]: true }));
+      }
     },
-    [segment, onUpdate]
+    [segment, onUpdate, setTouched]
   );
 
   const updateDropoffField = useCallback(
@@ -103,8 +120,12 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
           [field]: value,
         },
       });
+      // Clear error for this field when it's filled
+      if (value && (typeof value === 'string' ? value.trim() : value)) {
+        setTouched((prev) => ({ ...prev, [`${segment.id}-dropoff-${field}`]: true }));
+      }
     },
-    [segment, onUpdate]
+    [segment, onUpdate, setTouched]
   );
 
   const updatePackageField = useCallback(
@@ -115,8 +136,12 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
           [field]: value,
         },
       });
+      // Clear error for this field when it's filled
+      if (value && (typeof value === 'string' ? value.trim() : value)) {
+        setTouched((prev) => ({ ...prev, [`${segment.id}-package-${field}`]: true }));
+      }
     },
-    [segment, onUpdate]
+    [segment, onUpdate, setTouched]
   );
 
   const handlePhotoUpload = useCallback(
@@ -203,28 +228,175 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
     return parts.join("×");
   }, []);
 
+  // Map center for pickup tab
+  const pickupMapCenter = useMemo(() => {
+    if (segment.pickupPoint.location) {
+      return segment.pickupPoint.location;
+    }
+    return segment.dropoffPoint.location || defaultCenter;
+  }, [segment.pickupPoint.location, segment.dropoffPoint.location, defaultCenter]);
+
+  // Map center for dropoff tab
+  const dropoffMapCenter = useMemo(() => {
+    if (segment.dropoffPoint.location) {
+      return segment.dropoffPoint.location;
+    }
+    return segment.pickupPoint.location || defaultCenter;
+  }, [segment.pickupPoint.location, segment.dropoffPoint.location, defaultCenter]);
+
+  // Handle map click for pickup
+  const handlePickupMapClick = useCallback(
+    async (event: google.maps.MapMouseEvent) => {
+      if (!event.latLng || !isLoaded) return;
+
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      const location = { lat, lng };
+
+      setIsGeocoding(true);
+
+      try {
+        const geocoder = getGeocoder();
+        if (!geocoder) throw new Error("Geocoder not available");
+
+        const response = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+          geocoder.geocode({ location, language: isArabic ? "ar" : "en" }, (results, status) => {
+            if (status === "OK" && results && results.length > 0) {
+              resolve(results);
+            } else {
+              reject(new Error(`Geocoding failed: ${status}`));
+            }
+          });
+        });
+
+        if (response && response.length > 0) {
+          const parsedAddress = parseAddressComponents(response[0]);
+          
+          onUpdate({
+            pickupPoint: {
+              ...segment.pickupPoint,
+              location,
+              streetName: parsedAddress.street,
+              areaName: parsedAddress.area,
+              city: parsedAddress.city,
+              building: parsedAddress.building,
+            },
+          });
+
+          // Clear any location errors when location is selected
+          setTouched((prev) => ({ ...prev, [`${segment.id}-pickup-location`]: true }));
+        }
+      } catch (error) {
+        console.error("Geocoding error:", error);
+      } finally {
+        setIsGeocoding(false);
+      }
+    },
+    [isLoaded, segment, onUpdate, isArabic, setTouched]
+  );
+
+  // Handle map click for dropoff
+  const handleDropoffMapClick = useCallback(
+    async (event: google.maps.MapMouseEvent) => {
+      if (!event.latLng || !isLoaded) return;
+
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      const location = { lat, lng };
+
+      setIsGeocoding(true);
+
+      try {
+        const geocoder = getGeocoder();
+        if (!geocoder) throw new Error("Geocoder not available");
+
+        const response = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+          geocoder.geocode({ location, language: isArabic ? "ar" : "en" }, (results, status) => {
+            if (status === "OK" && results && results.length > 0) {
+              resolve(results);
+            } else {
+              reject(new Error(`Geocoding failed: ${status}`));
+            }
+          });
+        });
+
+        if (response && response.length > 0) {
+          const parsedAddress = parseAddressComponents(response[0]);
+          
+          onUpdate({
+            dropoffPoint: {
+              ...segment.dropoffPoint,
+              location,
+              streetName: parsedAddress.street,
+              areaName: parsedAddress.area,
+              city: parsedAddress.city,
+              building: parsedAddress.building,
+            },
+          });
+
+          // Clear any location errors when location is selected
+          setTouched((prev) => ({ ...prev, [`${segment.id}-dropoff-location`]: true }));
+        }
+      } catch (error) {
+        console.error("Geocoding error:", error);
+      } finally {
+        setIsGeocoding(false);
+      }
+    },
+    [isLoaded, segment, onUpdate, isArabic, setTouched]
+  );
+
+  // All points for map markers
+  const allMapMarkers = useMemo(() => {
+    const markers: Array<{
+      id: string;
+      location: { lat: number; lng: number } | null;
+      type: "pickup" | "dropoff";
+      label: string;
+    }> = [];
+
+    if (segment.pickupPoint.location) {
+      markers.push({
+        id: segment.pickupPoint.id,
+        location: segment.pickupPoint.location,
+        type: "pickup",
+        label: segment.pickupPoint.label,
+      });
+    }
+    if (segment.dropoffPoint.location) {
+      markers.push({
+        id: segment.dropoffPoint.id,
+        location: segment.dropoffPoint.location,
+        type: "dropoff",
+        label: segment.dropoffPoint.label,
+      });
+    }
+
+    return markers;
+  }, [segment]);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-md border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700">
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 sm:gap-3 mb-6 sm:mb-8 border-b-2 border-gray-200 dark:border-gray-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`
-              flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all
-              border-b-2 -mb-px
+              flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 font-semibold text-sm sm:text-base transition-all duration-200
+              border-b-2 -mb-px relative
               ${activeTab === tab.id
                 ? tab.color === "green"
-                  ? "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                  ? "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 shadow-sm"
                   : tab.color === "orange"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20"
-                  : "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 shadow-sm"
+                  : "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-sm"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               }
             `}
           >
-            {tab.icon}
+            <span className={activeTab === tab.id ? "scale-110" : ""}>{tab.icon}</span>
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
@@ -241,10 +413,48 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-green-500" />
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
               {isArabic ? "تفاصيل نقطة الالتقاط" : "Pickup Point Details"}
             </h3>
+
+            {/* Map Section */}
+            <div 
+              data-field={`${segment.id}-pickup-location`}
+              className={`bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 mb-3 sm:mb-4 transition-colors border-2 ${
+                touched[`${segment.id}-pickup-location`] && errors[`${segment.id}-pickup-location`]
+                  ? "border-red-500 dark:border-red-400"
+                  : "border-gray-200 dark:border-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 dark:text-green-400 flex-shrink-0" />
+                <h4 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-gray-900 dark:text-gray-100">
+                  {isArabic ? "حدد موقع الالتقاط" : "Select Pickup Location"}
+                  <span className="text-red-500 ml-1">*</span>
+                </h4>
+                {isGeocoding && <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500 animate-spin" />}
+              </div>
+              <div className="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] rounded-lg sm:rounded-xl overflow-hidden">
+                <MobileMapSection
+                  isLoaded={isLoaded}
+                  loadError={loadError}
+                  mapCenter={pickupMapCenter}
+                  defaultCenter={defaultCenter}
+                  handleMapClick={handlePickupMapClick}
+                  isGeocoding={isGeocoding}
+                  mapRef={pickupMapRef}
+                  locationSelected={!!segment.pickupPoint.location}
+                  isArabic={isArabic}
+                  allPoints={allMapMarkers}
+                />
+              </div>
+              {touched[`${segment.id}-pickup-location`] && errors[`${segment.id}-pickup-location`] && (
+                <p className="text-red-500 dark:text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                  {errors[`${segment.id}-pickup-location`]}
+                </p>
+              )}
+            </div>
 
             {/* Location Display */}
             {segment.pickupPoint.location && (
@@ -337,7 +547,8 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                 onBlur={() => setTouched((prev) => ({ ...prev, [`${segment.id}-pickup-details`]: true }))}
                 rows={3}
                 placeholder={isArabic ? "مثال: المبنى 5، البوابة 2" : "Example: Building 5, Gate 2"}
-                className={`w-full px-4 py-3 text-sm rounded-xl border-2 ${
+                data-field={`${segment.id}-pickup-details`}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg sm:rounded-xl border-2 ${
                   touched[`${segment.id}-pickup-details`] && errors[`${segment.id}-pickup-details`]
                     ? "border-red-500 dark:border-red-400"
                     : "border-gray-200 dark:border-gray-700 focus:border-green-500 dark:focus:border-green-400"
@@ -405,10 +616,48 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-orange-500" />
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
               {isArabic ? "تفاصيل نقطة التوصيل" : "Dropoff Point Details"}
             </h3>
+
+            {/* Map Section */}
+            <div 
+              data-field={`${segment.id}-dropoff-location`}
+              className={`bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 mb-3 sm:mb-4 transition-colors border-2 ${
+                touched[`${segment.id}-dropoff-location`] && errors[`${segment.id}-dropoff-location`]
+                  ? "border-red-500 dark:border-red-400"
+                  : "border-gray-200 dark:border-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400 flex-shrink-0" />
+                <h4 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-gray-900 dark:text-gray-100">
+                  {isArabic ? "حدد موقع التوصيل" : "Select Dropoff Location"}
+                  <span className="text-red-500 ml-1">*</span>
+                </h4>
+                {isGeocoding && <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 animate-spin" />}
+              </div>
+              <div className="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] rounded-lg sm:rounded-xl overflow-hidden">
+                <MobileMapSection
+                  isLoaded={isLoaded}
+                  loadError={loadError}
+                  mapCenter={dropoffMapCenter}
+                  defaultCenter={defaultCenter}
+                  handleMapClick={handleDropoffMapClick}
+                  isGeocoding={isGeocoding}
+                  mapRef={dropoffMapRef}
+                  locationSelected={!!segment.dropoffPoint.location}
+                  isArabic={isArabic}
+                  allPoints={allMapMarkers}
+                />
+              </div>
+              {touched[`${segment.id}-dropoff-location`] && errors[`${segment.id}-dropoff-location`] && (
+                <p className="text-red-500 dark:text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                  {errors[`${segment.id}-dropoff-location`]}
+                </p>
+              )}
+            </div>
 
             {/* Location Display */}
             {segment.dropoffPoint.location && (
@@ -450,7 +699,8 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                   onChange={(e) => updateDropoffField("contactName", e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, [`${segment.id}-dropoff-name`]: true }))}
                   placeholder={isArabic ? "أدخل الاسم" : "Enter name"}
-                  className={`w-full px-4 py-3 text-sm rounded-xl border-2 ${
+                  data-field={`${segment.id}-dropoff-name`}
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg sm:rounded-xl border-2 ${
                     touched[`${segment.id}-dropoff-name`] && errors[`${segment.id}-dropoff-name`]
                       ? "border-red-500 dark:border-red-400"
                       : "border-gray-200 dark:border-gray-700 focus:border-orange-500 dark:focus:border-orange-400"
@@ -467,16 +717,16 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
               <div className="dir-ltr" dir="ltr">
                 <PhoneInputField
                   label={isArabic ? "رقم الهاتف" : "Phone"}
-                  value={segment.dropoffPoint.contactPhone}
-                  onChange={(phone) => {
+                  value={segment.dropoffPoint.contactPhone || ""}
+                  onChange={(phone: string) => {
                     updateDropoffField("contactPhone", phone);
                     setTouched((prev) => ({ ...prev, [`${segment.id}-dropoff-phone`]: true }));
                   }}
                   isArabic={isArabic}
-                  required={true}
+                  required
                   name={`${segment.id}-dropoff-phone`}
                   error={touched[`${segment.id}-dropoff-phone`] && errors[`${segment.id}-dropoff-phone`] ? errors[`${segment.id}-dropoff-phone`] : undefined}
-                  disabled={false}
+                  placeholder={isArabic ? "أدخل رقم الهاتف" : "Enter phone number"}
                 />
               </div>
             </div>
@@ -527,7 +777,8 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                 onBlur={() => setTouched((prev) => ({ ...prev, [`${segment.id}-dropoff-details`]: true }))}
                 rows={3}
                 placeholder={isArabic ? "مثال: الشقة 12، الطابق 3" : "Example: Apt 12, Floor 3"}
-                className={`w-full px-4 py-3 text-sm rounded-xl border-2 ${
+                data-field={`${segment.id}-dropoff-details`}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg sm:rounded-xl border-2 ${
                   touched[`${segment.id}-dropoff-details`] && errors[`${segment.id}-dropoff-details`]
                     ? "border-red-500 dark:border-red-400"
                     : "border-gray-200 dark:border-gray-700 focus:border-orange-500 dark:focus:border-orange-400"
@@ -646,7 +897,8 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                 onChange={(e) => updatePackageField("description", e.target.value)}
                 onBlur={() => setTouched((prev) => ({ ...prev, [`${segment.id}-package-description`]: true }))}
                 placeholder={isArabic ? "مثال: إلكترونيات - لابتوب" : "Example: Electronics - Laptop"}
-                className={`w-full px-4 py-3 text-sm rounded-xl border-2 ${
+                data-field={`${segment.id}-package-description`}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg sm:rounded-xl border-2 ${
                   touched[`${segment.id}-package-description`] && errors[`${segment.id}-package-description`]
                     ? "border-red-500 dark:border-red-400"
                     : "border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
@@ -681,7 +933,8 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
                   }}
                   onBlur={() => setTouched((prev) => ({ ...prev, [`${segment.id}-package-weight`]: true }))}
                   placeholder="3"
-                  className={`w-full px-4 py-3 text-sm rounded-xl border-2 dir-ltr ${
+                  data-field={`${segment.id}-package-weight`}
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg sm:rounded-xl border-2 dir-ltr ${
                     touched[`${segment.id}-package-weight`] && errors[`${segment.id}-package-weight`]
                       ? "border-red-500 dark:border-red-400"
                       : "border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
@@ -881,11 +1134,11 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
       </AnimatePresence>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
         {activeTab !== "pickup" && onPrevious && (
           <button
             onClick={onPrevious}
-            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold rounded-xl transition-all touch-manipulation shadow-md hover:shadow-lg flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
+            className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold rounded-lg sm:rounded-xl transition-all touch-manipulation shadow-md hover:shadow-lg flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[48px] text-xs sm:text-sm md:text-base flex-1 sm:flex-none"
           >
             <span>{isArabic ? "السابق" : "Previous"}</span>
           </button>
@@ -894,7 +1147,7 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
         {activeTab !== "package" && onNext && (
           <button
             onClick={onNext}
-            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base"
+            className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white font-semibold rounded-lg sm:rounded-xl transition-all touch-manipulation shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[48px] text-xs sm:text-sm md:text-base flex-1 sm:flex-none"
           >
             <span>{isArabic ? "التالي" : "Next"}</span>
           </button>
@@ -903,13 +1156,13 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
           <button
             onClick={onNext}
             disabled={!isCompleted}
-            className={`px-4 sm:px-6 py-2.5 sm:py-3 font-semibold rounded-xl transition-all touch-manipulation shadow-lg flex items-center justify-center gap-2 min-h-[48px] text-sm sm:text-base ${
+            className={`px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 font-semibold rounded-lg sm:rounded-xl transition-all touch-manipulation shadow-lg flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[48px] text-xs sm:text-sm md:text-base flex-1 sm:flex-none ${
               isCompleted
                 ? "bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white hover:shadow-xl cursor-pointer"
                 : "bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60"
             }`}
           >
-            <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
             <span>{isArabic ? "إكمال" : "Complete"}</span>
           </button>
         )}

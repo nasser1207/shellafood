@@ -1,15 +1,28 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CreditCard, Wallet, Wallet2, Smartphone, Lock, Check, Receipt, Info, ArrowRight } from "lucide-react";
+import { CreditCard, Wallet, Wallet2, Smartphone, Lock, Check, Receipt, Info, ArrowRight, MapPin } from "lucide-react";
 import { PAYMENT_METHODS, PaymentMethodId } from "./utils/paymentMethods";
-import { calculatePricing, formatPrice } from "./utils/pricing";
+import { calculateOrderPricing, formatPrice, formatDistance } from "./utils/pricing";
 
 interface OrderPaymentPageProps {
 	transportType: string;
+}
+
+interface OrderData {
+	transportType: string;
+	orderType: string;
+	locationPoints: Array<{
+		id: string;
+		type: "pickup" | "dropoff";
+		location: { lat: number; lng: number } | null;
+	}>;
+	isExpress?: boolean;
+	requiresRefrigeration?: boolean;
+	loadingEquipmentNeeded?: boolean;
 }
 
 export default function OrderPaymentPage({ transportType }: OrderPaymentPageProps) {
@@ -18,16 +31,146 @@ export default function OrderPaymentPage({ transportType }: OrderPaymentPageProp
 	const isArabic = language === "ar";
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodId | null>(null);
+	const [orderData, setOrderData] = useState<OrderData | null>(null);
 
-	// Base price based on transport type (can be dynamic)
-	const basePrice = useMemo(() => {
-		return transportType === "motorbike" ? 50 : 150; // Example prices
-	}, [transportType]);
+	const [storedPricing, setStoredPricing] = useState<any>(null);
 
-	// Memoized pricing breakdown
+	// Load order data from sessionStorage - supports both old and new formats
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			// Function to load pricing
+			const loadPricing = () => {
+				const pricingStr = sessionStorage.getItem("orderPricing");
+				if (pricingStr) {
+					try {
+						const parsed = JSON.parse(pricingStr);
+						setStoredPricing(parsed);
+						console.log("✅ Stored pricing loaded:", parsed);
+						return true;
+					} catch (error) {
+						console.error("❌ Error parsing stored pricing:", error);
+					}
+				} else {
+					console.log("ℹ️ No stored pricing found in sessionStorage");
+				}
+				return false;
+			};
+
+			// Try to load pricing immediately
+			loadPricing();
+
+			// Also check again after a short delay (in case pricing was just stored)
+			const timeoutId = setTimeout(() => {
+				if (!storedPricing) {
+					console.log("🔄 Re-checking for stored pricing...");
+					loadPricing();
+				}
+			}, 500);
+
+			// Load and convert order data using data converter utility
+			import("./utils/dataConverter").then(({ loadAndConvertOrderData }) => {
+				const data = loadAndConvertOrderData();
+				if (data) {
+					setOrderData(data);
+					console.log("✅ Order data loaded for payment:", data);
+					console.log("📍 Location points:", data.locationPoints);
+					console.log("📍 Location points count:", data.locationPoints?.length || 0);
+				} else {
+					console.warn("⚠️ No order data found in sessionStorage");
+				}
+			}).catch((error) => {
+				console.error("❌ Error loading order data:", error);
+			});
+
+			return () => clearTimeout(timeoutId);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []); // Only run once on mount
+
+	// Calculate pricing using centralized utility
 	const pricing = useMemo(() => {
-		return calculatePricing(basePrice);
-	}, [basePrice]);
+		console.log("🔍 Calculating pricing - storedPricing:", storedPricing, "orderData:", orderData);
+		
+		// First, use stored pricing if available (from summary page or choose-driver page)
+		if (storedPricing) {
+			// Check if pricing has valid values
+			if (storedPricing.total !== undefined && storedPricing.total !== null) {
+				console.log("✅ Using stored pricing:", storedPricing);
+				return storedPricing;
+			} else {
+				console.warn("⚠️ Stored pricing exists but has invalid total:", storedPricing);
+			}
+		} else {
+			console.log("ℹ️ No stored pricing found, will calculate from order data");
+		}
+
+		// Otherwise, calculate from order data
+		if (!orderData) {
+			console.warn("No order data available");
+			return {
+				basePrice: 0,
+				platformFee: 0,
+				subtotal: 0,
+				vat: 0,
+				total: 0,
+				distance: 0,
+			};
+		}
+
+		if (!orderData.locationPoints || orderData.locationPoints.length === 0) {
+			console.warn("No location points available in order data");
+			return {
+				basePrice: 0,
+				platformFee: 0,
+				subtotal: 0,
+				vat: 0,
+				total: 0,
+				distance: 0,
+			};
+		}
+
+		// Filter out location points without valid locations
+		const validLocationPoints = orderData.locationPoints.filter(
+			(point: any) => point.location && point.location.lat && point.location.lng
+		);
+
+		if (validLocationPoints.length === 0) {
+			console.warn("No valid location points (with lat/lng) found");
+			console.warn("Available location points:", orderData.locationPoints);
+			return {
+				basePrice: 0,
+				platformFee: 0,
+				subtotal: 0,
+				vat: 0,
+				total: 0,
+				distance: 0,
+			};
+		}
+
+		try {
+			const pricingInput = {
+				transportType: (transportType === "motorbike" ? "motorbike" : "truck") as "motorbike" | "truck",
+				locationPoints: validLocationPoints,
+				isExpress: orderData.isExpress || false,
+				requiresRefrigeration: orderData.requiresRefrigeration || false,
+				loadingEquipmentNeeded: orderData.loadingEquipmentNeeded || false,
+			};
+			console.log("Pricing input:", pricingInput);
+			const calculated = calculateOrderPricing(pricingInput);
+			console.log("Calculated pricing:", calculated);
+			return calculated;
+		} catch (error) {
+			console.error("Error calculating pricing:", error);
+			return {
+				basePrice: 0,
+				platformFee: 0,
+				subtotal: 0,
+				vat: 0,
+				total: 0,
+				distance: 0,
+			};
+		}
+	}, [orderData, transportType, storedPricing]);
 
 	// Memoized selected method
 	const selectedMethod = useMemo(() => {
@@ -45,6 +188,11 @@ export default function OrderPaymentPage({ transportType }: OrderPaymentPageProp
 		if (!selectedPaymentMethod) return;
 
 		setIsProcessing(true);
+		
+		// Store pricing data for confirmation page
+		if (typeof window !== "undefined") {
+			sessionStorage.setItem("orderPricing", JSON.stringify(pricing));
+		}
 		
 		// Simulate payment processing
 		await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -160,6 +308,21 @@ export default function OrderPaymentPage({ transportType }: OrderPaymentPageProp
 						</div>
 						
 						<div className="space-y-3">
+							{/* Distance Info */}
+							{pricing.distance > 0 && (
+								<div className="flex items-center justify-between py-2 bg-blue-50 dark:bg-blue-900/20 px-3 rounded-lg border border-blue-200 dark:border-blue-800">
+									<div className="flex items-center gap-2">
+										<MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+										<span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+											{isArabic ? "المسافة الإجمالية:" : "Total Distance:"}
+										</span>
+									</div>
+									<span className="text-sm font-bold text-blue-700 dark:text-blue-300">
+										{formatDistance(pricing.distance, isArabic)}
+									</span>
+								</div>
+							)}
+
 							{/* Base Delivery Price */}
 							<div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
 								<span className="text-sm text-gray-600 dark:text-gray-400">

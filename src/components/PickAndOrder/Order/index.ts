@@ -1,4 +1,3 @@
-export { default as OrderDetailsPage } from "./OrderDetailsPage";
 export { default as OrderSummaryPage } from "./OrderSummaryPage";
 export { default as OrderConfirmationPage } from "./OrderConfirmationPage";
 export { default as OrderPaymentPage } from "./OrderPaymentPage";

@@ -67,12 +67,12 @@ const DriverCard = memo<{
 	}, [driver.id, onChat]);
 
 	// Theme colors based on vehicle type
-	const primaryColor = isTruck ? "#31A342" : "#FA9D2B";
+	const primaryColor = isTruck ? "#31A342" : "#eab308"; // yellow-500
 	const bgGradient = isTruck 
 		? "from-green-50 to-white dark:from-green-900/10 dark:to-gray-800" 
-		: "from-orange-50 to-white dark:from-orange-900/10 dark:to-gray-800";
+		: "from-yellow-50 to-white dark:from-yellow-900/10 dark:to-gray-800";
 	const borderColor = isSelected 
-		? (isTruck ? "border-[#31A342] dark:border-green-500" : "border-[#FA9D2B] dark:border-orange-500")
+		? (isTruck ? "border-[#31A342] dark:border-green-500" : "border-yellow-500 dark:border-yellow-500")
 		: "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600";
 
 	return (
@@ -121,7 +121,7 @@ const DriverCard = memo<{
 						<div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
 							isTruck 
 								? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" 
-								: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+								: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
 						}`}>
 							{isTruck ? <Truck className="w-3 h-3" /> : <Bike className="w-3 h-3" />}
 							<span>{isArabic ? (isTruck ? "شاحنة" : "دراجة نارية") : (isTruck ? "Truck" : "Motorbike")}</span>
@@ -258,7 +258,7 @@ const DriverCard = memo<{
 							<div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold ${
 								isTruck 
 									? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" 
-									: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+									: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
 							}`}>
 								{isTruck ? <Truck className="w-4 h-4" /> : <Bike className="w-4 h-4" />}
 								<span>{driver.experience} {isArabic ? "خبرة" : "experience"}</span>
@@ -381,9 +381,44 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 		libraries: MAP_CONFIG.libraries
 	});
 
-	// Get pickup location (would come from order data in real app)
+	// Get pickup location from order data
 	useEffect(() => {
-		// Mock pickup location
+		if (typeof window !== "undefined") {
+			try {
+				const storedData = sessionStorage.getItem("pickAndOrderDetails");
+				if (storedData) {
+					const parsed = JSON.parse(storedData);
+					
+					// Check if it's new format (routeSegments)
+					if (parsed.routeSegments && Array.isArray(parsed.routeSegments) && parsed.routeSegments.length > 0) {
+						const firstSegment = parsed.routeSegments[0];
+						if (firstSegment.pickupPoint && firstSegment.pickupPoint.location) {
+							setPickupLocation({
+								lat: firstSegment.pickupPoint.location.lat,
+								lng: firstSegment.pickupPoint.location.lng,
+							});
+							return;
+						}
+					}
+					
+					// Old format (locationPoints)
+					if (parsed.locationPoints && Array.isArray(parsed.locationPoints)) {
+						const firstPickup = parsed.locationPoints.find((p: any) => p.type === "pickup");
+						if (firstPickup && firstPickup.location) {
+							setPickupLocation({
+								lat: firstPickup.location.lat,
+								lng: firstPickup.location.lng,
+							});
+							return;
+						}
+					}
+				}
+			} catch (error) {
+				console.error("Error loading pickup location:", error);
+			}
+		}
+		
+		// Fallback to default location (Riyadh)
 		setPickupLocation({ lat: 24.7136, lng: 46.6753 });
 	}, []);
 
@@ -558,9 +593,55 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 		setShowConfirmModal(true);
 	}, []);
 
-	const handleConfirmDriver = useCallback(() => {
+	const handleConfirmDriver = useCallback(async () => {
 		if (selectedDriver) {
 			setShowConfirmModal(false);
+			
+			// Calculate and store pricing before navigating to payment page
+			try {
+				// Import utilities
+				const { loadAndConvertOrderData } = await import("./utils/dataConverter");
+				const { calculateOrderPricing } = await import("./utils/pricing");
+				
+				// Load order data
+				const orderData = loadAndConvertOrderData();
+				
+				if (orderData && orderData.locationPoints && orderData.locationPoints.length > 0) {
+					// Filter valid location points
+					const validLocationPoints = orderData.locationPoints.filter(
+						(point: any) => point.location && point.location.lat && point.location.lng
+					);
+					
+					if (validLocationPoints.length > 0) {
+						try {
+							const pricing = calculateOrderPricing({
+								transportType: (transportType === "motorbike" ? "motorbike" : "truck") as "motorbike" | "truck",
+								locationPoints: validLocationPoints,
+								isExpress: orderData.isExpress || false,
+								requiresRefrigeration: orderData.requiresRefrigeration || false,
+								loadingEquipmentNeeded: orderData.loadingEquipmentNeeded || false,
+							});
+							
+							// Store pricing for payment page
+							sessionStorage.setItem("orderPricing", JSON.stringify(pricing));
+							console.log("✅ Pricing calculated and stored from choose-driver:", pricing);
+							
+							// Small delay to ensure storage is complete
+							await new Promise(resolve => setTimeout(resolve, 100));
+						} catch (error) {
+							console.error("❌ Error calculating pricing:", error);
+						}
+					} else {
+						console.warn("⚠️ No valid location points found for pricing calculation");
+					}
+				} else {
+					console.warn("⚠️ No order data or location points found");
+				}
+			} catch (error) {
+				console.error("❌ Error loading order data for pricing:", error);
+			}
+			
+			// Navigate after pricing is calculated and stored
 			router.push(`/pickandorder/${transportType}/order/payment?type=${orderType}&driverId=${selectedDriver}`);
 		}
 	}, [selectedDriver, router, transportType, orderType]);
@@ -661,7 +742,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 		return {
 			url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
 				<svg width="${isSelected ? 40 : 32}" height="${isSelected ? 40 : 32}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<circle cx="16" cy="16" r="14" fill="${isSelected ? '#31A342' : '#FA9D2B'}" stroke="white" stroke-width="3"/>
+					<circle cx="16" cy="16" r="14" fill="${isSelected ? '#31A342' : '#eab308'}" stroke="white" stroke-width="3"/>
 					<text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${driver.pricePerKm}</text>
 				</svg>
 			`),
@@ -744,11 +825,11 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 					<div className="flex items-center gap-3 mb-3">
 						<div className={`p-2.5 sm:p-3 rounded-xl ${
 							isMotorbike 
-								? "bg-orange-100 dark:bg-orange-900/30" 
+								? "bg-yellow-100 dark:bg-yellow-900/30" 
 								: "bg-green-100 dark:bg-green-900/30"
 						}`}>
 							{isMotorbike ? (
-								<Bike className="w-6 h-6 sm:w-7 sm:h-7 text-[#FA9D2B]" />
+								<Bike className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-500" />
 							) : (
 								<Truck className="w-6 h-6 sm:w-7 sm:h-7 text-[#31A342]" />
 							)}
@@ -782,7 +863,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 								onClick={() => setActiveFilter(filter.key)}
 								className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
 									activeFilter === filter.key
-										? `text-white shadow-lg ${isMotorbike ? "bg-[#FA9D2B]" : "bg-[#31A342]"}`
+										? `text-white shadow-lg ${isMotorbike ? "bg-yellow-500" : "bg-[#31A342]"}`
 										: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
 								}`}
 							>
@@ -798,7 +879,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 							disabled={isExpanding}
 							className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-4 sm:mb-6 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${
 								isArabic ? "flex-row-reverse" : ""
-							} ${isMotorbike ? "bg-[#FA9D2B] hover:bg-[#E88D26]" : "bg-[#31A342] hover:bg-[#2a8f3a]"}`}
+							} ${isMotorbike ? "bg-yellow-500 hover:bg-yellow-600" : "bg-[#31A342] hover:bg-[#2a8f3a]"}`}
 						>
 							{isExpanding ? (
 								<>
@@ -821,7 +902,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 					{/* Loading State */}
 					{isLoadingDrivers && (
 						<div className="flex flex-col items-center justify-center py-12 sm:py-16 space-y-3 sm:space-y-4">
-							<Loader2 className={`w-10 h-10 sm:w-12 sm:h-12 animate-spin ${isMotorbike ? "text-[#FA9D2B]" : "text-[#31A342]"}`} />
+							<Loader2 className={`w-10 h-10 sm:w-12 sm:h-12 animate-spin ${isMotorbike ? "text-yellow-500" : "text-[#31A342]"}`} />
 							<p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium text-center px-4">
 								{isArabic ? "جاري البحث عن أقرب السائقين..." : "Searching for closest drivers..."}
 							</p>
@@ -943,11 +1024,11 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 						</h3>
 						<div className={`p-2 rounded-lg ${
 							isMotorbike 
-								? "bg-orange-100 dark:bg-orange-900/30" 
+								? "bg-yellow-100 dark:bg-yellow-900/30" 
 								: "bg-green-100 dark:bg-green-900/30"
 						}`}>
 							{isMotorbike ? (
-								<Bike className="w-5 h-5 sm:w-6 sm:h-6 text-[#FA9D2B]" />
+								<Bike className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
 							) : (
 								<Truck className="w-5 h-5 sm:w-6 sm:h-6 text-[#31A342]" />
 							)}
@@ -957,7 +1038,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 					{/* Driver Info Card */}
 					<div className={`p-4 sm:p-5 rounded-2xl mb-5 sm:mb-6 bg-gradient-to-br ${
 						isMotorbike 
-							? "from-orange-50 to-white dark:from-orange-900/10 dark:to-gray-800 border-2 border-orange-100 dark:border-orange-900/30" 
+							? "from-yellow-50 to-white dark:from-yellow-900/10 dark:to-gray-800 border-2 border-yellow-100 dark:border-yellow-900/30" 
 							: "from-green-50 to-white dark:from-green-900/10 dark:to-gray-800 border-2 border-green-100 dark:border-green-900/30"
 					}`}>
 						<div className="flex items-start gap-3 sm:gap-4 mb-4">
@@ -989,7 +1070,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 								</div>
 								<div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
 									isMotorbike 
-										? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400" 
+										? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400" 
 										: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
 								}`}>
 									{isMotorbike ? <Bike className="w-3 h-3" /> : <Truck className="w-3 h-3" />}
@@ -1014,16 +1095,16 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 						{/* Price */}
 						<div className={`inline-flex items-baseline gap-2 px-4 py-2.5 rounded-xl ${
 							isMotorbike 
-								? "bg-orange-100 dark:bg-orange-900/30" 
+								? "bg-yellow-100 dark:bg-yellow-900/30" 
 								: "bg-green-100 dark:bg-green-900/30"
 						}`}>
 							<span className={`text-xl sm:text-2xl font-bold ${
-								isMotorbike ? "text-orange-600 dark:text-orange-400" : "text-green-600 dark:text-green-400"
+								isMotorbike ? "text-yellow-600 dark:text-yellow-400" : "text-green-600 dark:text-green-400"
 							}`}>
 								{selectedDriverData.pricePerKm}
 							</span>
 							<span className={`text-sm font-medium ${
-								isMotorbike ? "text-orange-600 dark:text-orange-400" : "text-green-600 dark:text-green-400"
+								isMotorbike ? "text-yellow-600 dark:text-yellow-400" : "text-green-600 dark:text-green-400"
 							}`}>
 								{isArabic ? "ر.س/كم" : "SAR/km"}
 							</span>
@@ -1050,7 +1131,7 @@ export default function ChooseDriverPage({ transportType, orderType }: ChooseDri
 						<button
 							onClick={handleConfirmDriver}
 							className={`w-full sm:flex-1 px-5 sm:px-6 py-3 sm:py-3.5 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${
-								isMotorbike ? "bg-[#FA9D2B] hover:bg-[#E88D26]" : "bg-[#31A342] hover:bg-[#2a8f3a]"
+								isMotorbike ? "bg-yellow-500 hover:bg-yellow-600" : "bg-[#31A342] hover:bg-[#2a8f3a]"
 							}`}
 						>
 							<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />

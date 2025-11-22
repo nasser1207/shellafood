@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import React, { useState } from "react";
 import { FormInput } from "@/components/Utils/FormInput";
 import { SectionHeader } from "@/components/Utils/SectionHeader";
-import { PhoneInputField } from "@/components/Utils/PhoneInput";
+import PhoneInputField from "@/components/Utils/PhoneInput";
 import { CheckCircle2 } from "lucide-react";
 import ContractModal from "./ContractModal";
 

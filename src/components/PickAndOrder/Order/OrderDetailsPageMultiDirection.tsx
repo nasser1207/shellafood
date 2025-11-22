@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -48,22 +48,48 @@ export default function OrderDetailsPageMultiDirection({
 	const isMultiDirection = orderType === "multi-direction";
 	const isMotorbike = transportType === "motorbike";
 
-	// Current user
-	const currentUser = useMemo(
-		() => ({
+	// Current user - try to get from localStorage or use default
+	const currentUser = useMemo(() => {
+		if (typeof window !== "undefined") {
+			try {
+				const userDataStr = localStorage.getItem("userData");
+				if (userDataStr) {
+					const userData = JSON.parse(userDataStr);
+					if (userData.name && userData.phone) {
+						return {
+							name: userData.name,
+							phone: userData.phone,
+						};
+					}
+				}
+			} catch (error) {
+				console.error("Error loading user data:", error);
+			}
+		}
+		
+		// Fallback
+		return {
 			name: isArabic ? "أحمد محمد" : "Ahmed Mohammed",
 			phone: "+966 50 123 4567",
-		}),
-		[isArabic]
-	);
+		};
+	}, [isArabic]);
 
 	// Step management
 	const [currentStep, setCurrentStep] = useState<Step>("plan-route");
 
-	// Route segments
-	const [routeSegments, setRouteSegments] = useState<RouteSegment[]>([
-		createEmptySegment(0, isArabic),
-	]);
+	// Route segments - Initialize with sender info
+	const [routeSegments, setRouteSegments] = useState<RouteSegment[]>(() => {
+		const initialSegment = createEmptySegment(0, isArabic);
+		// Auto-populate sender's info for the first pickup point
+		return [{
+			...initialSegment,
+			pickupPoint: {
+				...initialSegment.pickupPoint,
+				contactName: currentUser.name,
+				contactPhone: currentUser.phone,
+			},
+		}];
+	});
 
 	// Vehicle options
 	const [vehicleOptions, setVehicleOptions] = useState<VehicleOptions>({
@@ -106,6 +132,51 @@ export default function OrderDetailsPageMultiDirection({
 
 	const defaultCenter = useMemo(() => MAP_CONFIG.defaultCenter, []);
 
+	// Load existing data from sessionStorage if available (when editing)
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			try {
+				const savedData = sessionStorage.getItem("pickAndOrderDetails");
+				if (savedData) {
+					const parsedData = JSON.parse(savedData);
+					
+					// Check if this is multi-direction data with routeSegments
+					if (parsedData.routeSegments && Array.isArray(parsedData.routeSegments)) {
+						// Auto-populate sender's phone for pickup points if missing
+						const segmentsWithSenderPhone = parsedData.routeSegments.map((segment: RouteSegment) => ({
+							...segment,
+							pickupPoint: {
+								...segment.pickupPoint,
+								// If contactPhone is empty, use currentUser's phone (sender's phone)
+								contactPhone: segment.pickupPoint.contactPhone || currentUser.phone,
+								// If contactName is empty, use currentUser's name (sender's name)
+								contactName: segment.pickupPoint.contactName || currentUser.name,
+							},
+						}));
+						
+						setRouteSegments(segmentsWithSenderPhone);
+						
+						// Restore vehicle options
+						if (isMotorbike && parsedData.vehicleOptions) {
+							setMotorbikeOptions(parsedData.vehicleOptions);
+						} else if (!isMotorbike && parsedData.vehicleOptions) {
+							setVehicleOptions(parsedData.vehicleOptions);
+						}
+						
+						// Restore return to pickup option (for one-direction only)
+						if (!isMultiDirection && parsedData.returnToPickup !== undefined) {
+							setReturnToPickup(parsedData.returnToPickup);
+						}
+						
+						console.log("Restored order data from sessionStorage with sender info:", segmentsWithSenderPhone);
+					}
+				}
+			} catch (error) {
+				console.error("Error loading saved order data:", error);
+			}
+		}
+	}, [isMotorbike, isMultiDirection, currentUser]);
+
 	// Segment completion calculation
 	const getSegmentCompletion = useCallback((segment: RouteSegment): number => {
 		const requiredFields = [
@@ -133,8 +204,17 @@ export default function OrderDetailsPageMultiDirection({
 	// Add new segment
 	const handleAddSegment = useCallback(() => {
 		const newSegment = createEmptySegment(routeSegments.length, isArabic);
-		setRouteSegments((prev) => [...prev, newSegment]);
-	}, [routeSegments.length, isArabic]);
+		// Auto-populate sender's info for the new pickup point
+		const segmentWithSenderInfo = {
+			...newSegment,
+			pickupPoint: {
+				...newSegment.pickupPoint,
+				contactName: currentUser.name,
+				contactPhone: currentUser.phone,
+			},
+		};
+		setRouteSegments((prev) => [...prev, segmentWithSenderInfo]);
+	}, [routeSegments.length, isArabic, currentUser]);
 
 	// Remove segment
 	const handleRemoveSegment = useCallback(
@@ -152,6 +232,37 @@ export default function OrderDetailsPageMultiDirection({
 				prev.map((segment, index) =>
 					index === segmentIndex ? { ...segment, ...updates } : segment
 				)
+			);
+		},
+		[]
+	);
+
+	// Update phone number for pickup or dropoff point
+	const handleUpdatePhone = useCallback(
+		(segmentIndex: number, pointType: "pickup" | "dropoff", phone: string) => {
+			setRouteSegments((prev) =>
+				prev.map((segment, index) => {
+					if (index === segmentIndex) {
+						if (pointType === "pickup") {
+							return {
+								...segment,
+								pickupPoint: {
+									...segment.pickupPoint,
+									contactPhone: phone,
+								},
+							};
+						} else {
+							return {
+								...segment,
+								dropoffPoint: {
+									...segment.dropoffPoint,
+									contactPhone: phone,
+								},
+							};
+						}
+					}
+					return segment;
+				})
 			);
 		},
 		[]
@@ -444,23 +555,33 @@ export default function OrderDetailsPageMultiDirection({
 											index={index}
 											isActive={selectedSegmentIndex === index}
 											onClick={() => setSelectedSegmentIndex(index)}
+											onEdit={() => setSelectedSegmentIndex(index)}
 											onRemove={() => handleRemoveSegment(index)}
 											canRemove={isMultiDirection && routeSegments.length > 1}
 											isArabic={isArabic}
 											completionPercentage={getSegmentCompletion(segment)}
+											onUpdatePhone={(pointType, phone) => handleUpdatePhone(index, pointType, phone)}
 										/>
 									))}
 								</div>
 							</div>
 
-							{/* Continue Button - Go directly to vehicle options */}
+							{/* Continue Button - Go directly to vehicle/package options */}
 							<button
 								onClick={goToNextStep}
 								disabled={routeSegments.every((s) => !s.pickupPoint.location && !s.dropoffPoint.location)}
 								className="w-full px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-to-r from-[#31A342] to-[#2a8f38] hover:from-[#2a8f38] hover:to-[#258533] active:from-[#258533] active:to-[#1f7a2a] dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-600 dark:disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 touch-manipulation min-h-[48px] text-sm sm:text-base"
-								aria-label={isArabic ? "متابعة لخيارات المركبة" : "Continue to Vehicle Options"}
+								aria-label={isMotorbike 
+									? (isArabic ? "متابعة لخيارات الطرد" : "Continue to Package Options")
+									: (isArabic ? "متابعة لخيارات المركبة" : "Continue to Vehicle Options")
+								}
 							>
-								<span>{isArabic ? "متابعة لخيارات المركبة" : "Continue to Vehicle Options"}</span>
+								<span>
+									{isMotorbike 
+										? (isArabic ? "متابعة لخيارات الطرد" : "Continue to Package Options")
+										: (isArabic ? "متابعة لخيارات المركبة" : "Continue to Vehicle Options")
+									}
+								</span>
 								<ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 ${isArabic ? "rotate-180" : ""}`} />
 							</button>
 						</motion.div>

@@ -75,17 +75,17 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 		titleEn: "Complete Home Maintenance Services",
 		descriptionAr: "حلول احترافية لجميع احتياجاتك",
 		descriptionEn: "Professional solutions for all your needs",
-		heroImage: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200&h=800&fit=crop",
+		heroImage: "/serveme-hero.png",
 		videoThumbnail: "https://images.unsplash.com/photo-1621905251918-48116d8b6d82?w=1200&h=800&fit=crop",
 		mainServices: {
 			ar: [
 				{ slug: "pest-control", title: "مكافحة الحشرات", image: "https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?w=600&h=400&fit=crop", path: "/serve-me/home-maintenance/pest-control" },
-				{ slug: "electrical-services", title: "خدمات الكهرباء", image: "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600&h=400&fit=crop", path: "/serve-me/home-maintenance/electrical-services" },
-				{ slug: "plumbing-services", title: "خدمات السباكة", image: "https://images.unsplash.com/photo-1621905252472-6af3f59fd39e?w=600&h=400&fit=crop", path: "/serve-me/home-maintenance/plumbing-services" },
-				{ slug: "home-cleaning", title: "تنظيف المنازل والحدائق", image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600&h=400&fit=crop", path: "/serve-me/home-maintenance/home-cleaning" },
-				{ slug: "ac-maintenance", title: "اصلاح وصيانة المكيفات", image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=600&h=400&fit=crop", path: "/serve-me/home-maintenance/ac-maintenance" },
+				{ slug: "electrical-services", title: "خدمات الكهرباء", image: "/serveme-hero.png", path: "/serve-me/home-maintenance/electrical-services" },
+				{ slug: "plumbing-services", title: "خدمات السباكة", image: "/serveme-hero.png", path: "/serve-me/home-maintenance/plumbing-services" },
+				{ slug: "home-cleaning", title: "تنظيف المنازل والحدائق", image: "/serveme-hero.png", path: "/serve-me/home-maintenance/home-cleaning" },
+				{ slug: "ac-maintenance", title: "اصلاح وصيانة المكيفات", image: "/serveme-hero.png", path: "/serve-me/home-maintenance/ac-maintenance" },
 			
-				{ slug: "carpentry-services", title: "خدمات النجارة", image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&h=400&fit=crop", path: "/serve-me/home-maintenance/carpentry-services" },
+				{ slug: "carpentry-services", title: "خدمات النجارة", image: "/serveme-hero.png", path: "/serve-me/home-maintenance/carpentry-services" },
 		
 			],
 			en: [
@@ -125,7 +125,7 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 			ar: [
 				{ 
 					name: "ورشة المحترف", 
-					image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop", 
+					image: "/serveme-hero.png", 
 					rating: 4.7, 
 					distance: "2.5 كم", 
 					availableHours: "متاح اليوم من: 9 ص - 6 م"
@@ -141,7 +141,7 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 			en: [
 				{ 
 					name: "Professional Workshop", 
-					image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop", 
+					image: "/serveme-hero.png", 
 					rating: 4.7, 
 					distance: "2.5 km", 
 					availableHours: "Available today: 9 AM - 6 PM"
@@ -247,36 +247,36 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 		titleEn: "Teachers and Training Services",
 		descriptionAr: "تعليم وتدريب احترافي في جميع المجالات",
 		descriptionEn: "Professional education and training in all fields",
-		heroImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=800&fit=crop",
-		videoThumbnail: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&h=800&fit=crop",
+		heroImage: "/helpsupport.jpg",
+		videoThumbnail: "/helpsupport.jpg",
 		mainServices: {
 			ar: [
-				{ slug: "private-tutoring", title: "دروس خصوصية", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/private-tutoring" },
-				{ slug: "professional-training", title: "تدريب مهني", image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/professional-training" },
-				{ slug: "language-learning", title: "تعليم اللغات", image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/language-learning" },
-				{ slug: "development-courses", title: "دورات تطوير", image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/development-courses" },
-				{ slug: "sports-training", title: "تدريب رياضي", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/sports-training" },
-				{ slug: "computer-education", title: "تعليم الحاسوب", image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/computer-education" },
+				{ slug: "private-tutoring", title: "دروس خصوصية", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/private-tutoring" },
+				{ slug: "professional-training", title: "تدريب مهني", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/professional-training" },
+				{ slug: "language-learning", title: "تعليم اللغات", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/language-learning" },
+				{ slug: "development-courses", title: "دورات تطوير", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/development-courses" },
+				{ slug: "sports-training", title: "تدريب رياضي", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/sports-training" },
+				{ slug: "computer-education", title: "تعليم الحاسوب", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/computer-education" },
 			],
 			en: [
-				{ slug: "private-tutoring", title: "Private Tutoring", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/private-tutoring" },
-				{ slug: "professional-training", title: "Professional Training", image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/professional-training" },
-				{ slug: "language-learning", title: "Language Learning", image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/language-learning" },
-				{ slug: "development-courses", title: "Development Courses", image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/development-courses" },
-				{ slug: "sports-training", title: "Sports Training", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/sports-training" },
-				{ slug: "computer-education", title: "Computer Education", image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/computer-education" },
+				{ slug: "private-tutoring", title: "Private Tutoring", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/private-tutoring" },
+				{ slug: "professional-training", title: "Professional Training", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/professional-training" },
+				{ slug: "language-learning", title: "Language Learning", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/language-learning" },
+				{ slug: "development-courses", title: "Development Courses", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/development-courses" },
+				{ slug: "sports-training", title: "Sports Training", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/sports-training" },
+				{ slug: "computer-education", title: "Computer Education", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/computer-education" },
 			],
 		},
 		keyServices: {
 			ar: [
-				{ slug: "individual-learning", title: "تعليم فردي", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/individual-learning", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
-				{ slug: "intensive-courses", title: "دورات مكثفة", image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/intensive-courses", icon: React.createElement(Hammer, { className: "w-8 h-8" }) },
-				{ slug: "practical-training", title: "تدريب عملي", image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/practical-training", icon: React.createElement(Zap, { className: "w-8 h-8" }) },
+				{ slug: "individual-learning", title: "تعليم فردي", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/individual-learning", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
+				{ slug: "intensive-courses", title: "دورات مكثفة", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/intensive-courses", icon: React.createElement(Hammer, { className: "w-8 h-8" }) },
+				{ slug: "practical-training", title: "تدريب عملي", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/practical-training", icon: React.createElement(Zap, { className: "w-8 h-8" }) },
 			],
 			en: [
-				{ slug: "individual-learning", title: "Individual Learning", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/individual-learning", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
-				{ slug: "intensive-courses", title: "Intensive Courses", image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/intensive-courses", icon: React.createElement(Hammer, { className: "w-8 h-8" }) },
-				{ slug: "practical-training", title: "Practical Training", image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=400&fit=crop", path: "/serve-me/teachers-training/practical-training", icon: React.createElement(Zap, { className: "w-8 h-8" }) },
+				{ slug: "individual-learning", title: "Individual Learning", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/individual-learning", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
+				{ slug: "intensive-courses", title: "Intensive Courses", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/intensive-courses", icon: React.createElement(Hammer, { className: "w-8 h-8" }) },
+				{ slug: "practical-training", title: "Practical Training", image: "/helpsupport.jpg", path: "/serve-me/teachers-training/practical-training", icon: React.createElement(Zap, { className: "w-8 h-8" }) },
 			],
 		},
 		whyChooseUs: {
@@ -587,36 +587,36 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 		titleEn: "Women's Salon Services",
 		descriptionAr: "عناية بالجمال من خبيرات محترفات",
 		descriptionEn: "Beauty care from professional experts",
-		heroImage: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=1200&h=800&fit=crop",
-		videoThumbnail: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1200&h=800&fit=crop",
+		heroImage: "/serveme-hero.png",
+		videoThumbnail: "/serveme-hero.png",
 		mainServices: {
 			ar: [
-				{ slug: "hair-cutting-styling", title: "قص وتصفيف الشعر", image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=600&h=400&fit=crop", path: "/serve-me/women-salons/hair-cutting-styling" },
-				{ slug: "hair-coloring", title: "صبغ الشعر", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&h=400&fit=crop", path: "/serve-me/women-salons/hair-coloring" },
-				{ slug: "skin-care", title: "عناية بالبشرة", image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d5de?w=600&h=400&fit=crop", path: "/serve-me/women-salons/skin-care" },
-				{ slug: "makeup-events", title: "مكياج ومناسبات", image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=600&h=400&fit=crop", path: "/serve-me/women-salons/makeup-events" },
-				{ slug: "nail-care", title: "عناية بالأظافر", image: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=400&fit=crop", path: "/serve-me/women-salons/nail-care" },
-				{ slug: "hair-treatment", title: "علاج الشعر", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&h=400&fit=crop", path: "/serve-me/women-salons/hair-treatment" },
+				{ slug: "hair-cutting-styling", title: "قص وتصفيف الشعر", image: "/serveme-hero.png", path: "/serve-me/women-salons/hair-cutting-styling" },
+				{ slug: "hair-coloring", title: "صبغ الشعر", image: "/serveme-hero.png", path: "/serve-me/women-salons/hair-coloring" },
+				{ slug: "skin-care", title: "عناية بالبشرة", image: "/serveme-hero.png", path: "/serve-me/women-salons/skin-care" },
+				{ slug: "makeup-events", title: "مكياج ومناسبات", image: "/serveme-hero.png", path: "/serve-me/women-salons/makeup-events" },
+				{ slug: "nail-care", title: "عناية بالأظافر", image: "/serveme-hero.png", path: "/serve-me/women-salons/nail-care" },
+				{ slug: "hair-treatment", title: "علاج الشعر", image: "/serveme-hero.png", path: "/serve-me/women-salons/hair-treatment" },
 			],
 			en: [
-				{ slug: "hair-cutting-styling", title: "Hair Cutting and Styling", image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=600&h=400&fit=crop", path: "/serve-me/women-salons/hair-cutting-styling" },
-				{ slug: "hair-coloring", title: "Hair Coloring", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&h=400&fit=crop", path: "/serve-me/women-salons/hair-coloring" },
-				{ slug: "skin-care", title: "Skin Care", image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d5de?w=600&h=400&fit=crop", path: "/serve-me/women-salons/skin-care" },
-				{ slug: "makeup-events", title: "Makeup and Events", image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=600&h=400&fit=crop", path: "/serve-me/women-salons/makeup-events" },
-				{ slug: "nail-care", title: "Nail Care", image: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=400&fit=crop", path: "/serve-me/women-salons/nail-care" },
-				{ slug: "hair-treatment", title: "Hair Treatment", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&h=400&fit=crop", path: "/serve-me/women-salons/hair-treatment" },
+				{ slug: "hair-cutting-styling", title: "Hair Cutting and Styling", image: "/serveme-hero.png", path: "/serve-me/women-salons/hair-cutting-styling" },
+				{ slug: "hair-coloring", title: "Hair Coloring", image: "/serveme-hero.png", path: "/serve-me/women-salons/hair-coloring" },
+				{ slug: "skin-care", title: "Skin Care", image: "/serveme-hero.png", path: "/serve-me/women-salons/skin-care" },
+				{ slug: "makeup-events", title: "Makeup and Events", image: "/serveme-hero.png", path: "/serve-me/women-salons/makeup-events" },
+				{ slug: "nail-care", title: "Nail Care", image: "/serveme-hero.png", path: "/serve-me/women-salons/nail-care" },
+				{ slug: "hair-treatment", title: "Hair Treatment", image: "/serveme-hero.png", path: "/serve-me/women-salons/hair-treatment" },
 			],
 		},
 		keyServices: {
 			ar: [
-				{ slug: "beauty-experts", title: "خبيرات تجميل", image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=600&h=400&fit=crop", path: "/serve-me/women-salons/beauty-experts", icon: React.createElement(Sparkles, { className: "w-8 h-8" }) },
-				{ slug: "original-products", title: "منتجات أصلية", image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d5de?w=600&h=400&fit=crop", path: "/serve-me/women-salons/original-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
-				{ slug: "elegant-atmosphere", title: "أجواء راقية", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&h=400&fit=crop", path: "/serve-me/women-salons/elegant-atmosphere", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
+				{ slug: "beauty-experts", title: "خبيرات تجميل", image: "/serveme-hero.png", path: "/serve-me/women-salons/beauty-experts", icon: React.createElement(Sparkles, { className: "w-8 h-8" }) },
+				{ slug: "original-products", title: "منتجات أصلية", image: "/serveme-hero.png", path: "/serve-me/women-salons/original-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
+				{ slug: "elegant-atmosphere", title: "أجواء راقية", image: "/serveme-hero.png", path: "/serve-me/women-salons/elegant-atmosphere", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
 			],
 			en: [
-				{ slug: "beauty-experts", title: "Beauty Experts", image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=600&h=400&fit=crop", path: "/serve-me/women-salons/beauty-experts", icon: React.createElement(Sparkles, { className: "w-8 h-8" }) },
-				{ slug: "original-products", title: "Original Products", image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d5de?w=600&h=400&fit=crop", path: "/serve-me/women-salons/original-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
-				{ slug: "elegant-atmosphere", title: "Elegant Atmosphere", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&h=400&fit=crop", path: "/serve-me/women-salons/elegant-atmosphere", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
+				{ slug: "beauty-experts", title: "Beauty Experts", image: "/serveme-hero.png", path: "/serve-me/women-salons/beauty-experts", icon: React.createElement(Sparkles, { className: "w-8 h-8" }) },
+				{ slug: "original-products", title: "Original Products", image: "/serveme-hero.png", path: "/serve-me/women-salons/original-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
+				{ slug: "elegant-atmosphere", title: "Elegant Atmosphere", image: "/serveme-hero.png", path: "/serve-me/women-salons/elegant-atmosphere", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
 			],
 		},
 		whyChooseUs: {
@@ -763,7 +763,7 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 			ar: [
 				{ slug: "cement-bricks", title: "أسمنت وطوب", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/cement-bricks" },
 				{ slug: "iron-steel", title: "حديد وصلب", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/iron-steel" },
-				{ slug: "tiles-ceramics", title: "بلاط وسيراميك", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/tiles-ceramics" },
+				{ slug: "tiles-ceramics", title: "بلاط وسيراميك", image: "/serveme-hero.png", path: "/serve-me/construction-materials/tiles-ceramics" },
 				{ slug: "sanitary-ware", title: "أدوات صحية", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/sanitary-ware" },
 				{ slug: "doors-windows", title: "أبواب ونوافذ", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/doors-windows" },
 				{ slug: "paints-insulation", title: "دهانات وعوازل", image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/paints-insulation" },
@@ -771,7 +771,7 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 			en: [
 				{ slug: "cement-bricks", title: "Cement and Bricks", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/cement-bricks" },
 				{ slug: "iron-steel", title: "Iron and Steel", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/iron-steel" },
-				{ slug: "tiles-ceramics", title: "Tiles and Ceramics", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/tiles-ceramics" },
+				{ slug: "tiles-ceramics", title: "Tiles and Ceramics", image: "/serveme-hero.png", path: "/serve-me/construction-materials/tiles-ceramics" },
 				{ slug: "sanitary-ware", title: "Sanitary Ware", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/sanitary-ware" },
 				{ slug: "doors-windows", title: "Doors and Windows", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/doors-windows" },
 				{ slug: "paints-insulation", title: "Paints and Insulation", image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/paints-insulation" },
@@ -781,12 +781,12 @@ export const serviceCategoriesData: Record<string, ServiceCategoryData> = {
 			ar: [
 				{ slug: "fast-delivery", title: "توصيل سريع", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/fast-delivery", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
 				{ slug: "best-prices", title: "أفضل الأسعار", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/best-prices", icon: React.createElement(Hammer, { className: "w-8 h-8" }) },
-				{ slug: "high-quality-products", title: "منتجات عالية الجودة", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/high-quality-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
+				{ slug: "high-quality-products", title: "منتجات عالية الجودة", image: "/serveme-hero.png", path: "/serve-me/construction-materials/high-quality-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
 			],
 			en: [
 				{ slug: "fast-delivery", title: "Fast Delivery", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/fast-delivery", icon: React.createElement(Wrench, { className: "w-8 h-8" }) },
 				{ slug: "best-prices", title: "Best Prices", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/best-prices", icon: React.createElement(Hammer, { className: "w-8 h-8" }) },
-				{ slug: "high-quality-products", title: "High Quality Products", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop", path: "/serve-me/construction-materials/high-quality-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
+				{ slug: "high-quality-products", title: "High Quality Products", image: "/serveme-hero.png", path: "/serve-me/construction-materials/high-quality-products", icon: React.createElement(Shield, { className: "w-8 h-8" }) },
 			],
 		},
 		whyChooseUs: {

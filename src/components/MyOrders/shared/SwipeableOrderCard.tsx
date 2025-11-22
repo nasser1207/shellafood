@@ -59,7 +59,7 @@ export function SwipeableOrderCard({
 	};
 
 	return (
-		<div className="relative overflow-hidden rounded-2xl md:overflow-visible">
+		<div className="relative w-full overflow-hidden rounded-2xl md:overflow-visible">
 			{/* Background Actions - Only visible on mobile */}
 			<div className="md:hidden absolute inset-0 flex items-center justify-between px-6 pointer-events-none">
 				{canTrack && (
@@ -95,7 +95,7 @@ export function SwipeableOrderCard({
 				dragElastic={0.2}
 				onDragEnd={handleDragEnd}
 				style={{ x }}
-				className="relative z-10 md:static md:transform-none"
+				className="relative w-full z-10 md:static md:transform-none"
 			>
 				{children}
 			</motion.div>
