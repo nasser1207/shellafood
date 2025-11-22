@@ -375,31 +375,55 @@ export const SegmentDetailsForm: React.FC<SegmentDetailsFormProps> = ({
     return markers;
   }, [segment]);
 
+  // Determine which tabs are accessible (only current and previous tabs)
+  const isTabAccessible = (tabId: TabType): boolean => {
+    const tabOrder: TabType[] = ["pickup", "dropoff", "package"];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    const tabIndex = tabOrder.indexOf(tabId);
+    
+    // Allow current tab and previous tabs (for going back)
+    return tabIndex <= currentIndex;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700">
       {/* Tabs */}
       <div className="flex gap-2 sm:gap-3 mb-6 sm:mb-8 border-b-2 border-gray-200 dark:border-gray-700">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`
-              flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 font-semibold text-sm sm:text-base transition-all duration-200
-              border-b-2 -mb-px relative
-              ${activeTab === tab.id
-                ? tab.color === "green"
-                  ? "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 shadow-sm"
-                  : tab.color === "orange"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 shadow-sm"
-                  : "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-sm"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              }
-            `}
-          >
-            <span className={activeTab === tab.id ? "scale-110" : ""}>{tab.icon}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const accessible = isTabAccessible(tab.id);
+          const isActive = activeTab === tab.id;
+          
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                // Only allow clicking on accessible tabs (current or previous)
+                if (accessible) {
+                  setActiveTab(tab.id);
+                }
+              }}
+              disabled={!accessible}
+              className={`
+                flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 font-semibold text-sm sm:text-base transition-all duration-200
+                border-b-2 -mb-px relative
+                ${isActive
+                  ? tab.color === "green"
+                    ? "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 shadow-sm"
+                    : tab.color === "orange"
+                    ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 shadow-sm"
+                    : "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-sm"
+                  : accessible
+                  ? "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                  : "border-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50"
+                }
+              `}
+              title={!accessible ? (isArabic ? "يرجى إكمال الأقسام السابقة أولاً" : "Please complete previous sections first") : undefined}
+            >
+              <span className={isActive ? "scale-110" : ""}>{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}

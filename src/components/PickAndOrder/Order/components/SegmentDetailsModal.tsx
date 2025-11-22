@@ -247,6 +247,7 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 						transition={{ duration: 0.15 }}
 						onClick={onClose}
 						className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+						data-modal-backdrop
 					/>
 
 					{/* Modal */}
@@ -257,7 +258,7 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 							exit={{ opacity: 0, scale: 0.96, y: 10 }}
 							transition={{ duration: 0.15, ease: "easeOut" }}
 							onClick={(e) => e.stopPropagation()}
-							className="relative w-full h-full sm:h-auto sm:max-w-4xl sm:max-h-[95vh] sm:max-h-[90vh] overflow-hidden bg-white dark:bg-gray-800 rounded-none sm:rounded-xl md:rounded-2xl shadow-2xl flex flex-col"
+							className="relative w-full h-full sm:h-auto sm:max-w-4xl sm:max-h-[95vh] sm:max-h-[90vh] overflow-visible bg-white dark:bg-gray-800 rounded-none sm:rounded-xl md:rounded-2xl shadow-2xl flex flex-col"
 						>
 							{/* Header */}
 							<div className="flex items-center justify-between p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 gap-2 sm:gap-3 md:gap-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
@@ -342,7 +343,7 @@ export const SegmentDetailsModal: React.FC<SegmentDetailsModalProps> = ({
 							</AnimatePresence>
 
 							{/* Content */}
-							<div className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 lg:p-6">
+							<div className="flex-1 overflow-y-auto overflow-x-visible p-2 sm:p-3 md:p-4 lg:p-6">
 								{/* Segment Details Form */}
 								<SegmentDetailsForm
 									segment={segment}

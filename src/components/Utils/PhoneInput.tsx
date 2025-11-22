@@ -32,7 +32,7 @@ interface Country {
 
 // Comprehensive country phone configuration
 const COUNTRIES: Country[] = [
-  { code: "sa", name: "Saudi Arabia", nameAr: "السعودية", dialCode: "+966", flag: "🇸🇦", maxDigits: 122, minDigits: 12 },
+  { code: "sa", name: "Saudi Arabia", nameAr: "السعودية", dialCode: "+966", flag: "🇸🇦", maxDigits: 12, minDigits: 12 },
   { code: "ae", name: "United Arab Emirates", nameAr: "الإمارات", dialCode: "+971", flag: "🇦🇪", maxDigits: 13, minDigits: 12 },
   { code: "eg", name: "Egypt", nameAr: "مصر", dialCode: "+20", flag: "🇪🇬", maxDigits: 13, minDigits: 12 },
   { code: "jo", name: "Jordan", nameAr: "الأردن", dialCode: "+962", flag: "🇯🇴", maxDigits: 13, minDigits: 12 },
@@ -59,17 +59,10 @@ const COUNTRIES: Country[] = [
 ];
 
 /**
- * Professional Phone Input Component (Expert UI/UX Design)
+ * Expert-Level Phone Input Component
  * 
- * @features
- * - Premium glassmorphism design with depth
- * - Smooth micro-interactions and animations
- * - Real-time validation with haptic feedback
- * - Adaptive responsive design (mobile-first)
- * - Auto dark mode with seamless transitions
- * - Full RTL/LTR localization support
- * - Enhanced accessibility (WCAG 2.1 AAA)
- * - Performance optimized with virtual scrolling ready
+ * Premium design with mobile-first approach, smooth animations,
+ * and comprehensive accessibility support.
  */
 export default function PhoneInputField({
   label,
@@ -91,13 +84,14 @@ export default function PhoneInputField({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left?: number; right?: number } | null>(null);
 
-  // Detect dark mode with system preference
+  // Detect dark mode
   useEffect(() => {
     const checkDarkMode = () => {
       const isDark = document.documentElement.classList.contains('dark') ||
@@ -106,10 +100,8 @@ export default function PhoneInputField({
     };
 
     checkDarkMode();
-    
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', checkDarkMode);
 
@@ -119,34 +111,32 @@ export default function PhoneInputField({
     };
   }, []);
 
-  // Calculate dropdown position with responsive handling
+  // Enhanced dropdown positioning with visualViewport support
   useEffect(() => {
     if (isDropdownOpen && buttonRef.current) {
       const updatePosition = () => {
         const rect = buttonRef.current?.getBoundingClientRect();
         if (!rect) return;
 
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
+        // Use visualViewport for better mobile keyboard handling
+        const viewport = (window as any).visualViewport || window;
+        const viewportWidth = viewport.width || window.innerWidth;
+        const viewportHeight = viewport.height || window.innerHeight;
         const scrollY = window.scrollY;
         const scrollX = window.scrollX;
         
-        // Dropdown dimensions (approximate)
-        // On mobile, use full width minus padding; on larger screens, use fixed widths
-        const isMobile = viewportWidth < 640; // sm breakpoint
+        const isMobile = viewportWidth < 640;
         const dropdownWidth = isMobile 
           ? (compact ? viewportWidth - 16 : viewportWidth - 32)
           : (compact ? 280 : 340);
-        // Account for search box height (~60px) + padding
         const dropdownHeight = (compact ? 200 : 240) + 60;
         
-        // Calculate horizontal position
         let left: number | undefined;
         let right: number | undefined;
         
         if (isArabic) {
           // RTL: align to right edge of button
-          const rightEdge = viewportWidth - rect.right + scrollX;
+          const rightEdge = viewportWidth - rect.right;
           // Ensure dropdown doesn't go off-screen
           if (rightEdge + dropdownWidth > viewportWidth) {
             // Shift left to fit within viewport
@@ -159,7 +149,7 @@ export default function PhoneInputField({
           }
         } else {
           // LTR: align to left edge of button
-          const leftEdge = rect.left + scrollX;
+          const leftEdge = rect.left;
           // Ensure dropdown doesn't go off-screen
           if (leftEdge + dropdownWidth > viewportWidth) {
             // Shift right to fit within viewport
@@ -179,59 +169,59 @@ export default function PhoneInputField({
         
         // Open below if there's enough space, otherwise open above
         if (spaceBelow >= dropdownHeight || spaceBelow > spaceAbove) {
-          top = rect.bottom + scrollY + 4;
+          top = rect.bottom + 4;
         } else {
           // Open above the button
-          top = rect.top + scrollY - dropdownHeight - 4;
+          top = rect.top - dropdownHeight - 4;
         }
         
         // Ensure dropdown doesn't go off-screen vertically
-        if (top + dropdownHeight > scrollY + viewportHeight) {
-          top = Math.max(8, scrollY + viewportHeight - dropdownHeight - 8);
+        if (top + dropdownHeight > viewportHeight) {
+          top = Math.max(8, viewportHeight - dropdownHeight - 8);
         }
-        if (top < scrollY) {
-          top = scrollY + 8;
+        if (top < 8) {
+          top = 8;
         }
         
-        setDropdownPosition({
-          top,
-          ...(left !== undefined ? { left } : {}),
-          ...(right !== undefined ? { right } : {}),
-        });
+        setDropdownPosition({ top, ...(left !== undefined ? { left } : {}), ...(right !== undefined ? { right } : {}) });
       };
 
       updatePosition();
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
+      if ((window as any).visualViewport) {
+        (window as any).visualViewport.addEventListener('resize', updatePosition);
+      }
 
       return () => {
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
+        if ((window as any).visualViewport) {
+          (window as any).visualViewport.removeEventListener('resize', updatePosition);
+        }
       };
     } else {
       setDropdownPosition(null);
     }
   }, [isDropdownOpen, isArabic, compact]);
 
-  // Handle click outside to close dropdown
+  // Handle click outside
   useEffect(() => {
     if (!isDropdownOpen) return;
 
     const handleClickOutside = (event: Event) => {
       const target = event.target as Node;
       const button = (target instanceof Element && target.closest('[data-phone-input-button]'));
+      // Don't close if clicking on modal backdrop (let modal handle it)
+      const modalBackdrop = (target instanceof Element && target.closest('[data-modal-backdrop]'));
       
-      if (
-        dropdownRef.current && 
-        !dropdownRef.current.contains(target) &&
-        !button
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(target) && !button && !modalBackdrop) {
         setIsDropdownOpen(false);
         setSearchQuery("");
+        setHighlightedIndex(-1);
       }
     };
 
-    // Delay to avoid immediate closure when opening
     const timeoutId = setTimeout(() => {
       document.addEventListener("mousedown", handleClickOutside, true);
       document.addEventListener("touchstart", handleClickOutside, true);
@@ -245,10 +235,9 @@ export default function PhoneInputField({
     };
   }, [isDropdownOpen]);
 
-  // Filter countries with intelligent search
+  // Filter countries
   const filteredCountries = useMemo(() => {
     if (!searchQuery) return COUNTRIES;
-    
     const query = searchQuery.toLowerCase();
     return COUNTRIES.filter(country => 
       country.name.toLowerCase().includes(query) ||
@@ -262,36 +251,35 @@ export default function PhoneInputField({
   const isValid = useMemo(() => {
     if (!value) return false;
     const digitsOnly = value.replace(/\D/g, "");
-    return digitsOnly.length >= selectedCountry.minDigits && 
-           digitsOnly.length <= selectedCountry.maxDigits;
+    const isValidLength = digitsOnly.length >= selectedCountry.minDigits && 
+                          digitsOnly.length <= selectedCountry.maxDigits;
+    const startsWithDialCode = value.startsWith(selectedCountry.dialCode);
+    return isValidLength && startsWithDialCode;
   }, [value, selectedCountry]);
 
-  // Notify parent of validation changes
   useEffect(() => {
     if (onValidationChange && value) {
       onValidationChange(isValid);
     }
   }, [isValid, value, onValidationChange]);
 
-  // Handle phone change with smart validation
+  // Handle phone change
   const handlePhoneChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       let phone = e.target.value;
-      
-      // Remove non-digit characters except +
       phone = phone.replace(/[^\d+]/g, "");
       
-      // Ensure it starts with the dial code
       if (!phone.startsWith(selectedCountry.dialCode)) {
         phone = selectedCountry.dialCode + phone.replace(/^\+?\d+/, "");
       }
 
-      // Extract only digits
       const digitsOnly = phone.replace(/\D/g, "");
 
-      // Prevent exceeding max digits
       if (digitsOnly.length > selectedCountry.maxDigits) {
-        return;
+        const dialCodeDigits = selectedCountry.dialCode.replace(/\D/g, "");
+        const maxLocalDigits = selectedCountry.maxDigits - dialCodeDigits.length;
+        const localDigits = digitsOnly.slice(dialCodeDigits.length).slice(0, maxLocalDigits);
+        phone = selectedCountry.dialCode + localDigits;
       }
 
       onChange(phone);
@@ -299,13 +287,13 @@ export default function PhoneInputField({
     [onChange, selectedCountry]
   );
 
-  // Handle country selection with smooth transition
+  // Handle country selection
   const handleCountrySelect = useCallback((country: Country) => {
     setSelectedCountry(country);
     setIsDropdownOpen(false);
     setSearchQuery("");
+    setHighlightedIndex(-1);
     
-    // Smart dial code replacement
     const digitsOnly = value.replace(/\D/g, "");
     const currentDialCode = selectedCountry.dialCode.replace(/\D/g, "");
     
@@ -320,7 +308,7 @@ export default function PhoneInputField({
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [value, selectedCountry, onChange]);
 
-  // Keyboard navigation for dropdown
+  // Keyboard navigation
   useEffect(() => {
     if (!isDropdownOpen) return;
 
@@ -328,17 +316,45 @@ export default function PhoneInputField({
       if (e.key === 'Escape') {
         setIsDropdownOpen(false);
         setSearchQuery("");
-        inputRef.current?.focus();
+        setHighlightedIndex(-1);
+        buttonRef.current?.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev < filteredCountries.length - 1 ? prev + 1 : 0
+        );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev > 0 ? prev - 1 : filteredCountries.length - 1
+        );
+      } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+        e.preventDefault();
+        handleCountrySelect(filteredCountries[highlightedIndex]);
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        setHighlightedIndex(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        setHighlightedIndex(filteredCountries.length - 1);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, filteredCountries, highlightedIndex, handleCountrySelect]);
 
-  // Clear search
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && dropdownRef.current) {
+      const item = dropdownRef.current.querySelector(`[data-country-index="${highlightedIndex}"]`);
+      item?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [highlightedIndex]);
+
   const clearSearch = useCallback(() => {
     setSearchQuery("");
+    setHighlightedIndex(-1);
     searchInputRef.current?.focus();
   }, []);
 
@@ -346,12 +362,20 @@ export default function PhoneInputField({
   const showError = error || (showValidation && value && !isValid && !isFocused);
   const errorId = `${name}-error`;
 
-  // Common classes
-  const baseText = "text-gray-700 dark:text-gray-300";
-  const baseBg = "bg-white dark:bg-gray-800";
-  const baseBorder = "border-gray-300 dark:border-gray-600";
-  const baseTransition = "transition-colors duration-150";
-  const baseInput = `${baseBg} text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500`;
+  // Calculate remaining digits
+  const digitsOnly = value.replace(/\D/g, "");
+  const dialCodeDigits = selectedCountry.dialCode.replace(/\D/g, "");
+  const localDigits = digitsOnly.slice(dialCodeDigits.length);
+  const maxLocalDigits = selectedCountry.maxDigits - dialCodeDigits.length;
+  const remainingDigits = maxLocalDigits - localDigits.length;
+  const showDigitCounter = isFocused && value && !showError && remainingDigits >= 0;
+
+  // Design tokens
+  const inputHeight = compact ? 'h-11' : 'h-12';
+  const inputPadding = compact ? 'px-3' : 'px-4';
+  const inputTextSize = compact ? 'text-sm' : 'text-[15px]';
+  const selectorWidth = compact ? 'min-w-[56px]' : 'min-w-[72px] sm:min-w-[84px]';
+  const selectorPadding = compact ? 'px-2.5' : 'px-3 sm:px-4';
 
   return (
     <div className={`flex flex-col gap-2 w-full ${className}`} dir={isArabic ? "rtl" : "ltr"}>
@@ -359,7 +383,7 @@ export default function PhoneInputField({
       {label && (
         <label
           htmlFor={name}
-          className={`${compact ? 'text-xs' : 'text-sm'} font-medium ${baseText} ${isArabic ? 'text-right' : 'text-left'} block`}
+          className={`${compact ? 'text-xs' : 'text-sm'} font-medium text-slate-700 dark:text-slate-300 ${isArabic ? 'text-right' : 'text-left'} block`}
         >
           {label}
           {required && (
@@ -374,13 +398,13 @@ export default function PhoneInputField({
       <div className="relative w-full">
         <div className={`
           flex ${isArabic ? 'flex-row-reverse' : 'flex-row'} 
-          ${compact ? 'rounded-md' : 'rounded-lg'} 
-          overflow-hidden border ${baseTransition}
+          ${compact ? 'rounded-lg' : 'rounded-xl'} 
+          overflow-hidden border-2 transition-all duration-200 ease-out
           ${error 
-            ? 'border-red-400 dark:border-red-500' 
+            ? 'border-red-300 dark:border-red-800 shadow-sm shadow-red-100 dark:shadow-red-900/20' 
             : isFocused || isDropdownOpen
-            ? 'border-blue-500 dark:border-blue-400 ring-1 ring-blue-500/20 dark:ring-blue-400/20'
-            : `${baseBorder} hover:border-gray-400 dark:hover:border-gray-500`
+            ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/15 dark:ring-blue-400/20 shadow-lg shadow-blue-100 dark:shadow-blue-900/20'
+            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm'
           }
           ${disabled ? 'opacity-60 cursor-not-allowed' : ''}
         `}>
@@ -404,41 +428,47 @@ export default function PhoneInputField({
               disabled={disabled}
               data-phone-input-button
               className={`
-                flex items-center justify-center gap-1.5
-                ${compact ? 'px-2.5 min-w-[52px] h-10' : 'px-3 min-w-[60px] h-11'}
-                ${isArabic ? (compact ? 'rounded-r-md' : 'rounded-r-lg') : (compact ? 'rounded-l-md' : 'rounded-l-lg')}
+                flex items-center justify-center gap-1.5 sm:gap-2
+                ${selectorPadding} ${selectorWidth} ${inputHeight}
+                ${isArabic ? (compact ? 'rounded-r-lg' : 'rounded-r-xl') : (compact ? 'rounded-l-lg' : 'rounded-l-xl')}
                 ${isArabic ? 'border-l-0' : 'border-r-0'}
-                bg-gray-50 dark:bg-gray-800 border-r ${baseBorder} ${baseTransition}
-                hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600
+                bg-slate-50 dark:bg-slate-900 border-r-2 border-slate-200 dark:border-slate-700
+                transition-all duration-200 ease-out
+                hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700
+                active:scale-[0.98]
                 disabled:opacity-50 disabled:cursor-not-allowed
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:focus-visible:ring-blue-400/30 focus-visible:ring-offset-1
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:focus-visible:ring-blue-400/30 focus-visible:ring-offset-2
+                touch-manipulation
               `}
-              aria-label={isArabic ? "اختر الدولة" : "Select country"}
+              aria-label={isArabic ? `اختر الدولة، المحددة حاليًا ${selectedCountry.nameAr} ${selectedCountry.dialCode}` : `Select country, currently ${selectedCountry.name} ${selectedCountry.dialCode}`}
               aria-expanded={isDropdownOpen}
               aria-haspopup="listbox"
             >
-              <span className={`${compact ? 'text-lg' : 'text-xl'} leading-none`} role="img" aria-hidden="true">
+              <span className={`${compact ? 'text-xl' : 'text-2xl'} leading-none`} role="img" aria-hidden="true">
                 {selectedCountry.flag}
               </span>
               {!compact && (
-                <span className={`hidden sm:inline text-xs font-semibold ${baseText}`}>
+                <span className={`hidden sm:inline text-xs font-semibold text-slate-700 dark:text-slate-300`}>
                   {selectedCountry.dialCode}
                 </span>
               )}
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform duration-200 ease-out ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown - Rendered via Portal to avoid modal clipping */}
+            {/* Dropdown */}
             {isDropdownOpen && dropdownPosition && typeof window !== 'undefined' ? createPortal(
               <div 
                 ref={dropdownRef}
                 className={`
-                  fixed z-[99999] rounded-lg border ${baseBg} border-gray-200 dark:border-gray-700 shadow-2xl
+                  fixed z-[999999] rounded-xl border-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700
+                  shadow-xl dark:shadow-2xl
                   ${compact 
                     ? 'w-[calc(100vw-1rem)] sm:w-[280px]' 
-                    : 'w-[calc(100vw-2rem)] sm:w-[300px] md:w-[340px]'
+                    : 'w-[calc(100vw-2rem)] sm:w-[340px]'
                   }
-                  max-w-[calc(100vw-1rem)] animate-in fade-in slide-in-from-top-1 duration-200
+                  max-w-[calc(100vw-1rem)]
+                  animate-in fade-in slide-in-from-top-1 duration-200
+                  backdrop-blur-sm bg-white/95 dark:bg-slate-800/95
                 `}
                 role="listbox"
                 aria-label={isArabic ? "قائمة الدول" : "Country list"}
@@ -448,24 +478,29 @@ export default function PhoneInputField({
                   top: `${dropdownPosition.top}px`,
                   ...(dropdownPosition.left !== undefined ? { left: `${dropdownPosition.left}px` } : {}),
                   ...(dropdownPosition.right !== undefined ? { right: `${dropdownPosition.right}px` } : {}),
-                  maxHeight: `${Math.min(window.innerHeight - dropdownPosition.top - 8, (compact ? 200 : 240) + 60)}px`,
+                  maxHeight: `${Math.min((window as any).visualViewport?.height || window.innerHeight, (compact ? 200 : 240) + 60)}px`,
                 }}
               >
                 {/* Search Box */}
-                <div className="p-2.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+                <div className="p-3 sm:p-4 border-b-2 border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 sticky top-0 z-10">
                   <div className="relative">
-                    <Search className={`absolute ${isArabic ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none`} />
+                    <Search className={`absolute ${isArabic ? 'right-3 sm:right-4' : 'left-3 sm:left-4'} top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 dark:text-slate-500 pointer-events-none`} />
                     <input
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setHighlightedIndex(-1);
+                      }}
                       placeholder={isArabic ? "ابحث عن دولة..." : "Search country..."}
                       className={`
-                        w-full h-10 text-sm rounded-md border ${baseBorder} ${baseInput}
-                        ${isArabic ? 'pr-10 pl-10' : 'pl-10 pr-10'}
+                        w-full h-11 sm:h-12 text-sm sm:text-base rounded-lg border-2 border-slate-200 dark:border-slate-700
+                        bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100
+                        placeholder:text-slate-400 dark:placeholder:text-slate-500
+                        ${isArabic ? 'pr-11 sm:pr-12 pl-11 sm:pl-12' : 'pl-11 sm:pl-12 pr-11 sm:pr-12'}
                         focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:border-blue-500 dark:focus:border-blue-400
-                        ${baseTransition}
+                        transition-all duration-200
                       `}
                       dir={isArabic ? "rtl" : "ltr"}
                       aria-label={isArabic ? "بحث عن دولة" : "Search country"}
@@ -478,13 +513,14 @@ export default function PhoneInputField({
                           clearSearch();
                         }}
                         className={`
-                          absolute ${isArabic ? 'left-2.5' : 'right-2.5'} top-1/2 -translate-y-1/2 
-                          p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
-                          hover:bg-gray-100 dark:hover:bg-gray-700 ${baseTransition}
+                          absolute ${isArabic ? 'left-2.5 sm:left-3' : 'right-2.5 sm:right-3'} top-1/2 -translate-y-1/2 
+                          p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300
+                          hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200
+                          touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center
                         `}
                         aria-label={isArabic ? "مسح البحث" : "Clear search"}
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -493,47 +529,58 @@ export default function PhoneInputField({
                 {/* Countries List */}
                 <div className={`overflow-y-auto ${compact ? 'max-h-[200px]' : 'max-h-[240px]'} custom-scrollbar`}>
                   {filteredCountries.length > 0 ? (
-                    filteredCountries.map((country) => (
-                      <button
-                        key={country.code}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCountrySelect(country);
-                        }}
-                        className={`
-                          w-full flex items-center gap-3 px-3 py-2.5 ${baseTransition}
-                          ${compact ? 'min-h-[44px]' : 'min-h-[48px]'}
-                          hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700
-                          ${selectedCountry.code === country.code 
-                            ? 'bg-blue-50 dark:bg-blue-900/30 border-l-2 border-blue-500 dark:border-blue-400' 
-                            : 'border-l-2 border-transparent'
-                          }
-                          focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700/50
-                        `}
-                        role="option"
-                        aria-selected={selectedCountry.code === country.code}
-                      >
-                        <span className={`${compact ? 'text-xl' : 'text-2xl'} flex-shrink-0`} role="img" aria-hidden="true">
-                          {country.flag}
-                        </span>
-                        <div className="flex-1 min-w-0 text-left">
-                          <div className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
-                            {isArabic ? country.nameAr : country.name}
+                    filteredCountries.map((country, index) => {
+                      const isSelected = selectedCountry.code === country.code;
+                      const isHighlighted = highlightedIndex === index;
+                      
+                      return (
+                        <button
+                          key={country.code}
+                          type="button"
+                          data-country-index={index}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCountrySelect(country);
+                          }}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                          className={`
+                            w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5
+                            transition-all duration-150 ease-out
+                            ${compact ? 'min-h-[48px]' : 'min-h-[56px]'}
+                            ${isSelected
+                              ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 dark:border-blue-400'
+                              : isHighlighted
+                              ? 'bg-slate-50 dark:bg-slate-700/50 border-l-4 border-transparent'
+                              : 'bg-transparent border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/30'
+                            }
+                            active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.98]
+                            focus:outline-none
+                            touch-manipulation
+                          `}
+                          role="option"
+                          aria-selected={isSelected}
+                        >
+                          <span className={`${compact ? 'text-2xl' : 'text-3xl'} flex-shrink-0`} role="img" aria-hidden="true">
+                            {country.flag}
+                          </span>
+                          <div className="flex-1 min-w-0 text-left">
+                            <div className="text-sm sm:text-base font-medium truncate text-slate-900 dark:text-slate-100">
+                              {isArabic ? country.nameAr : country.name}
+                            </div>
+                            <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                              {country.dialCode}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {country.dialCode}
-                          </div>
-                        </div>
-                        {selectedCountry.code === country.code && (
-                          <Check className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0" aria-hidden="true" />
-                        )}
-                      </button>
-                    ))
+                          {isSelected && (
+                            <Check className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 dark:text-blue-400 flex-shrink-0" aria-hidden="true" />
+                          )}
+                        </button>
+                      );
+                    })
                   ) : (
-                    <div className="p-8 text-center">
-                      <div className="text-2xl mb-2 opacity-50">🔍</div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="p-8 sm:p-10 text-center">
+                      <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 opacity-50">🔍</div>
+                      <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
                         {isArabic ? "لا توجد نتائج" : "No results found"}
                       </p>
                     </div>
@@ -560,11 +607,17 @@ export default function PhoneInputField({
               autoComplete="tel"
               placeholder={placeholder || (isArabic ? "أدخل رقم الهاتف" : "Enter phone number")}
               className={`
-                w-full ${baseInput} ${baseTransition}
-                ${compact ? 'h-10 px-3 text-sm' : 'h-11 px-3 text-sm'}
-                ${isArabic ? (compact ? 'rounded-l-md text-right pr-9' : 'rounded-l-lg text-right pr-11') : (compact ? 'rounded-r-md text-left pl-2 pr-9' : 'rounded-r-lg text-left pl-2 pr-11')}
+                w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100
+                placeholder:text-slate-400 dark:placeholder:text-slate-500
+                transition-all duration-200 ease-out
+                ${inputHeight} ${inputPadding} ${inputTextSize}
+                ${isArabic 
+                  ? (compact ? 'rounded-l-lg text-right pr-10 sm:pr-12' : 'rounded-l-xl text-right pr-12 sm:pr-14') 
+                  : (compact ? 'rounded-r-lg text-left pl-2 sm:pl-3 pr-10 sm:pr-12' : 'rounded-r-xl text-left pl-3 sm:pl-4 pr-12 sm:pr-14')
+                }
                 ${isArabic ? 'border-r-0' : 'border-l-0'}
                 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none
+                font-medium tracking-[0.5px]
               `}
               aria-invalid={showError ? "true" : "false"}
               aria-describedby={showError ? errorId : undefined}
@@ -574,17 +627,33 @@ export default function PhoneInputField({
 
             {/* Validation Icons */}
             {showSuccess && (
-              <div className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${isArabic ? 'left-2.5' : 'right-2.5'}`}>
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30">
-                  <Check className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-green-600 dark:text-green-400`} />
+              <div className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${isArabic ? 'left-3 sm:left-4' : 'right-3 sm:right-4'}`}>
+                <div className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/30 shadow-sm ring-2 ring-green-200 dark:ring-green-800 animate-in zoom-in duration-300">
+                  <Check className={`${compact ? 'w-3.5 h-3.5 sm:w-4 sm:h-4' : 'w-4 h-4 sm:w-5 sm:h-5'} text-green-600 dark:text-green-400`} />
                 </div>
               </div>
             )}
             {showError && (
-              <div className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${isArabic ? 'left-2.5' : 'right-2.5'}`}>
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/30">
-                  <AlertCircle className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-red-600 dark:text-red-400`} />
+              <div className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${isArabic ? 'left-3 sm:left-4' : 'right-3 sm:right-4'}`}>
+                <div className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/40 dark:to-red-800/30 shadow-sm ring-2 ring-red-200 dark:ring-red-800 animate-in zoom-in duration-300">
+                  <AlertCircle className={`${compact ? 'w-3.5 h-3.5 sm:w-4 sm:h-4' : 'w-4 h-4 sm:w-5 sm:h-5'} text-red-600 dark:text-red-400`} />
                 </div>
+              </div>
+            )}
+            {/* Digit Counter */}
+            {showDigitCounter && !showSuccess && !showError && (
+              <div className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${isArabic ? 'left-3 sm:left-4' : 'right-3 sm:right-4'}`}>
+                <span className={`
+                  text-xs sm:text-sm font-semibold px-1.5 py-0.5 rounded-md
+                  ${remainingDigits < 3 && remainingDigits > 0
+                    ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20' 
+                    : remainingDigits === 0
+                    ? 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20'
+                    : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50'
+                  }
+                `}>
+                  {remainingDigits >= 0 ? remainingDigits : 0}
+                </span>
               </div>
             )}
           </div>
@@ -597,10 +666,22 @@ export default function PhoneInputField({
           id={errorId}
           role="alert"
           aria-live="polite"
-          className={`flex items-start gap-2 text-xs text-red-600 dark:text-red-400 ${isArabic ? 'flex-row-reverse text-right' : 'text-left'} animate-in fade-in slide-in-from-top-1 duration-200`}
+          className={`
+            flex items-start gap-2 sm:gap-2.5 text-xs sm:text-sm text-red-600 dark:text-red-400
+            ${isArabic ? 'flex-row-reverse text-right' : 'text-left'}
+            animate-in fade-in slide-in-from-top-1 duration-200
+            bg-red-50 dark:bg-red-900/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
+            border border-red-200 dark:border-red-800/50
+          `}
         >
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>{error || (isArabic ? "الرجاء إدخال رقم هاتف صحيح" : "Please enter a valid phone number")}</span>
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
+          <span className="font-medium leading-relaxed">
+            {error || (
+              isArabic 
+                ? `الرجاء إدخال رقم هاتف صحيح (${selectedCountry.nameAr}: ${selectedCountry.dialCode} + ${selectedCountry.maxDigits - selectedCountry.dialCode.replace(/\D/g, "").length} أرقام)`
+                : `Please enter a valid phone number (${selectedCountry.name}: ${selectedCountry.dialCode} + ${selectedCountry.maxDigits - selectedCountry.dialCode.replace(/\D/g, "").length} digits)`
+            )}
+          </span>
         </div>
       )}
 
@@ -608,22 +689,28 @@ export default function PhoneInputField({
       <style jsx>{`
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 4px;
+        }
+
+        @media (min-width: 640px) {
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: ${isDarkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(249, 250, 251, 0.5)'};
+          background: ${isDarkMode ? 'rgba(15, 23, 42, 0.3)' : 'rgba(248, 250, 252, 0.5)'};
           border-radius: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: ${isDarkMode ? 'rgba(107, 114, 128, 0.4)' : 'rgba(156, 163, 175, 0.4)'};
+          background: ${isDarkMode ? 'rgba(100, 116, 139, 0.4)' : 'rgba(148, 163, 184, 0.4)'};
           border-radius: 3px;
           transition: background 0.2s;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: ${isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.6)'};
+          background: ${isDarkMode ? 'rgba(100, 116, 139, 0.6)' : 'rgba(148, 163, 184, 0.6)'};
         }
 
         /* Animations */
@@ -643,16 +730,31 @@ export default function PhoneInputField({
           }
         }
 
+        @keyframes zoom-in {
+          from { 
+            opacity: 0;
+            transform: scale(0);
+          }
+          to { 
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
         .animate-in {
           animation-fill-mode: both;
         }
 
         .fade-in {
-          animation: fade-in 0.2s ease-out;
+          animation: fade-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .slide-in-from-top-1 {
-          animation: slide-in-from-top 0.2s ease-out;
+          animation: slide-in-from-top 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .zoom-in {
+          animation: zoom-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* Touch-friendly for mobile */
